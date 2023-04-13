@@ -1,0 +1,70 @@
+version: ">= 0.14.0"
+
+formatter: markdown table
+
+content: |-
+  [![Tests](https://github.com/netascode/terraform-mso-nac-ndo/actions/workflows/test.yml/badge.svg)](https://github.com/netascode/terraform-mso-nac-ndo/actions/workflows/test.yml)
+
+  # Terraform NDO Nexus-as-Code Module
+
+  A Terraform module to configure Nexus Dashboard Orchestrator (NDO).
+
+  This module is part of the Cisco [*Nexus-as-Code*](https://cisco.com/go/nexusascode) project. Its goal is to allow users to instantiate network fabrics in minutes using an easy to use, opinionated data model. It takes away the complexity of having to deal with references, dependencies or loops. By completely separating data (defining variables) from logic (infrastructure declaration), it allows the user to focus on describing the intended configuration while using a set of maintained and tested Terraform Modules without the need to understand the low-level ACI object model. More information can be found here: https://cisco.com/go/nexusascode.
+
+  ## Usage
+
+  This module supports an inventory driven approach, where a complete NDO configuration or parts of it are either modeled in one or more YAML files or natively using Terraform variables.
+
+  There are five configuration sections which can be selectively enabled or disabled using module flags:
+
+  - `sites`: Enable sites in NDO
+  - `site_connectivity`: Manage Multi-Site connectivity configuration
+  - `tenants`: Configure tenants using NDO
+  - `schemas`: Configurations applied at the schema and template level (e.g., VRFs and Bridge Domains)
+  - `deploy_templates`: Automatically deploy templates
+
+  The full data model documentation is available here: https://developer.cisco.com/docs/nexus-as-code/#!data-model
+
+  ## Examples
+
+  Configuring a Tenant using YAML:
+
+  #### `ndo.yaml`
+
+  ```hcl
+  {{ include "./examples/tenant_yaml/ndo.yaml" }}
+  ```
+
+  #### `main.tf`
+
+  ```hcl
+  {{ include "./examples/tenant_yaml/main.tf" }}
+  ````
+
+  Configuring a Site using native HCL:
+
+  #### `main.tf`
+
+  ```hcl
+  {{ include "./examples/site_hcl/main.tf" }}
+  ````
+
+  {{ .Requirements }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+  {{ .Providers }}
+
+  {{ .Resources }}
+
+  {{ .Modules }}
+
+output:
+  file: README.md
+  mode: replace
+
+sort:
+  enabled: true
+  by: required

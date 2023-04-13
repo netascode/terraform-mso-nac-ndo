@@ -1,0 +1,8 @@
+ndo:
+  sites:
+    - name: APIC1
+      id: 1
+  tenants:
+    - name: NDO1
+      sites:
+        - name: APIC1
