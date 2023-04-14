@@ -31,7 +31,7 @@ resource "mso_schema_site" "schema_site" {
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = mso_site.site[each.value.site_name].id
-  undeploy_on_destroy = substr(try(local.ndo.version, local.ndo.defaults.ndo.version), 0, 3) < 3.7 ? null : true
+  undeploy_on_destroy = true
 }
 
 locals {
