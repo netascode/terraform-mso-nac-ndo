@@ -15,10 +15,11 @@ data "mso_user" "user" {
 }
 
 resource "mso_tenant" "tenant" {
-  for_each     = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants }
-  name         = each.value.name
-  display_name = each.value.name
-  description  = try(each.value.description, "")
+  for_each          = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants }
+  name              = each.value.name
+  display_name      = each.value.name
+  description       = try(each.value.description, "")
+  orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only)
 
   dynamic "user_associations" {
     for_each = { for user in try(each.value.users, []) : user.name => user }
