@@ -57,9 +57,3 @@ variable "write_default_values_file" {
   type        = string
   default     = ""
 }
-
-variable "mso_provider_username" {
-  description = "MSO provider username."
-  type        = string
-  default     = "admin"
-}
