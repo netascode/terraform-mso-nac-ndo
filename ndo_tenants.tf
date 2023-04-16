@@ -1,5 +1,5 @@
 locals {
-  default_users = distinct(concat([{ name = "admin" }], try(local.defaults.ndo.tenants.users, [])))
+  default_users = distinct(concat([{ name = "admin" }], local.defaults.ndo.tenants.users))
   tenant_users = flatten(distinct([
     for tenant in try(local.ndo.tenants, []) : [
       for user in distinct(concat(try(tenant.users, []), local.default_users)) : [user.name]

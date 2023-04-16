@@ -177,3 +177,5 @@ defaults:
           redirect_policy_name_suffix: ""
     tenants:
       orchestrator_only: true
+      users:
+        - name: admin
