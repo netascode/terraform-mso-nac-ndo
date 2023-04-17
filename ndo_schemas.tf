@@ -44,8 +44,8 @@ locals {
           template_name    = template.name
           name             = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
           display_name     = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          layer3_multicast = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast, "disabled") == "enabled" ? true : false
-          vzany            = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany, "disabled") == "enabled" ? true : false
+          layer3_multicast = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast)
+          vzany            = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
         }
       ]
     ]
@@ -76,13 +76,13 @@ locals {
           vrf_schema_id          = try(mso_schema.schema[bd.vrf.schema].id, mso_schema.schema[schema.name].id)
           vrf_template_name      = try(bd.vrf.template, template.name)
           layer2_unknown_unicast = try(bd.l2_unknown_unicast, local.defaults.ndo.schemas.templates.bridge_domains.l2_unknown_unicast, "proxy")
-          intersite_bum_traffic  = try(bd.intersite_bum_traffic, local.defaults.ndo.schemas.templates.bridge_domains.intersite_bum_traffic, "disabled") == "enabled" ? true : false
-          optimize_wan_bandwidth = try(bd.optimize_wan_bandwidth, local.defaults.ndo.schemas.templates.bridge_domains.optimize_wan_bandwidth, "disabled") == "enabled" ? true : false
-          layer2_stretch         = try(bd.l2_stretch, local.defaults.ndo.schemas.templates.bridge_domains.l2_stretch, "enabled") == "disabled" ? false : true
-          layer3_multicast       = try(bd.l3_multicast, local.defaults.ndo.schemas.templates.bridge_domains.l3_multicast, "disabled") == "enabled" ? true : false
-          arp_flooding           = try(bd.arp_flooding, local.defaults.ndo.schemas.templates.bridge_domains.arp_flooding, "disabled") == "enabled" ? true : false
+          intersite_bum_traffic  = try(bd.intersite_bum_traffic, local.defaults.ndo.schemas.templates.bridge_domains.intersite_bum_traffic)
+          optimize_wan_bandwidth = try(bd.optimize_wan_bandwidth, local.defaults.ndo.schemas.templates.bridge_domains.optimize_wan_bandwidth)
+          layer2_stretch         = try(bd.l2_stretch, local.defaults.ndo.schemas.templates.bridge_domains.l2_stretch)
+          layer3_multicast       = try(bd.l3_multicast, local.defaults.ndo.schemas.templates.bridge_domains.l3_multicast)
+          arp_flooding           = try(bd.arp_flooding, local.defaults.ndo.schemas.templates.bridge_domains.arp_flooding)
           virtual_mac_address    = try(bd.vmac, null) # Not yet implemented in schema
-          unicast_routing        = try(bd.unicast_routing, local.defaults.ndo.schemas.templates.bridge_domains.unicast_routing, "enabled") == "disabled" ? false : true
+          unicast_routing        = try(bd.unicast_routing, local.defaults.ndo.schemas.templates.bridge_domains.unicast_routing)
           #ipv6_unknown_multicast_flooding = try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast, "flood")               # Not yet implemented in schema
           #multi_destination_flooding      = try(bd.multi_destination_flooding, local.defaults.ndo.schemas.templates.bridge_domains.multi_destination_flooding, "flood_in_bd") # Not yet implemented in schema
           #unknown_multicast_flooding      = try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast, "flood")               # Not yet implemented in schema
@@ -132,7 +132,7 @@ locals {
             template_name = template.name
             bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
             site_id       = mso_site.site[site.name].id
-            host_route    = try(site.advertise_host_routes, local.defaults.ndo.schemas.templates.bridge_domains.sites.advertise_host_routes, "disabled") == "enabled" ? true : false
+            host_route    = try(site.advertise_host_routes, local.defaults.ndo.schemas.templates.bridge_domains.sites.advertise_host_routes)
             mac           = try(site.mac, local.defaults.ndo.schemas.templates.bridge_domains.sites.mac, "00:22:BD:F8:19:FF") # Not yet implemented in provider
           }
         ]
@@ -164,10 +164,10 @@ locals {
             bd_name            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
             ip                 = subnet.ip
             scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope, "private")
-            shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared, "disabled") == "enabled" ? true : false
-            no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, "disabled") == "enabled" ? true : false # Not yet implemented in schema
-            querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier, "disabled") == "enabled" ? true : false
-            primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, "disabled") == "enabled" ? true : false # Not yet implemented in provider
+            shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared)
+            no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, false) # Not yet implemented in schema
+            querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier, "disabled")
+            primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, false) # Not yet implemented in provider
           }
         ]
       ]
@@ -203,10 +203,10 @@ locals {
               site_id            = mso_site.site[site.name].id
               ip                 = subnet.ip
               scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope, "private")
-              shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared, "disabled") == "enabled" ? true : false
-              no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, "disabled") == "enabled" ? true : false # Not yet implemented in schema
-              querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier, "disabled") == "enabled" ? true : false
-              primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, "disabled") == "enabled" ? true : false # Not yet implemented in provider
+              shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared)
+              no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, false) # Not yet implemented in schema
+              querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier)
+              primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, false) # Not yet implemented in provider
             }
           ]
         ]
@@ -299,11 +299,11 @@ locals {
             vrf_name                   = try(epg.vrf.name, null) != null ? "${epg.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}" : null
             vrf_schema_id              = try(epg.vrf.name, null) != null ? try(mso_schema.schema[epg.vrf.schema].id, mso_schema.schema[schema.name].id) : null
             vrf_template_name          = try(epg.vrf.name, null) != null ? try(epg.vrf.template, template.name) : null
-            useg_epg                   = try(epg.useg, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.useg, "disabled") == "enabled" ? true : false
-            intra_epg                  = try(epg.intra_epg_isolation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intra_epg_isolation, "disabled") == "enabled" ? "enforced" : "unenforced"
-            intersite_multicast_source = try(epg.intersite_multicast_source, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intersite_multicast_source, "disabled") == "enabled" ? true : false # Not yet implemented in schema
-            proxy_arp                  = try(epg.proxy_arp, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.proxy_arp, "disabled") == "enabled" ? true : false
-            preferred_group            = try(epg.preferred_group, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.preferred_group, "disabled") == "enabled" ? true : false
+            useg_epg                   = try(epg.useg, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.useg)
+            intra_epg                  = try(epg.intra_epg_isolation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intra_epg_isolation) ? "enforced" : "unenforced"
+            intersite_multicast_source = try(epg.intersite_multicast_source, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intersite_multicast_source, false) # Not yet implemented in schema
+            proxy_arp                  = try(epg.proxy_arp, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.proxy_arp)
+            preferred_group            = try(epg.preferred_group, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.preferred_group)
             epg_type                   = try(epg.epg_type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.epg_type, "application") # Not yet implemented in schema
             access_type                = try(epg.access_type, null)                                                                                           # Not yet implemented in schema
             deployment_type            = try(epg.deployment_type, null)                                                                                       # Not yet implemented in schema
