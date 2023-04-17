@@ -1,5 +1,5 @@
 locals {
-  default_users = distinct(concat([{ name = "admin" }], local.defaults.ndo.tenants.users))
+  default_users = distinct(concat([{ name = "admin" }], try(local.defaults.ndo.tenants.users, [])))
   tenant_users = flatten(distinct([
     for tenant in try(local.ndo.tenants, []) : [
       for user in distinct(concat(try(tenant.users, []), local.default_users)) : [user.name]
@@ -17,7 +17,7 @@ resource "mso_tenant" "tenant" {
   name              = each.value.name
   display_name      = each.value.name
   description       = try(each.value.description, "")
-  orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only)
+  orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only, true) # not added to schema yet
 
   dynamic "user_associations" {
     for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user }
