@@ -263,7 +263,7 @@ locals {
             key           = "${schema.name}/${template.name}/${ap.name}/${site}"
             schema_id     = mso_schema.schema[schema.name].id
             template_name = template.name
-            site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+            site_id       = var.manage_sites ? mso_site.site[site].id : data.mso_site.site[site].id
             anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
           }
         ]
