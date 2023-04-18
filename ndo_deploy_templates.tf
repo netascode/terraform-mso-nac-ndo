@@ -10,14 +10,6 @@ locals {
   ])
 }
 
-# Deploy templates NDO < v3.7
-/* resource "mso_schema_template_deploy" "template" {
-  for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates }
-  schema_id     = mso_schema.schema[each.value.schema_name].id
-  template_name = each.value.template_name
-} */
-
-# Deploy templates NDO v3.7+
 resource "mso_schema_template_deploy_ndo" "template" {
   for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates }
   schema_id     = mso_schema.schema[each.value.schema_name].id
