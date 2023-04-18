@@ -8,12 +8,12 @@ locals {
 }
 
 data "mso_user" "user" {
-  for_each = toset(local.tenant_users)
+  for_each = var.manage_tenants ? toset(local.tenant_users) : []
   username = each.value
 }
 
 resource "mso_tenant" "tenant" {
-  for_each          = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants }
+  for_each          = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants && try(tenant.managed, local.defaults.ndo.tenants.managed, true) } # not added to schema yet
   name              = each.value.name
   display_name      = each.value.name
   description       = try(each.value.description, "")
@@ -32,4 +32,10 @@ resource "mso_tenant" "tenant" {
       site_id = var.manage_sites ? mso_site.site[site_associations.value.name].id : data.mso_site.site[site_associations.value.name].id
     }
   }
+}
+
+data "mso_tenant" "tenant" {
+  for_each     = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if !var.manage_tenants || try(!tenant.managed, !local.defaults.ndo.tenants.managed, false) } # not added to schema yet
+  name         = each.value.name
+  display_name = each.value.name
 }
