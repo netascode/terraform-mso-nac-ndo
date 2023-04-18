@@ -10,7 +10,7 @@ locals {
       maxAsLimit             = try(local.ndo.fabric_connectivity.bgp.max_as, local.defaults.ndo.fabric_connectivity.bgp.max_as)
     }
     sites = [for site in try(local.ndo.sites, []) : {
-      id                         = mso_site.site[site.name].id
+      id                         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
       apicSiteId                 = site.id
       platform                   = "on-premise"
       fabricId                   = 1

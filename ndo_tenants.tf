@@ -29,7 +29,7 @@ resource "mso_tenant" "tenant" {
   dynamic "site_associations" {
     for_each = { for site in try(each.value.sites, []) : site.name => site }
     content {
-      site_id = mso_site.site[site_associations.value.name].id
+      site_id = var.manage_sites ? mso_site.site[site_associations.value.name].id : data.mso_site.site[site_associations.value.name].id
     }
   }
 }
