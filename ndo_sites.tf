@@ -6,3 +6,8 @@ resource "mso_site" "site" {
     ignore_changes = [urls, username, location]
   }
 }
+
+data "mso_site" "site" {
+  for_each = { for site in try(local.ndo.sites, {}) : site.name => site if !var.manage_sites }
+  name     = each.value.name
+}

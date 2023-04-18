@@ -30,7 +30,7 @@ resource "mso_schema_site" "schema_site" {
   for_each            = { for site in local.template_sites : site.key => site if var.manage_schemas }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
-  site_id             = mso_site.site[each.value.site_name].id
+  site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.site[each.value.site_name].id
   undeploy_on_destroy = true
 }
 
@@ -131,7 +131,7 @@ locals {
             schema_id     = mso_schema.schema[schema.name].id
             template_name = template.name
             bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-            site_id       = mso_site.site[site.name].id
+            site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
             host_route    = try(site.advertise_host_routes, local.defaults.ndo.schemas.templates.bridge_domains.sites.advertise_host_routes)
             mac           = try(site.mac, local.defaults.ndo.schemas.templates.bridge_domains.sites.mac, "00:22:BD:F8:19:FF") # Not yet implemented in provider
           }
@@ -200,7 +200,7 @@ locals {
               schema_id          = mso_schema.schema[schema.name].id
               template_name      = template.name
               bd_name            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-              site_id            = mso_site.site[site.name].id
+              site_id            = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
               ip                 = subnet.ip
               scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope, "private")
               shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared)
@@ -263,7 +263,7 @@ locals {
             key           = "${schema.name}/${template.name}/${ap.name}/${site}"
             schema_id     = mso_schema.schema[schema.name].id
             template_name = template.name
-            site_id       = mso_site.site[site].id
+            site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
             anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
           }
         ]
@@ -356,7 +356,7 @@ locals {
               key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}"
               schema_id     = mso_schema.schema[schema.name].id
               template_name = template.name
-              site_id       = mso_site.site[site.name].id
+              site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
               anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
               epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
             }
