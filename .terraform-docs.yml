@@ -15,8 +15,9 @@ content: |-
 
   This module supports an inventory driven approach, where a complete NDO configuration or parts of it are either modeled in one or more YAML files or natively using Terraform variables.
 
-  There are five configuration sections which can be selectively enabled or disabled using module flags:
+  There are six configuration sections which can be selectively enabled or disabled using module flags:
 
+  - `system`: Manage system level configuration like banners
   - `sites`: Enable sites in NDO
   - `site_connectivity`: Manage Multi-Site connectivity configuration
   - `tenants`: Configure tenants using NDO

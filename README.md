@@ -11,8 +11,9 @@ This module is part of the Cisco [*Nexus-as-Code*](https://cisco.com/go/nexusasc
 
 This module supports an inventory driven approach, where a complete NDO configuration or parts of it are either modeled in one or more YAML files or natively using Terraform variables.
 
-There are five configuration sections which can be selectively enabled or disabled using module flags:
+There are six configuration sections which can be selectively enabled or disabled using module flags:
 
+- `system`: Manage system level configuration like banners
 - `sites`: Enable sites in NDO
 - `site_connectivity`: Manage Multi-Site connectivity configuration
 - `tenants`: Configure tenants using NDO
@@ -93,6 +94,7 @@ module "site" {
 | <a name="input_manage_schemas"></a> [manage\_schemas](#input\_manage\_schemas) | Flag to indicate if schemas should be managed. | `bool` | `false` | no |
 | <a name="input_manage_site_connectivity"></a> [manage\_site\_connectivity](#input\_manage\_site\_connectivity) | Flag to indicate if site connectivity be managed. | `bool` | `false` | no |
 | <a name="input_manage_sites"></a> [manage\_sites](#input\_manage\_sites) | Flag to indicate if sites should be managed. | `bool` | `false` | no |
+| <a name="input_manage_system"></a> [manage\_system](#input\_manage\_system) | Flag to indicate if system level configuration should be managed. | `bool` | `false` | no |
 | <a name="input_manage_tenants"></a> [manage\_tenants](#input\_manage\_tenants) | Flag to indicate if tenants be managed. | `bool` | `false` | no |
 | <a name="input_managed_schemas"></a> [managed\_schemas](#input\_managed\_schemas) | List of schema names to be managed. By default all schemas will be managed. | `list(string)` | `[]` | no |
 | <a name="input_model"></a> [model](#input\_model) | As an alternative to YAML files, a native Terraform data structure can be provided as well. | `map(any)` | `{}` | no |

@@ -16,6 +16,13 @@ variable "model" {
   default     = {}
 }
 
+# tflint-ignore: terraform_unused_declarations
+variable "manage_system" {
+  description = "Flag to indicate if system level configuration should be managed."
+  type        = bool
+  default     = false
+}
+
 variable "manage_sites" {
   description = "Flag to indicate if sites should be managed."
   type        = bool
