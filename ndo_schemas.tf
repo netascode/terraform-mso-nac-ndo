@@ -35,6 +35,148 @@ resource "mso_schema_site" "schema_site" {
 }
 
 locals {
+  filter_entries = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for filter in try(template.filters, []) : [
+          for entry in try(filter.entries, []) : {
+            key                  = "${schema.name}/${template.name}/${filter.name}/${entry.name}"
+            schema_id            = mso_schema.schema[schema.name].id
+            template_name        = template.name
+            name                 = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
+            display_name         = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
+            entry_name           = "${entry.name}${local.defaults.ndo.schemas.templates.filters.entries.name_suffix}"
+            entry_display_name   = "${entry.name}${local.defaults.ndo.schemas.templates.filters.entries.name_suffix}"
+            entry_description    = try(entry.description, "")
+            ether_type           = try(entry.ethertype, local.defaults.ndo.schemas.templates.filters.entries.ethertype)
+            arp_flag             = "unspecified"
+            ip_protocol          = contains(["ip", "ipv4", "ipv6"], try(entry.ethertype, local.defaults.ndo.schemas.templates.filters.entries.ethertype)) ? try(entry.protocol, local.defaults.ndo.schemas.templates.filters.entries.protocol) : "unspecified"
+            match_only_fragments = false
+            stateful             = try(entry.stateful, local.defaults.ndo.schemas.templates.filters.entries.stateful)
+            destination_from     = try(entry.destination_from_port, local.defaults.ndo.schemas.templates.filters.entries.destination_from_port)
+            destination_to       = try(entry.destination_to_port, entry.destination_from_port, local.defaults.ndo.schemas.templates.filters.entries.destination_from_port)
+            source_from          = try(entry.source_from_port, local.defaults.ndo.schemas.templates.filters.entries.source_from_port)
+            source_to            = try(entry.source_to_port, entry.source_from_port, local.defaults.ndo.schemas.templates.filters.entries.source_from_port)
+            tcp_session_rules    = ["unspecified"]
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_filter_entry" "schema_template_filter_entry" {
+  for_each             = { for entry in local.filter_entries : entry.key => entry }
+  schema_id            = each.value.schema_id
+  template_name        = each.value.template_name
+  name                 = each.value.name
+  display_name         = each.value.display_name
+  entry_name           = each.value.entry_name
+  entry_display_name   = each.value.entry_display_name
+  entry_description    = each.value.entry_description
+  ether_type           = each.value.ether_type
+  arp_flag             = each.value.arp_flag
+  ip_protocol          = each.value.ip_protocol
+  match_only_fragments = each.value.match_only_fragments
+  stateful             = each.value.stateful
+  destination_from     = each.value.destination_from
+  destination_to       = each.value.destination_to
+  source_from          = each.value.source_from
+  source_to            = each.value.source_to
+  tcp_session_rules    = each.value.tcp_session_rules
+}
+
+locals {
+  contracts = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : {
+          key           = "${schema.name}/${template.name}/${contract.name}"
+          schema_id     = mso_schema.schema[schema.name].id
+          template_name = template.name
+          contract_name = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+          display_name  = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+          filter_type   = try(contract.type, local.defaults.ndo.schemas.templates.contracts.type)
+          scope         = try(contract.scope, local.defaults.ndo.schemas.templates.contracts.scope)
+          directives    = ["none"]
+        }
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_contract" "schema_template_contract" {
+  for_each      = { for contract in local.contracts : contract.key => contract }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  contract_name = each.value.contract_name
+  display_name  = each.value.display_name
+  filter_type   = each.value.filter_type
+  scope         = each.value.scope
+  directives    = each.value.directives
+}
+
+locals {
+  contracts_filters = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : concat([
+          for filter in try(contract.filters, []) : {
+            key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+            schema_id            = mso_schema.schema[schema.name].id
+            template_name        = template.name
+            contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+            filter_type          = "bothWay"
+            filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+            filter_template_name = try(filter.template, null)
+            filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
+            directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+          }
+          ],
+          [
+            for filter in try(contract.provider_to_consumer_filters, []) : {
+              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+              schema_id            = mso_schema.schema[schema.name].id
+              template_name        = template.name
+              contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              filter_type          = "provider_to_consumer"
+              filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+              filter_template_name = try(filter.template, null)
+              filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
+              directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+            }
+          ],
+          [
+            for filter in try(contract.consumer_to_provider_filters, []) : {
+              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+              schema_id            = mso_schema.schema[schema.name].id
+              template_name        = template.name
+              contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              filter_type          = "consumer_to_provider"
+              filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+              filter_template_name = try(filter.template, null)
+              filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
+              directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+            }
+        ])
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_contract_filter" "schema_template_contract_filter" {
+  for_each             = { for filter in local.contracts_filters : filter.key => filter }
+  schema_id            = each.value.schema_id
+  template_name        = each.value.template_name
+  contract_name        = each.value.contract_name
+  filter_type          = each.value.filter_type
+  filter_schema_id     = each.value.filter_schema_id
+  filter_template_name = each.value.filter_template_name
+  filter_name          = each.value.filter_name
+  directives           = each.value.directives
+}
+
+locals {
   vrfs = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -287,34 +429,6 @@ resource "mso_schema_template_anp" "schema_template_anp" {
 }
 
 locals {
-  application_profiles_sites = flatten([
-    for schema in local.schemas : [
-      for template in try(schema.templates, []) : [
-        for ap in try(template.application_profiles, []) : [
-          for site in distinct(flatten([for epg in try(ap.endpoint_groups, []) : [for site in try(epg.sites, []) : site.name]])) : {
-            key           = "${schema.name}/${template.name}/${ap.name}/${site}"
-            schema_id     = mso_schema.schema[schema.name].id
-            template_name = template.name
-            site_id       = var.manage_sites ? mso_site.site[site].id : data.mso_site.site[site].id
-            anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
-          }
-        ]
-      ]
-    ]
-  ])
-}
-
-resource "mso_schema_site_anp" "schema_site_anp" {
-  for_each      = { for ap in local.application_profiles_sites : ap.key => ap }
-  schema_id     = each.value.schema_id
-  template_name = each.value.template_name
-  site_id       = each.value.site_id
-  anp_name      = each.value.anp_name
-
-  depends_on = [mso_schema_template_anp.schema_template_anp]
-}
-
-locals {
   endpoint_groups = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -379,48 +493,51 @@ resource "mso_schema_template_anp_epg" "schema_template_anp_epg" {
 }
 
 locals {
-  endpoint_groups_sites = flatten([
+  endpoint_groups_contracts = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for ap in try(template.application_profiles, []) : [
-          for epg in try(ap.endpoint_groups, []) : [
-            for site in try(epg.sites, []) : {
-              key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}"
-              schema_id     = mso_schema.schema[schema.name].id
-              template_name = template.name
-              site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
-              anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
-              epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+          for epg in try(ap.endpoint_groups, []) : concat([
+            for contract in try(epg.contracts.consumers, []) : {
+              key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}"
+              schema_id         = mso_schema.schema[schema.name].id
+              template_name     = template.name
+              anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+              epg_name          = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+              contract_name     = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              relationship_type = "consumer"
             }
-          ]
+            ],
+            [
+              for contract in try(epg.contracts.providers, []) : {
+                key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}"
+                schema_id         = mso_schema.schema[schema.name].id
+                template_name     = template.name
+                anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name          = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                contract_name     = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+                relationship_type = "provider"
+              }
+          ])
         ]
       ]
     ]
   ])
 }
 
-resource "mso_schema_site_anp_epg" "schema_site_anp_epg" {
-  for_each      = { for epg in local.endpoint_groups_sites : epg.key => epg }
-  schema_id     = each.value.schema_id
-  template_name = each.value.template_name
-  site_id       = each.value.site_id
-  anp_name      = each.value.anp_name
-  epg_name      = each.value.epg_name
+resource "mso_schema_template_anp_epg_contract" "schema_template_anp_epg_contract" {
+  for_each          = { for contract in local.endpoint_groups_contracts : contract.key => contract }
+  schema_id         = each.value.schema_id
+  template_name     = each.value.template_name
+  anp_name          = each.value.anp_name
+  epg_name          = each.value.epg_name
+  contract_name     = each.value.contract_name
+  relationship_type = each.value.relationship_type
 
   depends_on = [
-    mso_schema_site_anp.schema_site_anp,
     mso_schema_template_anp_epg.schema_template_anp_epg,
   ]
 }
-
-#resource "mso_schema_template_anp_epg_contract" "contract" {
-#}
-
-#resource "mso_schema_template_anp_epg_selector" "selector" {
-#}
-
-#resource "mso_schema_site_anp_epg_selector" "selector" {
-#}
 
 #resource "mso_schema_template_anp_epg_subnet" "subnet" {
 #}
