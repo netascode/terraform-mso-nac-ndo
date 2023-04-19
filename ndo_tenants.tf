@@ -1,19 +1,19 @@
 locals {
   default_users = distinct(concat([{ name = "admin" }], try(local.defaults.ndo.tenants.users, [])))
   tenant_users = flatten(distinct([
-    for tenant in try(local.ndo.tenants, []) : [
+    for tenant in local.tenants : [
       for user in distinct(concat(try(tenant.users, []), local.default_users)) : [user.name]
     ]
   ]))
 }
 
 data "mso_user" "user" {
-  for_each = var.manage_tenants ? toset(local.tenant_users) : []
+  for_each = toset(local.tenant_users)
   username = each.value
 }
 
 resource "mso_tenant" "tenant" {
-  for_each          = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants && try(tenant.managed, local.defaults.ndo.tenants.managed, true) } # not added to schema yet
+  for_each          = { for tenant in local.tenants : tenant.name => tenant if var.manage_tenants }
   name              = each.value.name
   display_name      = each.value.name
   description       = try(each.value.description, "")
@@ -35,7 +35,7 @@ resource "mso_tenant" "tenant" {
 }
 
 data "mso_tenant" "tenant" {
-  for_each     = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if !var.manage_tenants || try(!tenant.managed, !local.defaults.ndo.tenants.managed, false) } # not added to schema yet
+  for_each     = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if !var.manage_tenants || (length(var.managed_tenants) != 0 && !contains(var.managed_tenants, tenant.name)) }
   name         = each.value.name
   display_name = each.value.name
 }
