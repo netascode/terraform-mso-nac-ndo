@@ -231,6 +231,38 @@ resource "mso_schema_site_bd_subnet" "schema_site_bd_subnet" {
 }
 
 locals {
+  bridge_domains_sites_l3outs = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for bd in try(template.bridge_domains, []) : [
+          for site in try(bd.sites, []) : [
+            for l3out in try(site.l3outs, []) : {
+              key           = "${schema.name}/${template.name}/${bd.name}/${site.name}/${l3out}"
+              schema_id     = mso_schema.schema[schema.name].id
+              template_name = template.name
+              bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
+              site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+              l3out_name    = l3out
+            }
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_bd_l3out" "schema_site_bd_l3out" {
+  for_each      = { for l3out in local.bridge_domains_sites_l3outs : l3out.key => l3out }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  site_id       = each.value.site_id
+  bd_name       = each.value.bd_name
+  l3out_name    = each.value.l3out_name
+
+  depends_on = [mso_schema_site_bd.schema_site_bd]
+}
+
+locals {
   application_profiles = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
