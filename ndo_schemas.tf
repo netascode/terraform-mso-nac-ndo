@@ -6,7 +6,7 @@ resource "mso_schema" "schema" {
     content {
       name         = template.value.name
       display_name = template.value.name
-      tenant_id    = mso_tenant.tenant[template.value.tenant].id
+      tenant_id    = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.tenant[template.value.tenant].id
     }
   }
 }

@@ -33,3 +33,9 @@ resource "mso_tenant" "tenant" {
     }
   }
 }
+
+data "mso_tenant" "tenant" {
+  for_each     = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if !var.manage_tenants && var.manage_schemas }
+  name         = each.value.name
+  display_name = each.value.name
+}
