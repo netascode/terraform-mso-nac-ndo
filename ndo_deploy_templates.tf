@@ -29,6 +29,7 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_site_bd.schema_site_bd,
     mso_schema_template_bd_subnet.schema_template_bd_subnet,
     mso_schema_site_bd_subnet.schema_site_bd_subnet,
+    mso_schema_site_bd_l3out.schema_site_bd_l3out,
     mso_schema_template_anp.schema_template_anp,
     mso_schema_site_anp.schema_site_anp,
     mso_schema_template_anp_epg.schema_template_anp_epg,
