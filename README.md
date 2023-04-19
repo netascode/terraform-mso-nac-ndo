@@ -97,6 +97,7 @@ module "site" {
 | <a name="input_manage_system"></a> [manage\_system](#input\_manage\_system) | Flag to indicate if system level configuration should be managed. | `bool` | `false` | no |
 | <a name="input_manage_tenants"></a> [manage\_tenants](#input\_manage\_tenants) | Flag to indicate if tenants be managed. | `bool` | `false` | no |
 | <a name="input_managed_schemas"></a> [managed\_schemas](#input\_managed\_schemas) | List of schema names to be managed. By default all schemas will be managed. | `list(string)` | `[]` | no |
+| <a name="input_managed_tenants"></a> [managed\_tenants](#input\_managed\_tenants) | List of tenant names to be managed. By default all tenants will be managed. | `list(string)` | `[]` | no |
 | <a name="input_model"></a> [model](#input\_model) | As an alternative to YAML files, a native Terraform data structure can be provided as well. | `map(any)` | `{}` | no |
 | <a name="input_write_default_values_file"></a> [write\_default\_values\_file](#input\_write\_default\_values\_file) | Write all default values to a YAML file. Value is a path pointing to the file to be created. | `string` | `""` | no |
 | <a name="input_yaml_directories"></a> [yaml\_directories](#input\_yaml\_directories) | List of paths to YAML directories. | `list(string)` | `[]` | no |

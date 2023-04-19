@@ -41,6 +41,12 @@ variable "manage_tenants" {
   default     = false
 }
 
+variable "managed_tenants" {
+  description = "List of tenant names to be managed. By default all tenants will be managed."
+  type        = list(string)
+  default     = []
+}
+
 variable "manage_schemas" {
   description = "Flag to indicate if schemas should be managed."
   type        = bool

@@ -1,7 +1,7 @@
 locals {
   default_users = distinct(concat([{ name = "admin" }], try(local.defaults.ndo.tenants.users, [])))
   tenant_users = flatten(distinct([
-    for tenant in try(local.ndo.tenants, []) : [
+    for tenant in local.tenants : [
       for user in distinct(concat(try(tenant.users, []), local.default_users)) : [user.name]
     ]
   ]))
@@ -13,7 +13,7 @@ data "mso_user" "user" {
 }
 
 resource "mso_tenant" "tenant" {
-  for_each          = { for tenant in try(local.ndo.tenants, []) : tenant.name => tenant if var.manage_tenants }
+  for_each          = { for tenant in local.tenants : tenant.name => tenant }
   name              = each.value.name
   display_name      = each.value.name
   description       = try(each.value.description, "")
