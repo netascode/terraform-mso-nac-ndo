@@ -1,5 +1,5 @@
 resource "mso_schema" "schema" {
-  for_each = { for schema in local.schemas : schema.name => schema if var.manage_schemas }
+  for_each = { for schema in local.schemas : schema.name => schema }
   name     = each.value.name
   dynamic "template" {
     for_each = { for template in try(each.value.templates, []) : template.name => template }
@@ -27,7 +27,7 @@ locals {
 }
 
 resource "mso_schema_site" "schema_site" {
-  for_each            = { for site in local.template_sites : site.key => site if var.manage_schemas }
+  for_each            = { for site in local.template_sites : site.key => site }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.site[each.value.site_name].id
@@ -53,7 +53,7 @@ locals {
 }
 
 resource "mso_schema_template_vrf" "schema_template_vrf" {
-  for_each         = { for vrf in local.vrfs : vrf.key => vrf if var.manage_schemas }
+  for_each         = { for vrf in local.vrfs : vrf.key => vrf }
   schema_id        = each.value.schema_id
   template         = each.value.template_name
   name             = each.value.name
@@ -93,7 +93,7 @@ locals {
 }
 
 resource "mso_schema_template_bd" "schema_template_bd" {
-  for_each               = { for bd in local.bridge_domains : bd.key => bd if var.manage_schemas }
+  for_each               = { for bd in local.bridge_domains : bd.key => bd }
   schema_id              = each.value.schema_id
   template_name          = each.value.template_name
   name                   = each.value.name
@@ -142,7 +142,7 @@ locals {
 }
 
 resource "mso_schema_site_bd" "schema_site_bd" {
-  for_each      = { for bd in local.bridge_domains_sites : bd.key => bd if var.manage_schemas }
+  for_each      = { for bd in local.bridge_domains_sites : bd.key => bd }
   schema_id     = each.value.schema_id
   template_name = each.value.template_name
   bd_name       = each.value.bd_name
@@ -176,7 +176,7 @@ locals {
 }
 
 resource "mso_schema_template_bd_subnet" "schema_template_bd_subnet" {
-  for_each           = { for subnet in local.bridge_domains_subnets : subnet.key => subnet if var.manage_schemas }
+  for_each           = { for subnet in local.bridge_domains_subnets : subnet.key => subnet }
   schema_id          = each.value.schema_id
   template_name      = each.value.template_name
   bd_name            = each.value.bd_name
@@ -216,7 +216,7 @@ locals {
 }
 
 resource "mso_schema_site_bd_subnet" "schema_site_bd_subnet" {
-  for_each           = { for subnet in local.bridge_domains_sites_subnets : subnet.key => subnet if var.manage_schemas }
+  for_each           = { for subnet in local.bridge_domains_sites_subnets : subnet.key => subnet }
   schema_id          = each.value.schema_id
   template_name      = each.value.template_name
   site_id            = each.value.site_id
