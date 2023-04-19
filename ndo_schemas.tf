@@ -707,7 +707,7 @@ locals {
   ])
 }
 
-resource "mso_schema_site_anp_epg_static_port" "schema_site_anp_epg_static_prot" {
+resource "mso_schema_site_anp_epg_static_port" "schema_site_anp_epg_static_port" {
   for_each             = { for sp in local.endpoint_groups_sites_static_ports : sp.key => sp }
   schema_id            = each.value.schema_id
   site_id              = each.value.site_id
@@ -729,8 +729,45 @@ resource "mso_schema_site_anp_epg_static_port" "schema_site_anp_epg_static_prot"
   ]
 }
 
-#resource "mso_schema_site_anp_epg_domain" "domain" {
-#}
+locals {
+  endpoint_groups_sites_static_leafs = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : [
+              for sl in try(site.static_leafs, []) : {
+                key             = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${try(sl.pod, "1")}/${try(sl.node, "")}/${try(sl.vlan, "")}"
+                schema_id       = mso_schema.schema[schema.name].id
+                site_id         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                template_name   = template.name
+                anp_name        = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name        = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                path            = "topology/pod-${try(sl.pod, "1")}/node-${sl.node}"
+                port_encap_vlan = sl.vlan
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
 
-#resource "mso_schema_site_anp_epg_static_leaf" "static_leaf" {
+resource "mso_schema_site_anp_epg_static_leaf" "schema_site_anp_epg_static_leaf" {
+  for_each        = { for sl in local.endpoint_groups_sites_static_leafs : sl.key => sl }
+  schema_id       = each.value.schema_id
+  site_id         = each.value.site_id
+  template_name   = each.value.template_name
+  anp_name        = each.value.anp_name
+  epg_name        = each.value.epg_name
+  path            = each.value.path
+  port_encap_vlan = each.value.port_encap_vlan
+
+  depends_on = [
+    mso_schema_template_anp_epg.schema_template_anp_epg,
+  ]
+}
+
+#resource "mso_schema_site_anp_epg_domain" "domain" {
 #}
