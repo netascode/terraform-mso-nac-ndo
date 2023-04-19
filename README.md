@@ -126,12 +126,14 @@ module "site" {
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
+| [mso_schema_site_anp_epg_subnet.schema_site_anp_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_subnet) | resource |
 | [mso_schema_site_bd.schema_site_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd) | resource |
 | [mso_schema_site_bd_l3out.schema_site_bd_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd_l3out) | resource |
 | [mso_schema_site_bd_subnet.schema_site_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd_subnet) | resource |
 | [mso_schema_template_anp.schema_template_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_anp) | resource |
 | [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_anp_epg) | resource |
 | [mso_schema_template_anp_epg_contract.schema_template_anp_epg_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_anp_epg_contract) | resource |
+| [mso_schema_template_anp_epg_subnet.schema_template_anp_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_anp_epg_subnet) | resource |
 | [mso_schema_template_bd.schema_template_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_bd) | resource |
 | [mso_schema_template_bd_subnet.schema_template_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_bd_subnet) | resource |
 | [mso_schema_template_contract.schema_template_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract) | resource |
