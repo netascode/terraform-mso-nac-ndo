@@ -124,7 +124,6 @@ module "site" {
 |------|------|
 | [local_sensitive_file.defaults](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/sensitive_file) | resource |
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
-| [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
 | [mso_schema_site_anp.schema_site_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp) | resource |
@@ -140,7 +139,6 @@ module "site" {
 | [mso_schema_template_vrf.schema_template_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant) | resource |
-| [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/tenant) | data source |
