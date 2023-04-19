@@ -675,14 +675,62 @@ resource "mso_schema_site_anp_epg_subnet" "schema_site_anp_epg_subnet" {
   ]
 }
 
-#resource "mso_schema_template_anp_epg_useg_attr" "useg_attr" {
-#}
+locals {
+  endpoint_groups_sites_static_ports = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : [
+              for sp in try(site.static_ports, []) : {
+                key                  = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${try(sp.pod, "1")}/${try(sp.node, "")}/${try(sp.node_1, "")}/${try(sp.node_1, "")}/${try(sp.fex, "")}/${try(sp.module, "1")}/${try(sp.port, "")}/${try(sp.channel, "")}/${try(sp.vlan, "")}"
+                schema_id            = mso_schema.schema[schema.name].id
+                site_id              = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                template_name        = template.name
+                anp_name             = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name             = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                path_type            = try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type) == "pc" ? "dpc" : try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type)
+                pod                  = "pod-${try(sp.pod, 1)}"
+                leaf                 = try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type) == "vpc" ? "${sp.node_1}-${sp.node_2}" : try(sp.node, null)
+                path                 = try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type) == "port" ? "eth${try(sp.module, 1)}/${sp.port}" : "${sp.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
+                mode                 = try(sp.mode, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.mode)
+                deployment_immediacy = try(sp.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.deployment_immediacy)
+                vlan                 = try(sp.vlan, null)
+                micro_seg_vlan       = try(sp.useg_vlan, null)
+                fex                  = try(sp.fex, null)
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp_epg_static_port" "schema_site_anp_epg_static_prot" {
+  for_each             = { for sp in local.endpoint_groups_sites_static_ports : sp.key => sp }
+  schema_id            = each.value.schema_id
+  site_id              = each.value.site_id
+  template_name        = each.value.template_name
+  anp_name             = each.value.anp_name
+  epg_name             = each.value.epg_name
+  path_type            = each.value.path_type
+  pod                  = each.value.pod
+  leaf                 = each.value.leaf
+  path                 = each.value.path
+  mode                 = each.value.mode
+  deployment_immediacy = each.value.deployment_immediacy
+  vlan                 = each.value.vlan
+  micro_seg_vlan       = each.value.micro_seg_vlan
+  fex                  = each.value.fex
+
+  depends_on = [
+    mso_schema_template_anp_epg.schema_template_anp_epg,
+  ]
+}
 
 #resource "mso_schema_site_anp_epg_domain" "domain" {
 #}
 
 #resource "mso_schema_site_anp_epg_static_leaf" "static_leaf" {
-#}
-
-#resource "mso_schema_site_anp_epg_static_port" "static_port" {
 #}
