@@ -122,7 +122,7 @@ locals {
       for template in try(schema.templates, []) : [
         for contract in try(template.contracts, []) : concat([
           for filter in try(contract.filters, []) : {
-            key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+            key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/both"
             schema_id            = mso_schema.schema[schema.name].id
             template_name        = template.name
             contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
@@ -135,7 +135,7 @@ locals {
           ],
           [
             for filter in try(contract.provider_to_consumer_filters, []) : {
-              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/provider"
               schema_id            = mso_schema.schema[schema.name].id
               template_name        = template.name
               contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
@@ -148,7 +148,7 @@ locals {
           ],
           [
             for filter in try(contract.consumer_to_provider_filters, []) : {
-              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}"
+              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/consumer"
               schema_id            = mso_schema.schema[schema.name].id
               template_name        = template.name
               contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
@@ -174,6 +174,8 @@ resource "mso_schema_template_contract_filter" "schema_template_contract_filter"
   filter_template_name = each.value.filter_template_name
   filter_name          = each.value.filter_name
   directives           = each.value.directives
+
+  depends_on = [mso_schema_template_contract.schema_template_contract]
 }
 
 locals {
@@ -202,6 +204,55 @@ resource "mso_schema_template_vrf" "schema_template_vrf" {
   display_name     = each.value.display_name
   layer3_multicast = each.value.layer3_multicast
   vzany            = each.value.vzany
+}
+
+locals {
+  vrfs_contracts = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for vrf in try(template.vrfs, []) : concat([
+          for contract in try(vrf.contracts.consumers, []) : {
+            key                    = "${schema.name}/${template.name}/${vrf.name}/${contract.name}/consumer"
+            schema_id              = mso_schema.schema[schema.name].id
+            template_name          = template.name
+            vrf_name               = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+            contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+            contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+            contract_template_name = try(contract.template, null)
+            relationship_type      = "consumer"
+          }
+          ],
+          [
+            for contract in try(vrf.contracts.providers, []) : {
+              key                    = "${schema.name}/${template.name}/${vrf.name}/${contract.name}/provider"
+              schema_id              = mso_schema.schema[schema.name].id
+              template_name          = template.name
+              vrf_name               = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+              contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_template_name = try(contract.template, null)
+              relationship_type      = "provider"
+            }
+        ])
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_vrf_contract" "schema_template_vrf_contract" {
+  for_each               = { for contract in local.vrfs_contracts : contract.key => contract }
+  schema_id              = each.value.schema_id
+  template_name          = each.value.template_name
+  vrf_name               = each.value.vrf_name
+  contract_name          = each.value.contract_name
+  contract_schema_id     = each.value.contract_schema_id
+  contract_template_name = each.value.contract_template_name
+  relationship_type      = each.value.relationship_type
+
+  depends_on = [
+    mso_schema_template_vrf.schema_template_vrf,
+    mso_schema_template_contract.schema_template_contract,
+  ]
 }
 
 locals {
@@ -499,7 +550,7 @@ locals {
         for ap in try(template.application_profiles, []) : [
           for epg in try(ap.endpoint_groups, []) : concat([
             for contract in try(epg.contracts.consumers, []) : {
-              key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}"
+              key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/consumer"
               schema_id         = mso_schema.schema[schema.name].id
               template_name     = template.name
               anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
@@ -510,7 +561,7 @@ locals {
             ],
             [
               for contract in try(epg.contracts.providers, []) : {
-                key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}"
+                key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/provider"
                 schema_id         = mso_schema.schema[schema.name].id
                 template_name     = template.name
                 anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
@@ -536,6 +587,7 @@ resource "mso_schema_template_anp_epg_contract" "schema_template_anp_epg_contrac
 
   depends_on = [
     mso_schema_template_anp_epg.schema_template_anp_epg,
+    mso_schema_template_contract.schema_template_contract,
   ]
 }
 
