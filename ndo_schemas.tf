@@ -1024,3 +1024,52 @@ resource "mso_schema_template_external_epg" "schema_template_external_epg" {
     mso_schema_template_anp.schema_template_anp,
   ]
 }
+
+locals {
+  external_epgs_contracts = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : concat([
+          for contract in try(epg.contracts.consumers, []) : {
+            key                    = "${schema.name}/${template.name}/${epg.name}/${contract.name}/consumer"
+            schema_id              = mso_schema.schema[schema.name].id
+            template_name          = template.name
+            external_epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+            contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+            contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+            contract_template_name = try(contract.template, null)
+            relationship_type      = "consumer"
+          }
+          ],
+          [
+            for contract in try(epg.contracts.providers, []) : {
+              key                    = "${schema.name}/${template.name}/${epg.name}/${contract.name}/provider"
+              schema_id              = mso_schema.schema[schema.name].id
+              template_name          = template.name
+              external_epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+              contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_template_name = try(contract.template, null)
+              relationship_type      = "provider"
+            }
+        ])
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_external_epg_contract" "schema_template_external_epg_contract" {
+  for_each               = { for contract in local.external_epgs_contracts : contract.key => contract }
+  schema_id              = each.value.schema_id
+  template_name          = each.value.template_name
+  external_epg_name      = each.value.external_epg_name
+  contract_name          = each.value.contract_name
+  contract_schema_id     = each.value.contract_schema_id
+  contract_template_name = each.value.contract_template_name
+  relationship_type      = each.value.relationship_type
+
+  depends_on = [
+    mso_schema_template_external_epg.schema_template_external_epg,
+    mso_schema_template_contract.schema_template_contract,
+  ]
+}

@@ -46,5 +46,6 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_vmware,
     mso_schema_template_l3out.schema_template_l3out,
     mso_schema_template_external_epg.schema_template_external_epg,
+    mso_schema_template_external_epg_contract.schema_template_external_epg_contract,
   ]
 }
