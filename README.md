@@ -126,6 +126,10 @@ module "site" {
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
+| [mso_schema_site_anp.schema_site_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp) | resource |
+| [mso_schema_site_anp_epg.schema_site_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg) | resource |
+| [mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_physical](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_domain) | resource |
+| [mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_vmware](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_domain) | resource |
 | [mso_schema_site_anp_epg_static_leaf.schema_site_anp_epg_static_leaf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_static_leaf) | resource |
 | [mso_schema_site_anp_epg_static_port.schema_site_anp_epg_static_port](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_static_port) | resource |
 | [mso_schema_site_anp_epg_subnet.schema_site_anp_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_subnet) | resource |

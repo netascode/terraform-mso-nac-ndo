@@ -32,6 +32,8 @@ resource "mso_schema_site" "schema_site" {
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.site[each.value.site_name].id
   undeploy_on_destroy = true
+
+  depends_on = [mso_schema.schema]
 }
 
 locals {
@@ -342,7 +344,10 @@ resource "mso_schema_site_bd" "schema_site_bd" {
   site_id       = each.value.site_id
   host_route    = each.value.host_route
 
-  depends_on = [mso_schema_template_bd.schema_template_bd]
+  depends_on = [
+    mso_schema_site.schema_site,
+    mso_schema_template_bd.schema_template_bd,
+  ]
 }
 
 locals {
@@ -480,6 +485,37 @@ resource "mso_schema_template_anp" "schema_template_anp" {
 }
 
 locals {
+  application_profiles_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for site in distinct(flatten([for epg in try(ap.endpoint_groups, []) : [for site in try(epg.sites, []) : site.name]])) : {
+            key           = "${schema.name}/${template.name}/${ap.name}/${site}"
+            schema_id     = mso_schema.schema[schema.name].id
+            template_name = template.name
+            site_id       = var.manage_sites ? mso_site.site[site].id : data.mso_site.site[site].id
+            anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp" "schema_site_anp" {
+  for_each      = { for ap in local.application_profiles_sites : ap.key => ap }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  site_id       = each.value.site_id
+  anp_name      = each.value.anp_name
+
+  depends_on = [
+    mso_schema_site.schema_site,
+    mso_schema_template_anp.schema_template_anp,
+  ]
+}
+
+locals {
   endpoint_groups = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -540,6 +576,41 @@ resource "mso_schema_template_anp_epg" "schema_template_anp_epg" {
   depends_on = [
     mso_schema_template_bd.schema_template_bd,
     mso_schema_template_anp.schema_template_anp,
+  ]
+}
+
+locals {
+  endpoint_groups_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : {
+              key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}"
+              schema_id     = mso_schema.schema[schema.name].id
+              template_name = template.name
+              site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+              anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+              epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+            }
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp_epg" "schema_site_anp_epg" {
+  for_each      = { for epg in local.endpoint_groups_sites : epg.key => epg }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  site_id       = each.value.site_id
+  anp_name      = each.value.anp_name
+  epg_name      = each.value.epg_name
+
+  depends_on = [
+    mso_schema_site_anp.schema_site_anp,
+    mso_schema_template_anp_epg.schema_template_anp_epg,
   ]
 }
 
@@ -637,7 +708,7 @@ locals {
           for epg in try(ap.endpoint_groups, []) : [
             for site in try(epg.sites, []) : [
               for subnet in try(site.subnets, []) : {
-                key                = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${subnet.ip}"
+                key                = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${subnet.ip}"
                 schema_id          = mso_schema.schema[schema.name].id
                 site_id            = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
                 template_name      = template.name
@@ -671,6 +742,7 @@ resource "mso_schema_site_anp_epg_subnet" "schema_site_anp_epg_subnet" {
   no_default_gateway = each.value.no_default_gateway
 
   depends_on = [
+    mso_schema_site_anp_epg.schema_site_anp_epg,
     mso_schema_template_anp_epg_subnet.schema_template_anp_epg_subnet,
   ]
 }
@@ -683,7 +755,7 @@ locals {
           for epg in try(ap.endpoint_groups, []) : [
             for site in try(epg.sites, []) : [
               for sp in try(site.static_ports, []) : {
-                key                  = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${try(sp.pod, "1")}/${try(sp.node, "")}/${try(sp.node_1, "")}/${try(sp.node_1, "")}/${try(sp.fex, "")}/${try(sp.module, "1")}/${try(sp.port, "")}/${try(sp.channel, "")}/${try(sp.vlan, "")}"
+                key                  = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${try(sp.pod, "1")}/${try(sp.node, "")}/${try(sp.node_1, "")}/${try(sp.node_1, "")}/${try(sp.fex, "")}/${try(sp.module, "1")}/${try(sp.port, "")}/${try(sp.channel, "")}/${try(sp.vlan, "")}"
                 schema_id            = mso_schema.schema[schema.name].id
                 site_id              = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
                 template_name        = template.name
@@ -725,7 +797,7 @@ resource "mso_schema_site_anp_epg_static_port" "schema_site_anp_epg_static_port"
   fex                  = each.value.fex
 
   depends_on = [
-    mso_schema_template_anp_epg.schema_template_anp_epg,
+    mso_schema_site_anp_epg.schema_site_anp_epg,
   ]
 }
 
@@ -737,7 +809,7 @@ locals {
           for epg in try(ap.endpoint_groups, []) : [
             for site in try(epg.sites, []) : [
               for sl in try(site.static_leafs, []) : {
-                key             = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${try(sl.pod, "1")}/${try(sl.node, "")}/${try(sl.vlan, "")}"
+                key             = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${try(sl.pod, "1")}/${try(sl.node, "")}/${try(sl.vlan, "")}"
                 schema_id       = mso_schema.schema[schema.name].id
                 site_id         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
                 template_name   = template.name
@@ -765,9 +837,112 @@ resource "mso_schema_site_anp_epg_static_leaf" "schema_site_anp_epg_static_leaf"
   port_encap_vlan = each.value.port_encap_vlan
 
   depends_on = [
-    mso_schema_template_anp_epg.schema_template_anp_epg,
+    mso_schema_site_anp_epg.schema_site_anp_epg,
   ]
 }
 
-#resource "mso_schema_site_anp_epg_domain" "domain" {
-#}
+locals {
+  endpoint_groups_sites_domains_physical = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : [
+              for pd in try(site.physical_domains, []) : {
+                key                  = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${pd.name}"
+                schema_id            = mso_schema.schema[schema.name].id
+                site_id              = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                template_name        = template.name
+                anp_name             = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name             = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                domain_name          = "${pd.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.physical_domain_name_suffix}"
+                domain_type          = "physicalDomain"
+                deploy_immediacy     = try(pd.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.deployment_immediacy)
+                resolution_immediacy = try(pd.resolution_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.resolution_immediacy)
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_physical" {
+  for_each             = { for pd in local.endpoint_groups_sites_domains_physical : pd.key => pd }
+  schema_id            = each.value.schema_id
+  site_id              = each.value.site_id
+  template_name        = each.value.template_name
+  anp_name             = each.value.anp_name
+  epg_name             = each.value.epg_name
+  domain_name          = each.value.domain_name
+  domain_type          = each.value.domain_type
+  deploy_immediacy     = each.value.deploy_immediacy
+  resolution_immediacy = each.value.resolution_immediacy
+
+  depends_on = [
+    mso_schema_site_anp_epg.schema_site_anp_epg,
+  ]
+}
+
+locals {
+  endpoint_groups_sites_domains_vmware = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : [
+              for vmm in try(site.vmware_vmm_domains, []) : {
+                key                      = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${vmm.name}"
+                schema_id                = mso_schema.schema[schema.name].id
+                site_id                  = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                template_name            = template.name
+                anp_name                 = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name                 = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                domain_name              = "${vmm.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.vmm_domain_name_suffix}"
+                domain_type              = "vmmDomain"
+                vmm_domain_type          = "VMware"
+                deploy_immediacy         = try(vmm.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.deployment_immediacy)
+                resolution_immediacy     = try(vmm.resolution_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.resolution_immediacy)
+                vlan_encap_mode          = try(vmm.vlan_mode, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.vlan_mode)
+                allow_micro_segmentation = try(vmm.u_segmentation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.u_segmentation)
+                switching_mode           = "native"
+                switch_type              = "default"
+                micro_seg_vlan_type      = try(vmm.u_segmentation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.u_segmentation) ? "vlan" : null
+                micro_seg_vlan           = try(vmm.u_segmentation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.u_segmentation) ? vmm.useg_vlan : null
+                port_encap_vlan_type     = try(vmm.vlan_mode, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.vlan_mode) == "static" ? "vlan" : null
+                port_encap_vlan          = try(vmm.vlan_mode, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.vlan_mode) == "static" ? vmm.vlan : null
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_vmware" {
+  for_each                 = { for vmm in local.endpoint_groups_sites_domains_vmware : vmm.key => vmm }
+  schema_id                = each.value.schema_id
+  site_id                  = each.value.site_id
+  template_name            = each.value.template_name
+  anp_name                 = each.value.anp_name
+  epg_name                 = each.value.epg_name
+  domain_name              = each.value.domain_name
+  domain_type              = each.value.domain_type
+  vmm_domain_type          = each.value.vmm_domain_type
+  deploy_immediacy         = each.value.deploy_immediacy
+  resolution_immediacy     = each.value.resolution_immediacy
+  vlan_encap_mode          = each.value.vlan_encap_mode
+  allow_micro_segmentation = each.value.allow_micro_segmentation
+  switching_mode           = each.value.switching_mode
+  switch_type              = each.value.switch_type
+  micro_seg_vlan_type      = each.value.micro_seg_vlan_type
+  micro_seg_vlan           = each.value.micro_seg_vlan
+  port_encap_vlan_type     = each.value.port_encap_vlan_type
+  port_encap_vlan          = each.value.port_encap_vlan
+
+  depends_on = [
+    mso_schema_site_anp_epg.schema_site_anp_epg,
+  ]
+}
