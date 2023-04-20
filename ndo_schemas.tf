@@ -1073,3 +1073,47 @@ resource "mso_schema_template_external_epg_contract" "schema_template_external_e
     mso_schema_template_contract.schema_template_contract,
   ]
 }
+
+locals {
+  external_epgs_subnets = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : [
+          for subnet in try(epg.subnets, []) : {
+            key               = "${schema.name}/${template.name}/${epg.name}/${subnet.prefix}"
+            schema_id         = mso_schema.schema[schema.name].id
+            template_name     = template.name
+            external_epg_name = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+            ip                = subnet.prefix
+            scope = concat(
+              try(subnet.export_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.export_route_control) ? ["export-rtctrl"] : [],
+              try(subnet.import_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.import_route_control) ? ["import-rtctrl"] : [],
+              try(subnet.import_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.import_security) ? ["import-security"] : [],
+              try(subnet.shared_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.shared_route_control) ? ["shared-rtctrl"] : [],
+              try(subnet.shared_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.shared_security) ? ["shared-security"] : []
+            )
+            aggregate = concat(
+              try(subnet.aggregate_export, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.aggregate_export) ? ["export-rtctrl"] : [],
+              try(subnet.aggregate_import, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.aggregate_import) ? ["import-rtctrl"] : [],
+              try(subnet.aggregate_shared, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.aggregate_shared) ? ["shared-rtctrl"] : []
+            )
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_external_epg_subnet" "schema_template_external_epg_subnet" {
+  for_each          = { for subnet in local.external_epgs_subnets : subnet.key => subnet }
+  schema_id         = each.value.schema_id
+  template_name     = each.value.template_name
+  external_epg_name = each.value.external_epg_name
+  ip                = each.value.ip
+  scope             = each.value.scope
+  aggregate         = each.value.aggregate
+
+  depends_on = [
+    mso_schema_template_external_epg.schema_template_external_epg,
+  ]
+}
