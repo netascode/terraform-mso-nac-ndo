@@ -972,3 +972,55 @@ resource "mso_schema_template_l3out" "schema_template_l3out" {
   display_name  = each.value.display_name
   vrf_name      = each.value.vrf_name
 }
+
+locals {
+  external_epgs = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : {
+          key                        = "${schema.name}/${template.name}/${epg.name}"
+          schema_id                  = mso_schema.schema[schema.name].id
+          template_name              = template.name
+          external_epg_name          = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+          display_name               = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+          external_epg_type          = try(epg.type, local.defaults.ndo.schemas.templates.external_endpoint_groups.type)
+          vrf_name                   = "${epg.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          vrf_schema_id              = try(mso_schema.schema[epg.vrf.schema].id, mso_schema.schema[schema.name].id)
+          vrf_template_name          = try(epg.vrf.template, template.name)
+          include_in_preferred_group = try(epg.preferred_group, local.defaults.ndo.schemas.templates.external_endpoint_groups.preferred_group)
+          l3out_name                 = try(epg.l3out.name, null) != null ? "${epg.l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}" : null
+          l3out_schema_id            = try(epg.l3out.name, null) != null ? try(mso_schema.schema[epg.l3out.schema].id, mso_schema.schema[schema.name].id) : null
+          l3out_template_name        = try(epg.l3out.name, null) != null ? try(epg.l3out.template, template.name) : null
+          anp_name                   = try(epg.application_profile.name, null) != null ? "${epg.application_profile.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}" : null
+          anp_schema_id              = try(epg.application_profile.name, null) != null ? try(mso_schema.schema[epg.application_profile.schema].id, mso_schema.schema[schema.name].id) : null
+          anp_template_name          = try(epg.application_profile.name, null) != null ? try(epg.application_profile.template, template.name) : null
+        }
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_external_epg" "schema_template_external_epg" {
+  for_each                   = { for epg in local.external_epgs : epg.key => epg }
+  schema_id                  = each.value.schema_id
+  template_name              = each.value.template_name
+  external_epg_name          = each.value.external_epg_name
+  display_name               = each.value.display_name
+  external_epg_type          = each.value.external_epg_type
+  vrf_name                   = each.value.vrf_name
+  vrf_schema_id              = each.value.vrf_schema_id
+  vrf_template_name          = each.value.vrf_template_name
+  include_in_preferred_group = each.value.include_in_preferred_group
+  l3out_name                 = each.value.l3out_name
+  l3out_schema_id            = each.value.l3out_schema_id
+  l3out_template_name        = each.value.l3out_template_name
+  anp_name                   = each.value.anp_name
+  anp_schema_id              = each.value.anp_schema_id
+  anp_template_name          = each.value.anp_template_name
+
+  depends_on = [
+    mso_schema_template_vrf.schema_template_vrf,
+    mso_schema_template_l3out.schema_template_l3out,
+    mso_schema_template_anp.schema_template_anp,
+  ]
+}
