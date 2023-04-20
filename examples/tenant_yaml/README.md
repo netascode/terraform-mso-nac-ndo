@@ -15,6 +15,8 @@ ndo:
   sites:
     - name: APIC1
       id: 1
+      apic_urls:
+        - https://10.1.1.1
   tenants:
     - name: NDO1
       sites:

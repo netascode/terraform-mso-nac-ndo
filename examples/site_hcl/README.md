@@ -19,8 +19,9 @@ module "site" {
     ndo = {
       sites = [
         {
-          name = "APIC1"
-          id   = 1
+          name      = "APIC1"
+          id        = 1
+          apic_urls = ["https://10.1.1.1"]
         }
       ]
     }
