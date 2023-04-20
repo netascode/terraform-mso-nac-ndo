@@ -123,6 +123,7 @@ module "site" {
 | Name | Type |
 |------|------|
 | [local_sensitive_file.defaults](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/sensitive_file) | resource |
+| [mso_rest.schema_site_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
@@ -144,12 +145,14 @@ module "site" {
 | [mso_schema_template_bd_subnet.schema_template_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_bd_subnet) | resource |
 | [mso_schema_template_contract.schema_template_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract) | resource |
 | [mso_schema_template_contract_filter.schema_template_contract_filter](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_filter) | resource |
+| [mso_schema_template_contract_service_graph.schema_template_contract_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_service_graph) | resource |
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg) | resource |
 | [mso_schema_template_external_epg_contract.schema_template_external_epg_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_contract) | resource |
 | [mso_schema_template_external_epg_subnet.schema_template_external_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_subnet) | resource |
 | [mso_schema_template_filter_entry.schema_template_filter_entry](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_filter_entry) | resource |
 | [mso_schema_template_l3out.schema_template_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_l3out) | resource |
+| [mso_schema_template_service_graph.schema_template_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_service_graph) | resource |
 | [mso_schema_template_vrf.schema_template_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf) | resource |
 | [mso_schema_template_vrf_contract.schema_template_vrf_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf_contract) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |

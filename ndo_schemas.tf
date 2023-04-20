@@ -119,6 +119,43 @@ resource "mso_schema_template_contract" "schema_template_contract" {
 }
 
 locals {
+  contracts_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : [
+          for site in try(template.sites, []) : {
+            key       = "${schema.name}/${template.name}/${contract.name}/${site}"
+            schema_id = mso_schema.schema[schema.name].id
+            patch = [{
+              op   = "add"
+              path = "/sites/${var.manage_sites ? mso_site.site[site].id : data.mso_site.site[site].id}-${template.name}/contracts/-"
+              value = {
+                contractRef = {
+                  contractName = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+                  schemaId     = mso_schema.schema[schema.name].id
+                  templateName = template.name
+                }
+              }
+            }]
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_rest" "schema_site_contract" {
+  for_each = { for contract in local.contracts_sites : contract.key => contract }
+  path     = "api/v1/schemas/${each.value.schema_id}?validate=false"
+  method   = "PATCH"
+  payload  = jsonencode(each.value.patch)
+
+  depends_on = [
+    mso_schema_template_contract.schema_template_contract,
+  ]
+}
+
+locals {
   contracts_filters = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -178,6 +215,79 @@ resource "mso_schema_template_contract_filter" "schema_template_contract_filter"
   directives           = each.value.directives
 
   depends_on = [mso_schema_template_contract.schema_template_contract]
+}
+
+locals {
+  contracts_service_graphs_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : [
+          for node in try(contract.service_graph.nodes, []) : [
+            for site in try(node.provider.sites, []) : {
+              key                         = "${schema.name}/${template.name}/${contract.name}/${node.name}/${site.name}"
+              schema_id                   = mso_schema.schema[schema.name].id
+              site_id                     = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+              template_name               = template.name
+              contract_name               = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              service_graph_name          = "${contract.service_graph.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
+              service_graph_schema_id     = try(contract.service_graph.schema, null) != null ? mso_schema.schema[contract.service_graph.schema].id : null
+              service_graph_template_name = try(contract.service_graph.template, null)
+              node_relationship = [{
+                key                                       = "${node.provider.bridge_domain}/${node.consumer.bridge_domain}/${site.logical_interface}/${site.redirect_policy}/${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].logical_interface}/${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].redirect_policy}"
+                provider_connector_bd_name                = node.provider.bridge_domain
+                provider_connector_bd_schema_id           = try(node.provider.schema, null) != null ? mso_schema.schema[node.provider.schema].id : null
+                provider_connector_bd_template_name       = try(node.provider.template, null)
+                consumer_connector_bd_name                = node.consumer.bridge_domain
+                consumer_connector_bd_schema_id           = try(node.consumer.schema, null) != null ? mso_schema.schema[node.consumer.schema].id : null
+                consumer_connector_bd_template_name       = try(node.consumer.template, null)
+                provider_connector_cluster_interface      = "${site.logical_interface}${local.defaults.ndo.schemas.templates.service_graphs.logical_interface_name_suffix}"
+                consumer_connector_cluster_interface      = "${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].logical_interface}${local.defaults.ndo.schemas.templates.service_graphs.logical_interface_name_suffix}"
+                provider_connector_redirect_policy_tenant = try(site.tenant, template.tenant)
+                provider_connector_redirect_policy        = "${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
+                consumer_connector_redirect_policy_tenant = try([for s in try(node.consumer.sites, []) : s if s.name == site.name][0].tenant, template.tenant)
+                consumer_connector_redirect_policy        = "${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
+              }]
+            }
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_contract_service_graph" "schema_template_contract_service_graph" {
+  for_each                    = { for sg in local.contracts_service_graphs_sites : sg.key => sg }
+  schema_id                   = each.value.schema_id
+  site_id                     = each.value.site_id
+  template_name               = each.value.template_name
+  contract_name               = each.value.contract_name
+  service_graph_name          = each.value.service_graph_name
+  service_graph_schema_id     = each.value.service_graph_schema_id
+  service_graph_template_name = each.value.service_graph_template_name
+
+  dynamic "node_relationship" {
+    for_each = { for node_relationship in try(each.value.node_relationship, []) : node_relationship.key => node_relationship }
+    content {
+      provider_connector_bd_name                = node_relationship.value.provider_connector_bd_name
+      provider_connector_bd_schema_id           = node_relationship.value.provider_connector_bd_schema_id
+      provider_connector_bd_template_name       = node_relationship.value.provider_connector_bd_template_name
+      consumer_connector_bd_name                = node_relationship.value.consumer_connector_bd_name
+      consumer_connector_bd_schema_id           = node_relationship.value.consumer_connector_bd_schema_id
+      consumer_connector_bd_template_name       = node_relationship.value.consumer_connector_bd_template_name
+      provider_connector_cluster_interface      = node_relationship.value.provider_connector_cluster_interface
+      consumer_connector_cluster_interface      = node_relationship.value.consumer_connector_cluster_interface
+      provider_connector_redirect_policy_tenant = node_relationship.value.provider_connector_redirect_policy_tenant
+      provider_connector_redirect_policy        = node_relationship.value.provider_connector_redirect_policy
+      consumer_connector_redirect_policy_tenant = node_relationship.value.consumer_connector_redirect_policy_tenant
+      consumer_connector_redirect_policy        = node_relationship.value.consumer_connector_redirect_policy
+    }
+  }
+
+  depends_on = [
+    mso_schema_template_contract.schema_template_contract,
+    mso_schema_template_service_graph.schema_template_service_graph,
+    mso_rest.schema_site_contract,
+  ]
 }
 
 locals {
@@ -1116,4 +1226,47 @@ resource "mso_schema_template_external_epg_subnet" "schema_template_external_epg
   depends_on = [
     mso_schema_template_external_epg.schema_template_external_epg,
   ]
+}
+
+locals {
+  service_graphs = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for sg in try(template.service_graphs, []) : {
+          key                = "${schema.name}/${template.name}/${sg.name}"
+          schema_id          = mso_schema.schema[schema.name].id
+          template_name      = template.name
+          service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
+          service_node_type  = "other"
+          site_nodes = flatten([
+            for node in try(sg.nodes, []) : [
+              for site in try(node.sites, []) : {
+                key         = "${var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id}/${try(site.tenant, template.tenant)}/${site.device}"
+                site_id     = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                tenant_name = try(site.tenant, template.tenant)
+                node_name   = "${site.device}${local.defaults.ndo.schemas.templates.service_graphs.device_name_suffix}"
+              }
+            ]
+          ])
+        }
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_service_graph" "schema_template_service_graph" {
+  for_each           = { for sg in local.service_graphs : sg.key => sg }
+  schema_id          = each.value.schema_id
+  template_name      = each.value.template_name
+  service_graph_name = each.value.service_graph_name
+  service_node_type  = each.value.service_node_type
+
+  dynamic "site_nodes" {
+    for_each = { for site_node in try(each.value.site_nodes, []) : site_node.key => site_node }
+    content {
+      site_id     = site_nodes.value.site_id
+      tenant_name = site_nodes.value.tenant_name
+      node_name   = site_nodes.value.node_name
+    }
+  }
 }
