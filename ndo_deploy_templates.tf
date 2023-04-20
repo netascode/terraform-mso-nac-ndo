@@ -44,5 +44,6 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_site_anp_epg_static_leaf.schema_site_anp_epg_static_leaf,
     mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_physical,
     mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_vmware,
+    mso_schema_template_l3out.schema_template_l3out,
   ]
 }

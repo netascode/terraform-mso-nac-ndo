@@ -946,3 +946,29 @@ resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_vmware" {
     mso_schema_site_anp_epg.schema_site_anp_epg,
   ]
 }
+
+locals {
+  l3outs = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for l3out in try(template.l3outs, []) : {
+          key           = "${schema.name}/${template.name}/${l3out.name}"
+          schema_id     = mso_schema.schema[schema.name].id
+          template_name = template.name
+          l3out_name    = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
+          display_name  = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
+          vrf_name      = "${l3out.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+        }
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_l3out" "schema_template_l3out" {
+  for_each      = { for l3out in local.l3outs : l3out.key => l3out }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  l3out_name    = each.value.l3out_name
+  display_name  = each.value.display_name
+  vrf_name      = each.value.vrf_name
+}
