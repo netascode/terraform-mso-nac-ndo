@@ -29,7 +29,10 @@ resource "mso_tenant" "tenant" {
   dynamic "site_associations" {
     for_each = { for site in try(each.value.sites, []) : site.name => site }
     content {
-      site_id = var.manage_sites ? mso_site.site[site_associations.value.name].id : data.mso_site.site[site_associations.value.name].id
+      site_id               = var.manage_sites ? mso_site.site[site_associations.value.name].id : data.mso_site.site[site_associations.value.name].id
+      vendor                = try(site_associations.value.azure_subscription_id, null) != null ? "azure" : null
+      azure_subscription_id = try(site_associations.value.azure_subscription_id, null) != null ? site_associations.value.azure_subscription_id : null
+      azure_access_type     = try(site_associations.value.azure_subscription_id, null) != null ? "managed" : null
     }
   }
 }
