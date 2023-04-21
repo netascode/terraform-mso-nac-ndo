@@ -151,6 +151,7 @@ resource "mso_rest" "schema_site_contract" {
   payload  = jsonencode(each.value.patch)
 
   depends_on = [
+    mso_schema_site.schema_site,
     mso_schema_template_contract.schema_template_contract,
   ]
 }
