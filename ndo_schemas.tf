@@ -320,6 +320,34 @@ resource "mso_schema_template_vrf" "schema_template_vrf" {
 }
 
 locals {
+  vrfs_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for vrf in try(template.vrfs, []) : [
+          for site in try(vrf.sites, []) : {
+            key           = "${schema.name}/${template.name}/${vrf.name}/${site.name}"
+            schema_id     = mso_schema.schema[schema.name].id
+            site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+            template_name = template.name
+            vrf_name      = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_vrf" "schema_site_vrf" {
+  for_each      = { for site in local.vrfs_sites : site.key => site }
+  schema_id     = each.value.schema_id
+  site_id       = each.value.site_id
+  template_name = each.value.template_name
+  vrf_name      = each.value.vrf_name
+
+  depends_on = [mso_schema_template_vrf.schema_template_vrf]
+}
+
+locals {
   vrfs_contracts = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -366,6 +394,73 @@ resource "mso_schema_template_vrf_contract" "schema_template_vrf_contract" {
     mso_schema_template_vrf.schema_template_vrf,
     mso_schema_template_contract.schema_template_contract,
   ]
+}
+
+locals {
+  vrfs_sites_regions = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for vrf in try(template.vrfs, []) : [
+          for site in try(vrf.sites, []) : [
+            for region in try(site.regions, []) : {
+              key                = "${schema.name}/${template.name}/${vrf.name}/${site.name}/${region.name}"
+              schema_id          = mso_schema.schema[schema.name].id
+              site_id            = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+              template_name      = template.name
+              vrf_name           = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+              region_name        = region.name
+              vpn_gateway        = try(region.vpn_gateway, local.defaults.ndo.schemas.templates.vrfs.sites.regions.vpn_gateway)
+              hub_network_enable = try(region.hub_network, local.defaults.ndo.schemas.templates.vrfs.sites.regions.hub_network)
+              hub_network = try(region.hub_network, local.defaults.ndo.schemas.templates.vrfs.sites.regions.hub_network) ? {
+                name        = region.hub_network_name
+                tenant_name = region.hub_network_tenant
+              } : null
+              cidr = [for cidr in try(region.cidrs, []) : {
+                cidr_ip = cidr.ip
+                primary = true
+                subnet = [for subnet in try(cidr.subnets, []) : {
+                  ip   = subnet.ip
+                  zone = try(subnet.zone, null)
+                  name = try(subnet.name, "")
+                }]
+              }]
+            }
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_vrf_region" "schema_site_vrf_region" {
+  for_each           = { for region in local.vrfs_sites_regions : region.key => region }
+  schema_id          = each.value.schema_id
+  site_id            = each.value.site_id
+  template_name      = each.value.template_name
+  vrf_name           = each.value.vrf_name
+  region_name        = each.value.region_name
+  vpn_gateway        = each.value.vpn_gateway
+  hub_network_enable = each.value.hub_network_enable
+  hub_network        = each.value.hub_network
+
+  dynamic "cidr" {
+    for_each = { for cidr in try(each.value.cidr, []) : cidr.cidr_ip => cidr }
+    content {
+      cidr_ip = cidr.value.cidr_ip
+      primary = cidr.value.primary
+
+      dynamic "subnet" {
+        for_each = { for subnet in try(each.value.subnet, []) : subnet.ip => subnet }
+        content {
+          ip   = subnet.value.ip
+          zone = subnet.value.zone
+          name = subnet.value.name
+        }
+      }
+    }
+  }
+
+  depends_on = [mso_schema_site_vrf.schema_site_vrf]
 }
 
 locals {

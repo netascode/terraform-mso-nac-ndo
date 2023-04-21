@@ -30,6 +30,8 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_contract_filter.schema_template_contract_filter,
     mso_schema_template_contract_service_graph.schema_template_contract_service_graph,
     mso_schema_template_vrf.schema_template_vrf,
+    mso_schema_site_vrf.schema_site_vrf,
+    mso_schema_site_vrf_region.schema_site_vrf_region,
     mso_schema_template_bd.schema_template_bd,
     mso_schema_site_bd.schema_site_bd,
     mso_schema_template_bd_subnet.schema_template_bd_subnet,
