@@ -141,6 +141,7 @@ module "site" {
 | [mso_schema_site_bd.schema_site_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd) | resource |
 | [mso_schema_site_bd_l3out.schema_site_bd_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd_l3out) | resource |
 | [mso_schema_site_bd_subnet.schema_site_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_bd_subnet) | resource |
+| [mso_schema_site_external_epg_selector.schema_site_external_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_external_epg_selector) | resource |
 | [mso_schema_site_vrf.schema_site_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_vrf) | resource |
 | [mso_schema_site_vrf_region.schema_site_vrf_region](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_vrf_region) | resource |
 | [mso_schema_template_anp.schema_template_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_anp) | resource |
@@ -155,6 +156,7 @@ module "site" {
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg) | resource |
 | [mso_schema_template_external_epg_contract.schema_template_external_epg_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_contract) | resource |
+| [mso_schema_template_external_epg_selector.schema_template_external_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_selector) | resource |
 | [mso_schema_template_external_epg_subnet.schema_template_external_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_subnet) | resource |
 | [mso_schema_template_filter_entry.schema_template_filter_entry](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_filter_entry) | resource |
 | [mso_schema_template_l3out.schema_template_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_l3out) | resource |

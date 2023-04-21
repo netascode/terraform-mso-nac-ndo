@@ -1378,6 +1378,89 @@ resource "mso_schema_template_external_epg_subnet" "schema_template_external_epg
 }
 
 locals {
+  external_epgs_selectors = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : [
+          for selector in try(epg.selectors, []) : {
+            key               = "${schema.name}/${template.name}/${epg.name}/${selector.name}"
+            schema_id         = mso_schema.schema[schema.name].id
+            template_name     = template.name
+            external_epg_name = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+            name              = selector.name
+            expressions = [for ip in try(selector.ips, []) : {
+              key_     = ip
+              key      = "ipAddress"
+              operator = "equals"
+              value    = ip
+            }]
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_external_epg_selector" "schema_template_external_epg_selector" {
+  for_each          = { for selector in local.external_epgs_selectors : selector.key => selector }
+  schema_id         = each.value.schema_id
+  template_name     = each.value.template_name
+  external_epg_name = each.value.external_epg_name
+  name              = each.value.name
+
+  dynamic "expressions" {
+    for_each = { for expression in try(each.value.expressions, []) : expression.key_ => expression }
+    content {
+      key      = expressions.value.key
+      operator = expressions.value.operator
+      value    = expressions.value.value
+    }
+  }
+
+  depends_on = [
+    mso_schema_template_external_epg.schema_template_external_epg,
+  ]
+}
+
+locals {
+  external_epgs_sites_selectors = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : [
+          for site in try(epg.sites, []) : [
+            for selector in try(site.selectors, []) : [
+              for ip in try(selector.ips, []) : {
+                key               = "${schema.name}/${template.name}/${epg.name}/${site.name}/${selector.name}/${ip}"
+                schema_id         = mso_schema.schema[schema.name].id
+                template_name     = template.name
+                site_id           = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                external_epg_name = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
+                name              = selector.name
+                ip                = ip
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_external_epg_selector" "schema_site_external_epg_selector" {
+  for_each          = { for selector in local.external_epgs_sites_selectors : selector.key => selector }
+  schema_id         = each.value.schema_id
+  template_name     = each.value.template_name
+  site_id           = each.value.site_id
+  external_epg_name = each.value.external_epg_name
+  name              = each.value.name
+  ip                = each.value.ip
+
+  depends_on = [
+    mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
+  ]
+}
+
+locals {
   service_graphs = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
