@@ -1059,6 +1059,59 @@ resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_vmware" {
 }
 
 locals {
+  endpoint_groups_sites_selectors = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for ap in try(template.application_profiles, []) : [
+          for epg in try(ap.endpoint_groups, []) : [
+            for site in try(epg.sites, []) : [
+              for selector in try(site.selectors, []) : {
+                key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${selector.name}"
+                schema_id     = mso_schema.schema[schema.name].id
+                site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+                template_name = template.name
+                anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                name          = selector.name
+                expressions = [for expression in try(selector.expressions, []) : {
+                  key_     = "${expression.key}/${expression.operator}/${expression.value}"
+                  key      = expression.key
+                  operator = expression.operator
+                  value    = expression.value
+                }]
+              }
+            ]
+          ]
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_anp_epg_selector" "schema_site_anp_epg_selector" {
+  for_each      = { for selector in local.endpoint_groups_sites_selectors : selector.key => selector }
+  schema_id     = each.value.schema_id
+  site_id       = each.value.site_id
+  template_name = each.value.template_name
+  anp_name      = each.value.anp_name
+  epg_name      = each.value.epg_name
+  name          = each.value.name
+
+  dynamic "expressions" {
+    for_each = { for expression in try(each.value.expressions, []) : expression.key_ => expression }
+    content {
+      key      = expressions.value.key
+      operator = expressions.value.operator
+      value    = expressions.value.value
+    }
+  }
+
+  depends_on = [
+    mso_schema_site_anp_epg.schema_site_anp_epg,
+  ]
+}
+
+locals {
   l3outs = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
