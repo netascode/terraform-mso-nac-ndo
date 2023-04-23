@@ -18,8 +18,6 @@ defaults:
       protocol: "sftp"
       authentication: "password"
     system_config:
-      lockout_time: 5
-      allowed_consecutive_attempts: 5
       banner:
         type: "informational"
         state: "active"
@@ -115,7 +113,6 @@ defaults:
                 primary: false
         vrfs:
           name_suffix: ""
-          preferred_group: false
           l3_multicast: false
           vzany: false
           sites:
