@@ -100,7 +100,6 @@ locals {
           display_name  = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
           filter_type   = try(contract.type, local.defaults.ndo.schemas.templates.contracts.type)
           scope         = try(contract.scope, local.defaults.ndo.schemas.templates.contracts.scope)
-          directives    = ["none"]
         }
       ]
     ]
@@ -115,7 +114,6 @@ resource "mso_schema_template_contract" "schema_template_contract" {
   display_name  = each.value.display_name
   filter_type   = each.value.filter_type
   scope         = each.value.scope
-  directives    = each.value.directives
 }
 
 locals {
@@ -1345,11 +1343,11 @@ locals {
             external_epg_name = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
             ip                = subnet.prefix
             scope = concat(
+              try(subnet.shared_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.shared_security) ? ["shared-security"] : [],
               try(subnet.export_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.export_route_control) ? ["export-rtctrl"] : [],
               try(subnet.import_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.import_route_control) ? ["import-rtctrl"] : [],
-              try(subnet.import_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.import_security) ? ["import-security"] : [],
               try(subnet.shared_route_control, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.shared_route_control) ? ["shared-rtctrl"] : [],
-              try(subnet.shared_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.shared_security) ? ["shared-security"] : []
+              try(subnet.import_security, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.import_security) ? ["import-security"] : []
             )
             aggregate = concat(
               try(subnet.aggregate_export, local.defaults.ndo.schemas.templates.external_endpoint_groups.subnets.aggregate_export) ? ["export-rtctrl"] : [],
