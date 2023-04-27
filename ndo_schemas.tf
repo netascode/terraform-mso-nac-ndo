@@ -100,6 +100,7 @@ locals {
           display_name  = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
           filter_type   = try(contract.type, local.defaults.ndo.schemas.templates.contracts.type)
           scope         = try(contract.scope, local.defaults.ndo.schemas.templates.contracts.scope)
+          directives    = ["none"]
         }
       ]
     ]
@@ -114,6 +115,7 @@ resource "mso_schema_template_contract" "schema_template_contract" {
   display_name  = each.value.display_name
   filter_type   = each.value.filter_type
   scope         = each.value.scope
+  directives    = each.value.directives
 }
 
 locals {
