@@ -48,7 +48,7 @@ locals {
           ports = [for interface in try(spine.interfaces, []) : {
             portId        = "${try(interface.module, local.defaults.ndo.sites.pods.spines.interfaces.module)}/${interface.port}"
             ipAddress     = interface.ip
-            mtu           = try(interface.mtu, local.defaults.ndo.sites.pods.spines.interfaces.mtu)
+            mtu           = tostring(try(interface.mtu, local.defaults.ndo.sites.pods.spines.interfaces.mtu))
             routingPolicy = "${interface.ospf.policy}${local.defaults.ndo.sites.ospf_policies.name_suffix}"
             ospfAuthType  = try(interface.ospf.authentication_type, local.defaults.ndo.sites.pods.spines.interfaces.ospf.authentication_type)
             ospfAuthKey   = try(interface.ospf.authentication_key, "")
