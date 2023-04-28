@@ -1489,7 +1489,7 @@ locals {
           template_name      = template.name
           service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
           service_node_type  = "other"
-          description        = try(sg.description, "")
+          description        = try(sg.description, null)
           site_nodes = flatten([
             for node in try(sg.nodes, []) : [
               for site in try(node.sites, []) : {
