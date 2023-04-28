@@ -9,7 +9,7 @@ locals {
       gracefulRestartEnabled = try(local.ndo.fabric_connectivity.bgp.graceful_restart, local.defaults.ndo.fabric_connectivity.bgp.graceful_restart)
       maxAsLimit             = try(local.ndo.fabric_connectivity.bgp.max_as, local.defaults.ndo.fabric_connectivity.bgp.max_as)
     }
-    sites = [for site in try(local.ndo.sites, []) : {
+    sites = var.manage_site_connectivity ? [for site in try(local.ndo.sites, []) : {
       id                         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
       apicSiteId                 = site.id
       platform                   = "on-premise"
@@ -56,8 +56,13 @@ locals {
           }]
         }]
       }]
-    }]
+    }] : []
   }
+}
+
+data "mso_site" "site" {
+  for_each = toset([for site in try(local.ndo.sites, []) : site.name if !var.manage_sites && var.manage_site_connectivity])
+  name     = each.value
 }
 
 resource "mso_rest" "site_connectivity" {
