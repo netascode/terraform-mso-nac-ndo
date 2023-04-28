@@ -1470,6 +1470,7 @@ locals {
           template_name      = template.name
           service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
           service_node_type  = "other"
+          description        = try(sg.description, "")
           site_nodes = flatten([
             for node in try(sg.nodes, []) : [
               for site in try(node.sites, []) : {
@@ -1492,6 +1493,7 @@ resource "mso_schema_template_service_graph" "schema_template_service_graph" {
   template_name      = each.value.template_name
   service_graph_name = each.value.service_graph_name
   service_node_type  = each.value.service_node_type
+  description        = each.value.description
 
   dynamic "site_nodes" {
     for_each = { for site_node in try(each.value.site_nodes, []) : site_node.key => site_node }
