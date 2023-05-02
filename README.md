@@ -87,7 +87,7 @@ module "site" {
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.3.0 |
 | <a name="requirement_mso"></a> [mso](#requirement\_mso) | >= 0.9.0 |
-| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 0.2.4 |
+| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 0.2.5 |
 
 ## Inputs
 
@@ -119,7 +119,7 @@ module "site" {
 |------|---------|
 | <a name="provider_local"></a> [local](#provider\_local) | >= 2.3.0 |
 | <a name="provider_mso"></a> [mso](#provider\_mso) | >= 0.9.0 |
-| <a name="provider_utils"></a> [utils](#provider\_utils) | >= 0.2.4 |
+| <a name="provider_utils"></a> [utils](#provider\_utils) | >= 0.2.5 |
 
 ## Resources
 
