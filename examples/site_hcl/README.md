@@ -13,7 +13,7 @@ Note that this example will create resources. Resources can be destroyed with `t
 ```hcl
 module "site" {
   source  = "netascode/nac-ndo/mso"
-  version = "0.1.0"
+  version = ">= 0.7.0"
 
   model = {
     ndo = {

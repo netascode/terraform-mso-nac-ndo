@@ -34,7 +34,7 @@ ndo:
     - name: APIC1
       id: 1
       apic_urls:
-        - https://10.1.1.1
+        - "https://10.1.1.1"
   tenants:
     - name: NDO1
       sites:
@@ -46,7 +46,7 @@ ndo:
 ```hcl
 module "tenant" {
   source  = "netascode/nac-ndo/mso"
-  version = "0.1.0"
+  version = ">= 0.7.0"
 
   yaml_files = ["ndo.yaml"]
 
@@ -62,7 +62,7 @@ Configuring a Site using native HCL:
 ```hcl
 module "site" {
   source  = "netascode/nac-ndo/mso"
-  version = "0.1.0"
+  version = ">= 0.7.0"
 
   model = {
     ndo = {
