@@ -53,7 +53,7 @@ module "tenant" {
   manage_sites   = true
   manage_tenants = true
 }
-````
+```
 
 Configuring a Site using native HCL:
 
@@ -78,7 +78,21 @@ module "site" {
 
   manage_sites = true
 }
-````
+```
+
+## Issues
+
+Depending on the exact configuration, there might be issues with the NDO API returning errors due to concurrent operations. In this case one can use the `parallelism=1` command line attribute to ensure all resource operations are executed in sequence.
+
+```shell
+$ terraform apply -parallelism=1
+```
+
+Alternatively, an evironment variable can be used as well.
+
+```shell
+$ export TF_CLI_ARGS_apply="-parallelism=1"
+```
 
 ## Requirements
 
