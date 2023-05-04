@@ -234,7 +234,10 @@ resource "mso_schema_template_contract_filter" "schema_template_contract_filter"
   filter_name          = each.value.filter_name
   directives           = each.value.directives
 
-  depends_on = [mso_schema_template_contract.schema_template_contract]
+  depends_on = [
+    mso_schema_template_contract.schema_template_contract,
+    mso_schema_template_filter_entry.schema_template_filter_entry
+  ]
 }
 
 locals {
