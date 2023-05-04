@@ -22,6 +22,8 @@ There are six configuration sections which can be selectively enabled or disable
 
 The full data model documentation is available here: https://developer.cisco.com/docs/nexus-as-code/#!data-model
 
+The module currently supports only NDO version 3.7.
+
 ## Examples
 
 Configuring a Tenant using YAML:
@@ -88,7 +90,7 @@ Depending on the exact configuration, there might be issues with the NDO API ret
 $ terraform apply -parallelism=1
 ```
 
-Alternatively, an evironment variable can be used as well.
+Alternatively, an environment variable can be used as well.
 
 ```shell
 $ export TF_CLI_ARGS_apply="-parallelism=1"
