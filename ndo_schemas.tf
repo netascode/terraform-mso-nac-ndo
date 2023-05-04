@@ -849,24 +849,28 @@ locals {
         for ap in try(template.application_profiles, []) : [
           for epg in try(ap.endpoint_groups, []) : concat([
             for contract in try(epg.contracts.consumers, []) : {
-              key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/consumer"
-              schema_id         = mso_schema.schema[schema.name].id
-              template_name     = template.name
-              anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
-              epg_name          = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
-              contract_name     = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              relationship_type = "consumer"
+              key                    = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/consumer"
+              schema_id              = mso_schema.schema[schema.name].id
+              template_name          = template.name
+              anp_name               = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+              epg_name               = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+              contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_template_name = try(contract.template, null)
+              relationship_type      = "consumer"
             }
             ],
             [
               for contract in try(epg.contracts.providers, []) : {
-                key               = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/provider"
-                schema_id         = mso_schema.schema[schema.name].id
-                template_name     = template.name
-                anp_name          = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
-                epg_name          = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
-                contract_name     = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-                relationship_type = "provider"
+                key                    = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${contract.name}/provider"
+                schema_id              = mso_schema.schema[schema.name].id
+                template_name          = template.name
+                anp_name               = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+                epg_name               = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+                contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+                contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+                contract_template_name = try(contract.template, null)
+                relationship_type      = "provider"
               }
           ])
         ]
@@ -876,13 +880,15 @@ locals {
 }
 
 resource "mso_schema_template_anp_epg_contract" "schema_template_anp_epg_contract" {
-  for_each          = { for contract in local.endpoint_groups_contracts : contract.key => contract }
-  schema_id         = each.value.schema_id
-  template_name     = each.value.template_name
-  anp_name          = each.value.anp_name
-  epg_name          = each.value.epg_name
-  contract_name     = each.value.contract_name
-  relationship_type = each.value.relationship_type
+  for_each               = { for contract in local.endpoint_groups_contracts : contract.key => contract }
+  schema_id              = each.value.schema_id
+  template_name          = each.value.template_name
+  anp_name               = each.value.anp_name
+  epg_name               = each.value.epg_name
+  contract_name          = each.value.contract_name
+  contract_schema_id     = each.value.contract_schema_id
+  contract_template_name = each.value.contract_template_name
+  relationship_type      = each.value.relationship_type
 
   depends_on = [
     mso_schema_template_anp_epg.schema_template_anp_epg,
