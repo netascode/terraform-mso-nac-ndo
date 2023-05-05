@@ -4,12 +4,56 @@ locals {
       for template in try(schema.templates, []) : template.tenant
     ]
   ]))
+  managed_schemas = [for schema in local.schemas : schema.name]
+  template_schemas = distinct(flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        [for l3out in try(template.l3outs, []) : try([l3out.vrf.schema], [])],
+        [for bd in try(template.bridge_domains, []) : try([bd.vrf.schema], [])],
+        [for eepg in try(template.external_endpoint_groups, []) : [
+          [try([eepg.vrf.schema], [])],
+          [try([eepg.l3out.schema], [])],
+          [try([eepg.application_profile.schema], [])],
+          [for consumer in try(eepg.contracts.consumers, []) : try([consumer.schema], [])],
+          [for provider in try(eepg.contracts.providers, []) : try([provider.schema], [])],
+          [for site in try(eepg.sites, []) : try([site.l3out.schema], [])]
+        ]],
+        [for vrf in try(template.vrfs, []) : [
+          [for consumer in try(vrf.contracts.consumers, []) : try([consumer.schema], [])],
+          [for provider in try(vrf.contracts.providers, []) : try([provider.schema], [])],
+        ]],
+        [for ap in try(template.application_profiles, []) : [
+          [for epg in try(ap.endpoint_groups, []) : [
+            [try([epg.bridge_domain.schema], [])],
+            [try([epg.vrf.schema], [])],
+            [for consumer in try(epg.contracts.consumers, []) : try([consumer.schema], [])],
+            [for provider in try(epg.contracts.providers, []) : try([provider.schema], [])]
+          ]]
+        ]],
+        [for contract in try(template.contracts, []) : [
+          [for filter in try(contract.filters, []) : try([filter.schema], [])],
+          [for filter in try(contract.provider_to_consumer_filters, []) : try([filter.schema], [])],
+          [for filter in try(contract.consumer_to_provider_filters, []) : try([filter.schema], [])],
+          [try([contract.service_graph.schema], [])],
+          [for node in try(contract.service_graph.nodes, []) : [
+            [try([node.consumer.schema], [])],
+            [try([node.provider.schema], [])]
+          ]]
+        ]]
+      ]
+    ]
+  ]))
 }
 
 data "mso_tenant" "template_tenant" {
   for_each     = toset([for tenant in local.template_tenants : tenant if !var.manage_tenants && var.manage_schemas])
   name         = each.value
   display_name = each.value
+}
+
+data "mso_schema" "template_schema" {
+  for_each = toset([for schema in local.template_schemas : schema if !contains(local.managed_schemas, schema) && var.manage_schemas])
+  name     = each.value
 }
 
 resource "mso_schema" "schema" {
@@ -186,7 +230,7 @@ locals {
             template_name        = template.name
             contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
             filter_type          = "bothWay"
-            filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+            filter_schema_id     = try(filter.schema, null) != null ? try(mso_schema.schema[filter.schema].id, data.mso_schema.template_schema[filter.schema].id) : null
             filter_template_name = try(filter.template, null)
             filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
             directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
@@ -199,7 +243,7 @@ locals {
               template_name        = template.name
               contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
               filter_type          = "provider_to_consumer"
-              filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+              filter_schema_id     = try(filter.schema, null) != null ? try(mso_schema.schema[filter.schema].id, data.mso_schema.template_schema[filter.schema].id) : null
               filter_template_name = try(filter.template, null)
               filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
               directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
@@ -212,7 +256,7 @@ locals {
               template_name        = template.name
               contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
               filter_type          = "consumer_to_provider"
-              filter_schema_id     = try(filter.schema, null) != null ? mso_schema.schema[filter.schema].id : null
+              filter_schema_id     = try(filter.schema, null) != null ? try(mso_schema.schema[filter.schema].id, data.mso_schema.template_schema[filter.schema].id) : null
               filter_template_name = try(filter.template, null)
               filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
               directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
@@ -253,15 +297,15 @@ locals {
               template_name               = template.name
               contract_name               = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
               service_graph_name          = "${contract.service_graph.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
-              service_graph_schema_id     = try(contract.service_graph.schema, null) != null ? mso_schema.schema[contract.service_graph.schema].id : null
+              service_graph_schema_id     = try(contract.service_graph.schema, null) != null ? try(mso_schema.schema[contract.service_graph.schema].id, data.mso_schema.template_schema[contract.service_graph.schema].id) : null
               service_graph_template_name = try(contract.service_graph.template, null)
               node_relationship = [{
                 key                                       = "${node.provider.bridge_domain}/${node.consumer.bridge_domain}/${site.logical_interface}/${site.redirect_policy}/${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].logical_interface}/${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].redirect_policy}"
                 provider_connector_bd_name                = node.provider.bridge_domain
-                provider_connector_bd_schema_id           = try(node.provider.schema, null) != null ? mso_schema.schema[node.provider.schema].id : null
+                provider_connector_bd_schema_id           = try(node.provider.schema, null) != null ? try(mso_schema.schema[node.provider.schema].id, data.mso_schema.template_schema[node.provider.schema].id) : null
                 provider_connector_bd_template_name       = try(node.provider.template, null)
                 consumer_connector_bd_name                = node.consumer.bridge_domain
-                consumer_connector_bd_schema_id           = try(node.consumer.schema, null) != null ? mso_schema.schema[node.consumer.schema].id : null
+                consumer_connector_bd_schema_id           = try(node.consumer.schema, null) != null ? try(mso_schema.schema[node.consumer.schema].id, data.mso_schema.template_schema[node.consumer.schema].id) : null
                 consumer_connector_bd_template_name       = try(node.consumer.template, null)
                 provider_connector_cluster_interface      = "${site.logical_interface}${local.defaults.ndo.schemas.templates.service_graphs.logical_interface_name_suffix}"
                 consumer_connector_cluster_interface      = "${[for s in try(node.consumer.sites, []) : s if s.name == site.name][0].logical_interface}${local.defaults.ndo.schemas.templates.service_graphs.logical_interface_name_suffix}"
@@ -380,7 +424,7 @@ locals {
             template_name          = template.name
             vrf_name               = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
             contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-            contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+            contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
             contract_template_name = try(contract.template, null)
             relationship_type      = "consumer"
           }
@@ -392,7 +436,7 @@ locals {
               template_name          = template.name
               vrf_name               = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
               contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
               contract_template_name = try(contract.template, null)
               relationship_type      = "provider"
             }
@@ -496,8 +540,8 @@ locals {
           name                   = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
           display_name           = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
           vrf_name               = "${bd.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          vrf_schema_id          = try(mso_schema.schema[bd.vrf.schema].id, mso_schema.schema[schema.name].id)
-          vrf_template_name      = try(bd.vrf.template, template.name)
+          vrf_schema_id          = try(bd.vrf.schema, null) != null ? try(mso_schema.schema[bd.vrf.schema].id, data.mso_schema.template_schema[bd.vrf.schema].id) : null
+          vrf_template_name      = try(bd.vrf.template, null)
           layer2_unknown_unicast = try(bd.l2_unknown_unicast, local.defaults.ndo.schemas.templates.bridge_domains.l2_unknown_unicast, "proxy")
           intersite_bum_traffic  = try(bd.intersite_bum_traffic, local.defaults.ndo.schemas.templates.bridge_domains.intersite_bum_traffic)
           optimize_wan_bandwidth = try(bd.optimize_wan_bandwidth, local.defaults.ndo.schemas.templates.bridge_domains.optimize_wan_bandwidth)
@@ -755,11 +799,11 @@ locals {
             anp_name                   = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
             name                       = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
             bd_name                    = try(epg.bridge_domain.name, null) != null ? "${epg.bridge_domain.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}" : null
-            bd_schema_id               = try(epg.bridge_domain.name, null) != null ? try(mso_schema.schema[epg.bridge_domain.schema].id, mso_schema.schema[schema.name].id) : null
-            bd_template_name           = try(epg.bridge_domain.name, null) != null ? try(epg.bridge_domain.template, template.name) : null
+            bd_schema_id               = try(epg.bridge_domain.schema, null) != null ? try(mso_schema.schema[epg.bridge_domain.schema].id, data.mso_schema.template_schema[epg.bridge_domain.schema].id) : null
+            bd_template_name           = try(epg.bridge_domain.template, null)
             vrf_name                   = try(epg.vrf.name, null) != null ? "${epg.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}" : null
-            vrf_schema_id              = try(epg.vrf.name, null) != null ? try(mso_schema.schema[epg.vrf.schema].id, mso_schema.schema[schema.name].id) : null
-            vrf_template_name          = try(epg.vrf.name, null) != null ? try(epg.vrf.template, template.name) : null
+            vrf_schema_id              = try(epg.vrf.schema, null) != null ? try(mso_schema.schema[epg.vrf.schema].id, data.mso_schema.template_schema[epg.vrf.schema].id) : null
+            vrf_template_name          = try(epg.vrf.template, null)
             useg_epg                   = try(epg.useg, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.useg)
             intra_epg                  = try(epg.intra_epg_isolation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intra_epg_isolation) ? "enforced" : "unenforced"
             intersite_multicast_source = try(epg.intersite_multicast_source, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.intersite_multicast_source, false) # Not yet implemented in schema
@@ -855,7 +899,7 @@ locals {
               anp_name               = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
               epg_name               = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
               contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
               contract_template_name = try(contract.template, null)
               relationship_type      = "consumer"
             }
@@ -868,7 +912,7 @@ locals {
                 anp_name               = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name               = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
                 contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-                contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+                contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
                 contract_template_name = try(contract.template, null)
                 relationship_type      = "provider"
               }
@@ -1239,12 +1283,14 @@ locals {
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for l3out in try(template.l3outs, []) : {
-          key           = "${schema.name}/${template.name}/${l3out.name}"
-          schema_id     = mso_schema.schema[schema.name].id
-          template_name = template.name
-          l3out_name    = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
-          display_name  = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
-          vrf_name      = "${l3out.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          key               = "${schema.name}/${template.name}/${l3out.name}"
+          schema_id         = mso_schema.schema[schema.name].id
+          template_name     = template.name
+          l3out_name        = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
+          display_name      = "${l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
+          vrf_name          = "${l3out.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          vrf_schema_id     = try(l3out.vrf.schema, null) != null ? try(mso_schema.schema[l3out.vrf.schema].id, data.mso_schema.template_schema[l3out.vrf.schema].id) : null
+          vrf_template_name = try(l3out.vrf.template, null)
         }
       ]
     ]
@@ -1252,12 +1298,14 @@ locals {
 }
 
 resource "mso_schema_template_l3out" "schema_template_l3out" {
-  for_each      = { for l3out in local.l3outs : l3out.key => l3out }
-  schema_id     = each.value.schema_id
-  template_name = each.value.template_name
-  l3out_name    = each.value.l3out_name
-  display_name  = each.value.display_name
-  vrf_name      = each.value.vrf_name
+  for_each          = { for l3out in local.l3outs : l3out.key => l3out }
+  schema_id         = each.value.schema_id
+  template_name     = each.value.template_name
+  l3out_name        = each.value.l3out_name
+  display_name      = each.value.display_name
+  vrf_name          = each.value.vrf_name
+  vrf_schema_id     = each.value.vrf_schema_id
+  vrf_template_name = each.value.vrf_template_name
 }
 
 locals {
@@ -1272,15 +1320,15 @@ locals {
           display_name               = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
           external_epg_type          = try(epg.type, local.defaults.ndo.schemas.templates.external_endpoint_groups.type)
           vrf_name                   = "${epg.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          vrf_schema_id              = try(mso_schema.schema[epg.vrf.schema].id, mso_schema.schema[schema.name].id)
-          vrf_template_name          = try(epg.vrf.template, template.name)
+          vrf_schema_id              = try(epg.vrf.schema, null) != null ? try(mso_schema.schema[epg.vrf.schema].id, data.mso_schema.template_schema[epg.vrf.schema].id) : null
+          vrf_template_name          = try(epg.vrf.template, null)
           include_in_preferred_group = try(epg.preferred_group, local.defaults.ndo.schemas.templates.external_endpoint_groups.preferred_group)
           l3out_name                 = try(epg.l3out.name, null) != null ? "${epg.l3out.name}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}" : null
-          l3out_schema_id            = try(epg.l3out.name, null) != null ? try(mso_schema.schema[epg.l3out.schema].id, mso_schema.schema[schema.name].id) : null
-          l3out_template_name        = try(epg.l3out.name, null) != null ? try(epg.l3out.template, template.name) : null
+          l3out_schema_id            = try(epg.l3out.schema, null) != null ? try(mso_schema.schema[epg.l3out.schema].id, data.mso_schema.template_schema[epg.l3out.schema].id) : null
+          l3out_template_name        = try(epg.l3out.template, null)
           anp_name                   = try(epg.application_profile.name, null) != null ? "${epg.application_profile.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}" : null
-          anp_schema_id              = try(epg.application_profile.name, null) != null ? try(mso_schema.schema[epg.application_profile.schema].id, mso_schema.schema[schema.name].id) : null
-          anp_template_name          = try(epg.application_profile.name, null) != null ? try(epg.application_profile.template, template.name) : null
+          anp_schema_id              = try(epg.application_profile.schema, null) != null ? try(mso_schema.schema[epg.application_profile.schema].id, data.mso_schema.template_schema[epg.application_profile.schema].id) : null
+          anp_template_name          = try(epg.application_profile.template, null)
         }
       ]
     ]
@@ -1323,7 +1371,7 @@ locals {
             template_name          = template.name
             external_epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
             contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-            contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+            contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
             contract_template_name = try(contract.template, null)
             relationship_type      = "consumer"
           }
@@ -1335,7 +1383,7 @@ locals {
               template_name          = template.name
               external_epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
               contract_name          = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              contract_schema_id     = try(contract.schema, null) != null ? mso_schema.schema[contract.schema].id : null
+              contract_schema_id     = try(contract.schema, null) != null ? try(mso_schema.schema[contract.schema].id, data.mso_schema.template_schema[contract.schema].id) : null
               contract_template_name = try(contract.template, null)
               relationship_type      = "provider"
             }
