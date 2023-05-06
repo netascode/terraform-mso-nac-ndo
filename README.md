@@ -182,6 +182,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema) | data source |
+| [mso_schema.template_schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.template_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.tenant_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
