@@ -7,18 +7,19 @@ locals {
   yaml_strings_files = [
     for file in var.yaml_files : file(file)
   ]
+  model_strings = length(keys(var.model)) != 0 ? [yamlencode(var.model)] : []
   user_defaults = { "defaults" : try(lookup(yamldecode(data.utils_yaml_merge.model.output), "defaults"), {}) }
   defaults      = lookup(yamldecode(data.utils_yaml_merge.defaults.output), "defaults")
-  model         = length(keys(var.model)) == 0 ? yamldecode(data.utils_yaml_merge.model.output) : var.model
+  model         = yamldecode(data.utils_yaml_merge.model.output)
 }
 
 data "utils_yaml_merge" "model" {
-  input = concat(local.yaml_strings_directories, local.yaml_strings_files)
+  input = concat(local.yaml_strings_directories, local.yaml_strings_files, local.model_strings)
 
   lifecycle {
     precondition {
-      condition     = ((length(var.yaml_directories) != 0 || length(var.yaml_files) != 0) && length(keys(var.model)) == 0) || (length(var.yaml_directories) == 0 && length(var.yaml_files) == 0 && length(keys(var.model)) != 0)
-      error_message = "Either `yaml_directories`/`yaml_files` or a non-empty `model` value must be provided."
+      condition     = length(var.yaml_directories) != 0 || length(var.yaml_files) != 0 || length(keys(var.model)) != 0
+      error_message = "Either `yaml_directories`,`yaml_files` or a non-empty `model` value must be provided."
     }
   }
 }
