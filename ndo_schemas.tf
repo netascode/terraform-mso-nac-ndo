@@ -354,6 +354,9 @@ resource "mso_schema_template_contract_service_graph" "schema_template_contract_
     mso_schema_template_contract.schema_template_contract,
     mso_schema_template_service_graph.schema_template_service_graph,
     mso_rest.schema_site_contract,
+    mso_schema_template_anp_epg_contract.schema_template_anp_epg_contract,
+    mso_schema_template_external_epg_contract.schema_template_external_epg_contract,
+    mso_schema_template_vrf_contract.schema_template_vrf_contract,
   ]
 }
 
@@ -1306,6 +1309,8 @@ resource "mso_schema_template_l3out" "schema_template_l3out" {
   vrf_name          = each.value.vrf_name
   vrf_schema_id     = each.value.vrf_schema_id
   vrf_template_name = each.value.vrf_template_name
+
+  depends_on = [mso_schema_template_vrf.schema_template_vrf]
 }
 
 locals {
