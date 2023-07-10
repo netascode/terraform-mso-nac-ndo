@@ -27,7 +27,7 @@ resource "mso_tenant" "tenant" {
   name              = each.value.name
   display_name      = each.value.name
   description       = try(each.value.description, "")
-  orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only, true) # not added to schema yet
+  orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only)
 
   dynamic "user_associations" {
     for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user }
