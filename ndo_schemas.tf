@@ -602,7 +602,7 @@ locals {
             bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
             site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
             host_route    = try(site.advertise_host_routes, local.defaults.ndo.schemas.templates.bridge_domains.sites.advertise_host_routes)
-            mac           = try(site.mac, local.defaults.ndo.schemas.templates.bridge_domains.sites.mac, "00:22:BD:F8:19:FF") # Not yet implemented in provider
+            mac           = try(site.mac, local.defaults.ndo.schemas.templates.bridge_domains.sites.mac, "00:22:BD:F8:19:FF")
           }
         ]
       ]
@@ -617,6 +617,7 @@ resource "mso_schema_site_bd" "schema_site_bd" {
   bd_name       = each.value.bd_name
   site_id       = each.value.site_id
   host_route    = each.value.host_route
+  svi_mac       = each.value.mac
 
   depends_on = [
     mso_schema_site.schema_site,
