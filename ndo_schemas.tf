@@ -950,14 +950,16 @@ locals {
         for ap in try(template.application_profiles, []) : [
           for epg in try(ap.endpoint_groups, []) : [
             for subnet in try(epg.subnets, []) : {
-              key       = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${subnet.ip}"
-              schema_id = mso_schema.schema[schema.name].id
-              template  = template.name
-              anp_name  = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
-              epg_name  = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
-              ip        = subnet.ip
-              scope     = try(subnet.scope, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.scope)
-              shared    = try(subnet.shared, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.shared)
+              key                = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${subnet.ip}"
+              schema_id          = mso_schema.schema[schema.name].id
+              template           = template.name
+              anp_name           = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
+              epg_name           = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
+              ip                 = subnet.ip
+              scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.scope)
+              shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.shared)
+              no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.no_default_gateway)
+              primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.subnets.primary)
             }
           ]
         ]
@@ -967,14 +969,16 @@ locals {
 }
 
 resource "mso_schema_template_anp_epg_subnet" "schema_template_anp_epg_subnet" {
-  for_each  = { for subnet in local.endpoint_groups_subnets : subnet.key => subnet }
-  schema_id = each.value.schema_id
-  template  = each.value.template
-  anp_name  = each.value.anp_name
-  epg_name  = each.value.epg_name
-  ip        = each.value.ip
-  scope     = each.value.scope
-  shared    = each.value.shared
+  for_each           = { for subnet in local.endpoint_groups_subnets : subnet.key => subnet }
+  schema_id          = each.value.schema_id
+  template           = each.value.template
+  anp_name           = each.value.anp_name
+  epg_name           = each.value.epg_name
+  ip                 = each.value.ip
+  scope              = each.value.scope
+  shared             = each.value.shared
+  no_default_gateway = each.value.no_default_gateway
+  primary            = each.value.primary
 
   depends_on = [
     mso_schema_template_anp_epg.schema_template_anp_epg,
@@ -1000,6 +1004,7 @@ locals {
                 scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.subnets.scope)
                 shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.subnets.shared)
                 no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.subnets.no_default_gateway)
+                primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.subnets.primary)
               }
             ]
           ]
@@ -1021,6 +1026,7 @@ resource "mso_schema_site_anp_epg_subnet" "schema_site_anp_epg_subnet" {
   scope              = each.value.scope
   shared             = each.value.shared
   no_default_gateway = each.value.no_default_gateway
+  primary            = each.value.primary
 
   depends_on = [
     mso_schema_site_anp_epg.schema_site_anp_epg,
