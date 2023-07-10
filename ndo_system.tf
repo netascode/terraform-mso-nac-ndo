@@ -14,7 +14,7 @@ locals {
   }]
 }
 
-/* data "mso_rest" "system_config" {
+data "mso_rest" "system_config" {
   count = var.manage_system ? 1 : 0
   path  = "api/v1/platform/systemConfig"
 }
@@ -24,4 +24,4 @@ resource "mso_rest" "system_config" {
   path    = "api/v1/platform/systemConfig/${jsondecode(data.mso_rest.system_config[0].content).systemConfigs.id}"
   method  = "PATCH"
   payload = jsonencode(local.system_config)
-} */
+}
