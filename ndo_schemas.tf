@@ -46,9 +46,8 @@ locals {
 }
 
 data "mso_tenant" "template_tenant" {
-  for_each     = toset([for tenant in local.template_tenants : tenant if !var.manage_tenants && var.manage_schemas])
-  name         = each.value
-  display_name = each.value
+  for_each = toset([for tenant in local.template_tenants : tenant if !var.manage_tenants && var.manage_schemas])
+  name     = each.value
 }
 
 data "mso_schema" "template_schema" {
