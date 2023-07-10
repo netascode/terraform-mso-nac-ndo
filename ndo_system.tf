@@ -25,3 +25,17 @@ resource "mso_rest" "system_config" {
   method  = "PATCH"
   payload = jsonencode(local.system_config)
 }
+
+resource "mso_remote_location" "remote_location" {
+  for_each    = { for rl in try(local.ndo.remote_locations, []) : rl.name => rl }
+  name        = each.value.name
+  description = try(each.value.description, "")
+  protocol    = try(each.value.protocol, local.defaults.ndo.remote_locations.protocol)
+  hostname    = each.value.hostname_ip
+  port        = try(each.value.port, local.defaults.ndo.remote_locations.port)
+  path        = try(each.value.path, local.defaults.ndo.remote_locations.path)
+  username    = try(each.value.username, null)
+  password    = try(each.value.password, null)
+  ssh_key     = try(each.value.ssh_key, null)
+  passphrase  = try(each.value.passphrase, null)
+}
