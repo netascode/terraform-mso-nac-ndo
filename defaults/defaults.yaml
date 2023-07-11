@@ -101,6 +101,8 @@ defaults:
           name_suffix: ""
           l3_multicast: false
           vzany: false
+          data_plane_learning: true
+          preferred_group: false
           sites:
             regions:
               vpn_gateway: false
