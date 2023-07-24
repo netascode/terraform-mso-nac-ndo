@@ -44,7 +44,7 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_anp_epg_contract.schema_template_anp_epg_contract,
     mso_schema_template_anp_epg_subnet.schema_template_anp_epg_subnet,
     mso_schema_site_anp_epg_subnet.schema_site_anp_epg_subnet,
-    mso_schema_site_anp_epg_static_port.schema_site_anp_epg_static_port,
+    mso_schema_site_anp_epg_bulk_staticport.schema_site_anp_epg_bulk_staticport,
     mso_schema_site_anp_epg_static_leaf.schema_site_anp_epg_static_leaf,
     mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_physical,
     mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_vmware,

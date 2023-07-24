@@ -150,11 +150,11 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site) | resource |
 | [mso_schema_site_anp.schema_site_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp) | resource |
 | [mso_schema_site_anp_epg.schema_site_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg) | resource |
+| [mso_schema_site_anp_epg_bulk_staticport.schema_site_anp_epg_bulk_staticport](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_bulk_staticport) | resource |
 | [mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_physical](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_domain) | resource |
 | [mso_schema_site_anp_epg_domain.schema_site_anp_epg_domain_vmware](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_domain) | resource |
 | [mso_schema_site_anp_epg_selector.schema_site_anp_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_selector) | resource |
 | [mso_schema_site_anp_epg_static_leaf.schema_site_anp_epg_static_leaf](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_static_leaf) | resource |
-| [mso_schema_site_anp_epg_static_port.schema_site_anp_epg_static_port](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_static_port) | resource |
 | [mso_schema_site_anp_epg_subnet.schema_site_anp_epg_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_anp_epg_subnet) | resource |
 | [mso_schema_site_bd.schema_site_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_bd) | resource |
 | [mso_schema_site_bd_l3out.schema_site_bd_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_site_bd_l3out) | resource |
