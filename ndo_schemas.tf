@@ -715,7 +715,7 @@ locals {
               template_name = template.name
               bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
               site_id       = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
-              l3out_name    = l3out
+              l3out_name    = "${l3out}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
             }
           ]
         ]
