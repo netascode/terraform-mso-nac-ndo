@@ -223,6 +223,44 @@ resource "mso_schema_template_contract" "schema_template_contract" {
 }
 
 locals {
+  contracts_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : [
+          for site in try(template.sites, []) : {
+            key       = "${schema.name}/${template.name}/${contract.name}/${site}"
+            schema_id = mso_schema.schema[schema.name].id
+            patch = [{
+              op   = "add"
+              path = "/sites/${var.manage_sites ? mso_site.site[site].id : data.mso_site.template_site[site].id}-${template.name}/contracts/-"
+              value = {
+                contractRef = {
+                  contractName = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+                  schemaId     = mso_schema.schema[schema.name].id
+                  templateName = template.name
+                }
+              }
+            }]
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_rest" "schema_site_contract" {
+  for_each = { for contract in local.contracts_sites : contract.key => contract if local.ndo_version < 4.0 }
+  path     = "api/v1/schemas/${each.value.schema_id}?validate=false"
+  method   = "PATCH"
+  payload  = jsonencode(each.value.patch)
+
+  depends_on = [
+    mso_schema_site.schema_site,
+    mso_schema_template_contract.schema_template_contract,
+  ]
+}
+
+locals {
   contracts_filters = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -356,6 +394,7 @@ resource "mso_schema_template_contract_service_graph" "schema_template_contract_
   depends_on = [
     mso_schema_template_contract.schema_template_contract,
     mso_schema_template_service_graph.schema_template_service_graph,
+    mso_rest.schema_site_contract,
     mso_schema_template_anp_epg_contract.schema_template_anp_epg_contract,
     mso_schema_template_external_epg_contract.schema_template_external_epg_contract,
     mso_schema_template_vrf_contract.schema_template_vrf_contract,
