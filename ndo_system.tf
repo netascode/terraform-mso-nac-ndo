@@ -7,7 +7,7 @@ locals {
       alias = try(local.ndo.system_config.banner.alias, "")
       banner = {
         bannerType  = try(local.ndo.system_config.banner.type, local.defaults.ndo.system_config.banner.type)
-        message     = try(local.ndo.system_config.banner.type, "")
+        message     = try(local.ndo.system_config.banner.message, "")
         bannerState = try(local.ndo.system_config.banner.state, local.defaults.ndo.system_config.banner.state)
       }
     }]
@@ -27,7 +27,7 @@ resource "mso_rest" "system_config" {
 }
 
 resource "mso_remote_location" "remote_location" {
-  for_each    = { for rl in try(local.ndo.remote_locations, []) : rl.name => rl }
+  for_each    = { for rl in try(local.ndo.remote_locations, []) : rl.name => rl if var.manage_system }
   name        = each.value.name
   description = try(each.value.description, "")
   protocol    = try(each.value.protocol, local.defaults.ndo.remote_locations.protocol)
