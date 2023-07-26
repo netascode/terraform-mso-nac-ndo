@@ -61,9 +61,10 @@ resource "mso_schema" "schema" {
   dynamic "template" {
     for_each = { for template in try(each.value.templates, []) : template.name => template }
     content {
-      name         = template.value.name
-      display_name = template.value.name
-      tenant_id    = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
+      name          = template.value.name
+      display_name  = template.value.name
+      tenant_id     = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
+      template_type = "aci_multi_site"
     }
   }
 }
