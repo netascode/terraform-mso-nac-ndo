@@ -7,7 +7,7 @@ locals {
       alias = try(local.ndo.system_config.banner.alias, "")
       banner = {
         bannerType  = try(local.ndo.system_config.banner.type, local.defaults.ndo.system_config.banner.type)
-        message     = try(local.ndo.system_config.banner.type, "")
+        message     = try(local.ndo.system_config.banner.message, "")
         bannerState = try(local.ndo.system_config.banner.state, local.defaults.ndo.system_config.banner.state)
       }
     }]
