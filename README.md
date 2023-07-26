@@ -183,6 +183,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_vrf_contract.schema_template_vrf_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/schema_template_vrf_contract) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/site) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/resources/tenant) | resource |
+| [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/data-sources/rest) | data source |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/data-sources/schema) | data source |
 | [mso_schema.template_schema](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.0/docs/data-sources/schema) | data source |
