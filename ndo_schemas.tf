@@ -1616,7 +1616,7 @@ locals {
           schema_id          = mso_schema.schema[schema.name].id
           template_name      = template.name
           service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
-          service_node_type  = "other"
+          service_node_type  = try(sg.type, local.defaults.ndo.schemas.templates.service_graphs.node_type)
           description        = try(sg.description, null)
           site_nodes = flatten([
             for node in try(sg.nodes, []) : [
