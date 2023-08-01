@@ -116,6 +116,9 @@ defaults:
           arp_flooding: false
           l2_stretch: true
           l3_multicast: false
+          multi_destination_flooding: bd-flood
+          unknown_ipv4_multicast: flood
+          unknown_ipv6_multicast: flood
           subnets:
             scope: private
             shared: false
