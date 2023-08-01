@@ -61,6 +61,8 @@ defaults:
         options:
           name_suffix: ""
           id: 1
+    tenants:
+      orchestrator_only: true
     schemas:
       templates:
         application_profiles:
