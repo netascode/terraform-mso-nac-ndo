@@ -407,13 +407,15 @@ locals {
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for vrf in try(template.vrfs, []) : {
-          key              = "${schema.name}/${template.name}/${vrf.name}"
-          schema_id        = mso_schema.schema[schema.name].id
-          template_name    = template.name
-          name             = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          display_name     = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          layer3_multicast = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast)
-          vzany            = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
+          key                    = "${schema.name}/${template.name}/${vrf.name}"
+          schema_id              = mso_schema.schema[schema.name].id
+          template_name          = template.name
+          name                   = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          display_name           = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          layer3_multicast       = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast)
+          vzany                  = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
+          ip_data_plane_learning = try(vrf.data_plane_learning, local.defaults.ndo.schemas.templates.vrfs.data_plane_learning) ? "enabled" : "disabled"
+          preferred_group        = try(vrf.preferred_group, local.defaults.ndo.schemas.templates.vrfs.preferred_group)
         }
       ]
     ]
@@ -421,13 +423,15 @@ locals {
 }
 
 resource "mso_schema_template_vrf" "schema_template_vrf" {
-  for_each         = { for vrf in local.vrfs : vrf.key => vrf }
-  schema_id        = each.value.schema_id
-  template         = each.value.template_name
-  name             = each.value.name
-  display_name     = each.value.display_name
-  layer3_multicast = each.value.layer3_multicast
-  vzany            = each.value.vzany
+  for_each               = { for vrf in local.vrfs : vrf.key => vrf }
+  schema_id              = each.value.schema_id
+  template               = each.value.template_name
+  name                   = each.value.name
+  display_name           = each.value.display_name
+  layer3_multicast       = each.value.layer3_multicast
+  vzany                  = each.value.vzany
+  ip_data_plane_learning = each.value.ip_data_plane_learning
+  preferred_group        = each.value.preferred_group
 }
 
 locals {
@@ -575,29 +579,38 @@ resource "mso_schema_site_vrf_region" "schema_site_vrf_region" {
 }
 
 locals {
+  multi_destination_flooding_map = {
+    "bd-flood" : "flood_in_bd"
+    "encap-flood" : "flood_in_encap"
+    "drop" : "drop"
+  }
+  unknown_multicast_map = {
+    "flood" : "flood"
+    "opt-flood" : "optimized_flooding"
+  }
   bridge_domains = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for bd in try(template.bridge_domains, []) : {
-          key                    = "${schema.name}/${template.name}/${bd.name}"
-          schema_id              = mso_schema.schema[schema.name].id
-          template_name          = template.name
-          name                   = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-          display_name           = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-          vrf_name               = "${bd.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          vrf_schema_id          = try(bd.vrf.schema, null) != null ? try(mso_schema.schema[bd.vrf.schema].id, data.mso_schema.template_schema[bd.vrf.schema].id) : null
-          vrf_template_name      = try(bd.vrf.template, null)
-          layer2_unknown_unicast = try(bd.l2_unknown_unicast, local.defaults.ndo.schemas.templates.bridge_domains.l2_unknown_unicast, "proxy")
-          intersite_bum_traffic  = try(bd.intersite_bum_traffic, local.defaults.ndo.schemas.templates.bridge_domains.intersite_bum_traffic)
-          optimize_wan_bandwidth = try(bd.optimize_wan_bandwidth, local.defaults.ndo.schemas.templates.bridge_domains.optimize_wan_bandwidth)
-          layer2_stretch         = try(bd.l2_stretch, local.defaults.ndo.schemas.templates.bridge_domains.l2_stretch)
-          layer3_multicast       = try(bd.l3_multicast, local.defaults.ndo.schemas.templates.bridge_domains.l3_multicast)
-          arp_flooding           = try(bd.arp_flooding, local.defaults.ndo.schemas.templates.bridge_domains.arp_flooding)
-          virtual_mac_address    = try(bd.vmac, null) # Not yet implemented in schema
-          unicast_routing        = try(bd.unicast_routing, local.defaults.ndo.schemas.templates.bridge_domains.unicast_routing)
-          #ipv6_unknown_multicast_flooding = try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast, "flood")               # Not yet implemented in schema
-          #multi_destination_flooding      = try(bd.multi_destination_flooding, local.defaults.ndo.schemas.templates.bridge_domains.multi_destination_flooding, "flood_in_bd") # Not yet implemented in schema
-          #unknown_multicast_flooding      = try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast, "flood")               # Not yet implemented in schema
+          key                             = "${schema.name}/${template.name}/${bd.name}"
+          schema_id                       = mso_schema.schema[schema.name].id
+          template_name                   = template.name
+          name                            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
+          display_name                    = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
+          vrf_name                        = "${bd.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          vrf_schema_id                   = try(bd.vrf.schema, null) != null ? try(mso_schema.schema[bd.vrf.schema].id, data.mso_schema.template_schema[bd.vrf.schema].id) : null
+          vrf_template_name               = try(bd.vrf.template, null)
+          layer2_unknown_unicast          = try(bd.l2_unknown_unicast, local.defaults.ndo.schemas.templates.bridge_domains.l2_unknown_unicast, "proxy")
+          intersite_bum_traffic           = try(bd.intersite_bum_traffic, local.defaults.ndo.schemas.templates.bridge_domains.intersite_bum_traffic)
+          optimize_wan_bandwidth          = try(bd.optimize_wan_bandwidth, local.defaults.ndo.schemas.templates.bridge_domains.optimize_wan_bandwidth)
+          layer2_stretch                  = try(bd.l2_stretch, local.defaults.ndo.schemas.templates.bridge_domains.l2_stretch)
+          layer3_multicast                = try(bd.l3_multicast, local.defaults.ndo.schemas.templates.bridge_domains.l3_multicast)
+          arp_flooding                    = try(bd.arp_flooding, local.defaults.ndo.schemas.templates.bridge_domains.arp_flooding)
+          virtual_mac_address             = try(bd.virtual_mac, null)
+          unicast_routing                 = try(bd.unicast_routing, local.defaults.ndo.schemas.templates.bridge_domains.unicast_routing)
+          multi_destination_flooding      = local.multi_destination_flooding_map[try(bd.multi_destination_flooding, local.defaults.ndo.schemas.templates.bridge_domains.multi_destination_flooding)]
+          unknown_multicast_flooding      = local.unknown_multicast_map[try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast)]
+          ipv6_unknown_multicast_flooding = local.unknown_multicast_map[try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast)]
         }
       ]
     ]
@@ -605,31 +618,26 @@ locals {
 }
 
 resource "mso_schema_template_bd" "schema_template_bd" {
-  for_each               = { for bd in local.bridge_domains : bd.key => bd }
-  schema_id              = each.value.schema_id
-  template_name          = each.value.template_name
-  name                   = each.value.name
-  display_name           = each.value.display_name
-  vrf_name               = each.value.vrf_name
-  vrf_schema_id          = each.value.vrf_schema_id
-  vrf_template_name      = each.value.vrf_template_name
-  layer2_unknown_unicast = each.value.layer2_unknown_unicast
-  intersite_bum_traffic  = each.value.intersite_bum_traffic
-  optimize_wan_bandwidth = each.value.optimize_wan_bandwidth
-  layer2_stretch         = each.value.layer2_stretch
-  layer3_multicast       = each.value.layer3_multicast
-  arp_flooding           = each.value.arp_flooding
-  virtual_mac_address    = each.value.virtual_mac_address
-  unicast_routing        = each.value.unicast_routing
-  #ipv6_unknown_multicast_flooding = each.value.ipv6_unknown_multicast_flooding
-  #multi_destination_flooding      = each.value.multi_destination_flooding
-  #unknown_multicast_flooding      = each.value.unknown_multicast_flooding
-  #  dhcp_policy {
-  #    name
-  #    version
-  #    dhcp_option_policy_name
-  #    dhcp_option_policy_version
-  #  }
+  for_each                        = { for bd in local.bridge_domains : bd.key => bd }
+  schema_id                       = each.value.schema_id
+  template_name                   = each.value.template_name
+  name                            = each.value.name
+  display_name                    = each.value.display_name
+  vrf_name                        = each.value.vrf_name
+  vrf_schema_id                   = each.value.vrf_schema_id
+  vrf_template_name               = each.value.vrf_template_name
+  layer2_unknown_unicast          = each.value.layer2_unknown_unicast
+  intersite_bum_traffic           = each.value.intersite_bum_traffic
+  optimize_wan_bandwidth          = each.value.optimize_wan_bandwidth
+  layer2_stretch                  = each.value.layer2_stretch
+  layer3_multicast                = each.value.layer3_multicast
+  arp_flooding                    = each.value.arp_flooding
+  virtual_mac_address             = each.value.virtual_mac_address
+  unicast_routing                 = each.value.unicast_routing
+  ipv6_unknown_multicast_flooding = each.value.ipv6_unknown_multicast_flooding
+  multi_destination_flooding      = each.value.multi_destination_flooding
+  unknown_multicast_flooding      = each.value.unknown_multicast_flooding
+
   depends_on = [mso_schema_template_vrf.schema_template_vrf]
 }
 
@@ -1608,7 +1616,7 @@ locals {
           schema_id          = mso_schema.schema[schema.name].id
           template_name      = template.name
           service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
-          service_node_type  = "other"
+          service_node_type  = try(sg.type, local.defaults.ndo.schemas.templates.service_graphs.node_type)
           description        = try(sg.description, null)
           site_nodes = flatten([
             for node in try(sg.nodes, []) : [
