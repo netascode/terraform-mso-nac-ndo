@@ -1249,8 +1249,8 @@ locals {
                 domain_name              = "${vmm.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.vmm_domain_name_suffix}"
                 domain_type              = "vmmDomain"
                 vmm_domain_type          = "VMware"
-                deploy_immediacy         = try(vmm.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.deployment_immediacy)
-                resolution_immediacy     = try(vmm.resolution_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.physical_domains.resolution_immediacy)
+                deploy_immediacy         = try(vmm.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.deployment_immediacy)
+                resolution_immediacy     = try(vmm.resolution_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.resolution_immediacy)
                 vlan_encap_mode          = try(vmm.vlan_mode, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.vlan_mode)
                 allow_micro_segmentation = try(vmm.u_segmentation, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.vmware_vmm_domains.u_segmentation)
                 switching_mode           = "native"
