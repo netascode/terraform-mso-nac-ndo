@@ -64,7 +64,7 @@ resource "mso_schema" "schema" {
       name          = template.value.name
       display_name  = template.value.name
       tenant_id     = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
-      template_type = "aci_multi_site"
+      template_type = try(template.value.type, local.defaults.ndo.schemas.templates.type) == "autonomous" ? "aci_autonomous" : "aci_multi_site"
     }
   }
 }
