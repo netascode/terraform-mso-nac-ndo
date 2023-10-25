@@ -63,7 +63,7 @@ resource "mso_schema" "schema" {
     content {
       name          = template.value.name
       display_name  = template.value.name
-      description   = try(template.description, null)
+      description   = try(template.value.description, null)
       tenant_id     = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
       template_type = "aci_multi_site"
     }
