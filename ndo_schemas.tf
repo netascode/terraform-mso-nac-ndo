@@ -63,7 +63,7 @@ resource "mso_schema" "schema" {
     content {
       name          = template.value.name
       display_name  = template.value.name
-      description   = try(template.description, "")
+      description   = try(template.description, null)
       tenant_id     = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
       template_type = "aci_multi_site"
     }
@@ -598,7 +598,7 @@ locals {
           template_name                   = template.name
           name                            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
           display_name                    = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-          description                     = try(bd.description, "")
+          description                     = try(bd.description, null)
           vrf_name                        = "${bd.vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
           vrf_schema_id                   = try(bd.vrf.schema, null) != null ? try(mso_schema.schema[bd.vrf.schema].id, data.mso_schema.template_schema[bd.vrf.schema].id) : null
           vrf_template_name               = try(bd.vrf.template, null)
@@ -855,7 +855,7 @@ locals {
             template_name              = template.name
             anp_name                   = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
             name                       = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
-            description                = try(epg.description, "")
+            description                = try(epg.description, null)
             bd_name                    = try(epg.bridge_domain.name, null) != null ? "${epg.bridge_domain.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}" : null
             bd_schema_id               = try(epg.bridge_domain.schema, null) != null ? try(mso_schema.schema[epg.bridge_domain.schema].id, data.mso_schema.template_schema[epg.bridge_domain.schema].id) : null
             bd_template_name           = try(epg.bridge_domain.template, null)
