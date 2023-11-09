@@ -32,6 +32,7 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_contract_service_graph.schema_template_contract_service_graph,
     mso_schema_template_vrf.schema_template_vrf,
     mso_schema_site_vrf.schema_site_vrf,
+    mso_schema_template_vrf_contract.schema_template_vrf_contract,
     mso_schema_site_vrf_region.schema_site_vrf_region,
     mso_schema_template_bd.schema_template_bd,
     mso_schema_site_bd.schema_site_bd,
@@ -55,7 +56,7 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_external_epg_contract.schema_template_external_epg_contract,
     mso_schema_template_external_epg_subnet.schema_template_external_epg_subnet,
     mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
-    mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
+    mso_schema_site_external_epg_selector.schema_site_external_epg_selector,
     mso_schema_template_service_graph.schema_template_service_graph,
   ]
 }
