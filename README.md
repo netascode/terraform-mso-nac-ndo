@@ -172,6 +172,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_contract_filter.schema_template_contract_filter](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_contract_filter) | resource |
 | [mso_schema_template_contract_service_graph.schema_template_contract_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_contract_service_graph) | resource |
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.template2](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.template3](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_external_epg) | resource |
 | [mso_schema_template_external_epg_contract.schema_template_external_epg_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_external_epg_contract) | resource |
 | [mso_schema_template_external_epg_selector.schema_template_external_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/0.11.1/docs/resources/schema_template_external_epg_selector) | resource |

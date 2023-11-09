@@ -6,6 +6,7 @@ locals {
         key           = "${schema.name}/${template.name}"
         schema_name   = schema.name
         template_name = template.name
+        deploy_order  = try(template.deploy_order, 1)
       }
     ]
   ])
@@ -17,7 +18,7 @@ data "mso_schema" "schema" {
 }
 
 resource "mso_schema_template_deploy_ndo" "template" {
-  for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates }
+  for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
   schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
   template_name = each.value.template_name
 
@@ -57,4 +58,20 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
     mso_schema_template_service_graph.schema_template_service_graph,
   ]
+}
+
+resource "mso_schema_template_deploy_ndo" "template2" {
+  for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 2 }
+  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
+  template_name = each.value.template_name
+
+  depends_on = [mso_schema_template_deploy_ndo.template]
+}
+
+resource "mso_schema_template_deploy_ndo" "template3" {
+  for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 3 }
+  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
+  template_name = each.value.template_name
+
+  depends_on = [mso_schema_template_deploy_ndo.template2]
 }
