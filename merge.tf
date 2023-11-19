@@ -8,8 +8,8 @@ locals {
     for file in var.yaml_files : file(file)
   ]
   model_strings = length(keys(var.model)) != 0 ? [yamlencode(var.model)] : []
-  user_defaults = { "defaults" : try(lookup(yamldecode(data.utils_yaml_merge.model.output), "defaults"), {}) }
-  defaults      = lookup(yamldecode(data.utils_yaml_merge.defaults.output), "defaults")
+  user_defaults = { "defaults" : try(yamldecode(data.utils_yaml_merge.model.output)[defaults], {}) }
+  defaults      = yamldecode(data.utils_yaml_merge.defaults.output)[defaults]
   model         = yamldecode(data.utils_yaml_merge.model.output)
 }
 
