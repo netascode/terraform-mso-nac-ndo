@@ -1,4 +1,4 @@
-## 0.8.0 (unreleased)
+## 0.8.0
 
 - Add support for banner (`system_config`) configuration
 - Add support for remote locations
