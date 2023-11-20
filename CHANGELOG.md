@@ -5,6 +5,7 @@
 - Add support for custom bridge domain MACs
 - Add support for `no_default_gateway` and `primary` attributes to endpoint group subnets
 - Switch from mso_schema_site_anp_epg_static_port to mso_schema_site_anp_epg_bulk_staticport resource
+- Add support for subport (breakout) EPG static ports
 
 ## 0.7.0
 
