@@ -263,71 +263,6 @@ resource "mso_rest" "schema_site_contract" {
 }
 
 locals {
-  contracts_filters = flatten([
-    for schema in local.schemas : [
-      for template in try(schema.templates, []) : [
-        for contract in try(template.contracts, []) : concat([
-          for filter in try(contract.filters, []) : {
-            key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/both"
-            schema_id            = mso_schema.schema[schema.name].id
-            template_name        = template.name
-            contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-            filter_type          = "bothWay"
-            filter_schema_id     = try(mso_schema.schema[try(filter.schema, schema.name)].id, data.mso_schema.template_schema[try(filter.schema, schema.name)].id)
-            filter_template_name = try(filter.template, template.name)
-            filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-            directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
-          }
-          ],
-          [
-            for filter in try(contract.provider_to_consumer_filters, []) : {
-              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/provider"
-              schema_id            = mso_schema.schema[schema.name].id
-              template_name        = template.name
-              contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              filter_type          = "provider_to_consumer"
-              filter_schema_id     = try(mso_schema.schema[try(filter.schema, schema.name)].id, data.mso_schema.template_schema[try(filter.schema, schema.name)].id)
-              filter_template_name = try(filter.template, template.name)
-              filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-              directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
-            }
-          ],
-          [
-            for filter in try(contract.consumer_to_provider_filters, []) : {
-              key                  = "${schema.name}/${template.name}/${contract.name}/${filter.name}/consumer"
-              schema_id            = mso_schema.schema[schema.name].id
-              template_name        = template.name
-              contract_name        = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
-              filter_type          = "consumer_to_provider"
-              filter_schema_id     = try(mso_schema.schema[try(filter.schema, schema.name)].id, data.mso_schema.template_schema[try(filter.schema, schema.name)].id)
-              filter_template_name = try(filter.template, template.name)
-              filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-              directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
-            }
-        ])
-      ]
-    ]
-  ])
-}
-
-resource "mso_schema_template_contract_filter" "schema_template_contract_filter" {
-  for_each             = { for filter in local.contracts_filters : filter.key => filter if local.ndo_version < 4.0 }
-  schema_id            = each.value.schema_id
-  template_name        = each.value.template_name
-  contract_name        = each.value.contract_name
-  filter_type          = each.value.filter_type
-  filter_schema_id     = each.value.filter_schema_id
-  filter_template_name = each.value.filter_template_name
-  filter_name          = each.value.filter_name
-  directives           = each.value.directives
-
-  depends_on = [
-    mso_schema_template_contract.schema_template_contract,
-    mso_schema_template_filter_entry.schema_template_filter_entry
-  ]
-}
-
-locals {
   contracts_service_graphs = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
@@ -1767,7 +1702,7 @@ locals {
 }
 
 resource "mso_schema_site_service_graph" "schema_site_service_graph" {
-  for_each           = { for sg in local.service_graphs_sites : sg.key => sg if local.ndo_version >= 4.1 }
+  for_each           = { for sg in local.service_graphs_sites : sg.key => sg }
   schema_id          = each.value.schema_id
   template_name      = each.value.template_name
   site_id            = each.value.site_id
