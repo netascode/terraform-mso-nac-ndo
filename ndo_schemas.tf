@@ -251,7 +251,7 @@ locals {
 }
 
 resource "mso_rest" "schema_site_contract" {
-  for_each = { for contract in local.contracts_sites : contract.key => contract if local.ndo_version < 4.0 }
+  for_each = { for contract in local.contracts_sites : contract.key => contract if local.ndo_version == "3.7" }
   path     = "api/v1/schemas/${each.value.schema_id}?validate=false"
   method   = "PATCH"
   payload  = jsonencode(each.value.patch)
@@ -267,7 +267,7 @@ locals {
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for contract in try(template.contracts, []) : {
-          key                         = "${schema.name}/${template.name}/${contract.name}"
+          key                         = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}"
           schema_id                   = mso_schema.schema[schema.name].id
           template_name               = template.name
           contract_name               = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
@@ -293,7 +293,7 @@ locals {
 }
 
 resource "mso_schema_template_contract_service_graph" "schema_template_contract_service_graph" {
-  for_each                    = { for sg in local.contracts_service_graphs : sg.key => sg if local.ndo_version == 3.7 || local.ndo_version >= 4.2 }
+  for_each                    = { for sg in local.contracts_service_graphs : sg.key => sg if local.ndo_version == "3.7" || local.ndo_version >= 4.2 }
   schema_id                   = each.value.schema_id
   template_name               = each.value.template_name
   contract_name               = each.value.contract_name
@@ -315,9 +315,7 @@ resource "mso_schema_template_contract_service_graph" "schema_template_contract_
 
   depends_on = [
     mso_schema_template_contract.schema_template_contract,
-    mso_schema_template_service_graph.schema_template_service_graph,
     mso_schema_site_contract_service_graph.schema_site_contract_service_graph,
-    mso_rest.schema_site_contract,
     mso_schema_template_anp_epg_contract.schema_template_anp_epg_contract,
     mso_schema_template_external_epg_contract.schema_template_external_epg_contract,
     mso_schema_template_vrf_contract.schema_template_vrf_contract,
@@ -342,7 +340,7 @@ locals {
       for template in try(schema.templates, []) : [
         for contract in try(template.contracts, []) : [
           for site_name in try(local.contracts_service_graphs_sites_names, []) : {
-            key                         = "${schema.name}/${template.name}/${contract.name}/${site_name}"
+            key                         = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
             schema_id                   = mso_schema.schema[schema.name].id
             site_id                     = var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
             template_name               = template.name
@@ -377,7 +375,7 @@ locals {
 }
 
 resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_graph" {
-  for_each                    = { for sg in local.contracts_service_graphs_sites : sg.key => sg if local.ndo_version == 3.7 || local.ndo_version >= 4.2 }
+  for_each                    = { for sg in local.contracts_service_graphs_sites : sg.key => sg if local.ndo_version == "3.7" || local.ndo_version >= 4.2 }
   schema_id                   = each.value.schema_id
   template_name               = each.value.template_name
   contract_name               = each.value.contract_name
@@ -400,7 +398,10 @@ resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_rest.schema_site_contract,
+    mso_schema_template_service_graph.schema_template_service_graph,
     mso_schema_site_service_graph.schema_site_service_graph,
+    mso_rest.schema_site_service_graph,
   ]
 }
 
@@ -1685,7 +1686,7 @@ locals {
             schema_id          = mso_schema.schema[schema.name].id
             template_name      = template.name
             site_id            = var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
-            service_graph_name = sg.name
+            service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
             service_node = flatten([
               for node in try(sg.nodes, []) : [
                 for site in try(node.sites, []) : {
@@ -1699,10 +1700,40 @@ locals {
       ]
     ]
   ])
+  service_graphs_sites_37 = flatten([
+    for sg in local.service_graphs_sites : {
+      key       = sg.key
+      schema_id = sg.schema_id
+      patch = [{
+        op   = "add"
+        path = "/sites/${sg.site_id}-${sg.template_name}/serviceGraphs/-"
+        value = {
+          serviceGraphRef = {
+            serviceGraphName = sg.service_graph_name
+            schemaId         = sg.schema_id
+            templateName     = sg.template_name
+          }
+          serviceNodes = flatten([
+            for node in try(sg.service_node, []) : {
+              serviceNodeRef = {
+                serviceNodeName  = "node${node.key}"
+                serviceGraphName = sg.service_graph_name
+                schemaId         = sg.schema_id
+                templateName     = sg.template_name
+              }
+              device = {
+                dn = node.device_dn
+              }
+            }
+          ])
+        }
+      }]
+    }
+  ])
 }
 
 resource "mso_schema_site_service_graph" "schema_site_service_graph" {
-  for_each           = { for sg in local.service_graphs_sites : sg.key => sg }
+  for_each           = { for sg in local.service_graphs_sites : sg.key => sg if local.ndo_version >= 4.2 }
   schema_id          = each.value.schema_id
   template_name      = each.value.template_name
   site_id            = each.value.site_id
@@ -1714,6 +1745,18 @@ resource "mso_schema_site_service_graph" "schema_site_service_graph" {
       device_dn = service_node.value.device_dn
     }
   }
+
+  depends_on = [
+    mso_schema_site.schema_site,
+    mso_schema_template_service_graph.schema_template_service_graph,
+  ]
+}
+
+resource "mso_rest" "schema_site_service_graph" {
+  for_each = { for sg in local.service_graphs_sites_37 : sg.key => sg if local.ndo_version == "3.7" }
+  path     = "api/v1/schemas/${each.value.schema_id}?validate=false"
+  method   = "PATCH"
+  payload  = jsonencode(each.value.patch)
 
   depends_on = [
     mso_schema_site.schema_site,
