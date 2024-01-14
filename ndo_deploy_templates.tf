@@ -28,8 +28,8 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_filter_entry.schema_template_filter_entry,
     mso_schema_template_contract.schema_template_contract,
     mso_rest.schema_site_contract,
-    mso_schema_template_contract_filter.schema_template_contract_filter,
     mso_schema_template_contract_service_graph.schema_template_contract_service_graph,
+    mso_schema_site_contract_service_graph.schema_site_contract_service_graph,
     mso_schema_template_vrf.schema_template_vrf,
     mso_schema_site_vrf.schema_site_vrf,
     mso_schema_template_vrf_contract.schema_template_vrf_contract,
@@ -58,6 +58,8 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
     mso_schema_site_external_epg_selector.schema_site_external_epg_selector,
     mso_schema_template_service_graph.schema_template_service_graph,
+    mso_schema_site_service_graph.schema_site_service_graph,
+    mso_rest.schema_site_service_graph,
   ]
 }
 
