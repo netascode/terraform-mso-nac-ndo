@@ -695,11 +695,11 @@ locals {
             template_name      = template.name
             bd_name            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
             ip                 = subnet.ip
-            scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope, "private")
+            scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope)
             shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared)
-            no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, false)
-            querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier, "disabled")
-            primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, false) # Not yet implemented in provider
+            no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway)
+            querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier)
+            primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary)
           }
         ]
       ]
@@ -717,6 +717,7 @@ resource "mso_schema_template_bd_subnet" "schema_template_bd_subnet" {
   shared             = each.value.shared
   no_default_gateway = each.value.no_default_gateway
   querier            = each.value.querier
+  primary            = each.value.primary
 
   depends_on = [mso_schema_template_bd.schema_template_bd]
 }
@@ -734,11 +735,11 @@ locals {
               bd_name            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
               site_id            = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               ip                 = subnet.ip
-              scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.subnets.scope, "private")
-              shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.subnets.shared)
-              no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.subnets.no_default_gateway, false) # Not yet implemented in schema
-              querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.subnets.querier)
-              primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.subnets.primary, false) # Not yet implemented in provider
+              scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.scope)
+              shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.shared)
+              no_default_gateway = try(subnet.no_default_gateway, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.no_default_gateway)
+              querier            = try(subnet.querier, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.querier)
+              primary            = try(subnet.primary, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.primary)
             }
           ]
         ]
@@ -758,6 +759,7 @@ resource "mso_schema_site_bd_subnet" "schema_site_bd_subnet" {
   shared             = each.value.shared
   no_default_gateway = each.value.no_default_gateway
   querier            = each.value.querier
+  primary            = each.value.primary
 
   depends_on = [mso_schema_site_bd.schema_site_bd]
 }
