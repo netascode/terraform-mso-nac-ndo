@@ -1,3 +1,7 @@
+## 0.8.1 (unreleased)
+
+- Add support for NDO 4.2
+
 ## 0.8.0
 
 - Add support for banner (`system_config`) configuration
