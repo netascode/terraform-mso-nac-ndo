@@ -1,4 +1,4 @@
-## 0.8.1 (unreleased)
+## 0.8.1
 
 - Add support for NDO 4.2
 
