@@ -1276,7 +1276,7 @@ locals {
                 allow_promiscuous        = local.ndo_version >= 4.2 ? "reject" : null
                 mac_changes              = local.ndo_version >= 4.2 ? "reject" : null
                 forged_transmits         = local.ndo_version >= 4.2 ? "reject" : null
-                custom_epg_name = try(vmm.custom_epg_name, null)
+                custom_epg_name          = local.ndo_version >= 4.2 ? try(vmm.custom_epg_name, null) : null
               }
             ]
           ]
@@ -1311,7 +1311,7 @@ resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_vmware" {
   allow_promiscuous        = each.value.allow_promiscuous
   mac_changes              = each.value.mac_changes
   forged_transmits         = each.value.forged_transmits
-  custom_epg_name = each.value.custom_epg_name
+  custom_epg_name          = each.value.custom_epg_name
 
   depends_on = [
     mso_schema_site_anp_epg.schema_site_anp_epg,
