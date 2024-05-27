@@ -1,3 +1,7 @@
+## 0.9.0 (unreleased)
+
+- Add `custom_epg_name` attribute to EPG VMM domain
+
 ## 0.8.1
 
 - Add support for NDO 4.2
