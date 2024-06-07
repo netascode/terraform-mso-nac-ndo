@@ -277,10 +277,10 @@ locals {
           node_relationship = flatten([
             for node in try(contract.service_graph.nodes, []) : {
               key                                 = try(node.index, 1)
-              provider_connector_bd_name          = node.provider.bridge_domain
+              provider_connector_bd_name          = "${node.provider.bridge_domain}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
               provider_connector_bd_schema_id     = try(mso_schema.schema[try(node.provider.schema, schema.name)].id, data.mso_schema.template_schema[try(node.provider.schema, schema.name)].id)
               provider_connector_bd_template_name = try(node.provider.template, template.name)
-              consumer_connector_bd_name          = node.consumer.bridge_domain
+              consumer_connector_bd_name          = "${node.consumer.bridge_domain}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
               consumer_connector_bd_schema_id     = try(mso_schema.schema[try(node.consumer.schema, schema.name)].id, data.mso_schema.template_schema[try(node.consumer.schema, schema.name)].id)
               consumer_connector_bd_template_name = try(node.consumer.template, template.name)
             }
