@@ -323,23 +323,11 @@ resource "mso_schema_template_contract_service_graph" "schema_template_contract_
 }
 
 locals {
-  contracts_service_graphs_sites_names = distinct(flatten([
-    for schema in local.schemas : [
-      for template in try(schema.templates, []) : [
-        for contract in try(template.contracts, []) : [
-          for node in try(contract.service_graph.nodes, []) : [
-            [for site in try(node.provider.sites, []) : [site.name]],
-            [for site in try(node.consumer.sites, []) : [site.name]]
-          ]
-        ]
-      ]
-    ]
-  ]))
   contracts_service_graphs_sites = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for contract in try(template.contracts, []) : [
-          for site_name in try(local.contracts_service_graphs_sites_names, []) : {
+          for site_name in try(template.sites, []) : {
             key                         = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
             schema_id                   = mso_schema.schema[schema.name].id
             site_id                     = var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
@@ -1670,22 +1658,11 @@ resource "mso_schema_template_service_graph" "schema_template_service_graph" {
 }
 
 locals {
-  service_graph_sites_names = distinct(flatten([
-    for schema in local.schemas : [
-      for template in try(schema.templates, []) : [
-        for sg in try(template.service_graphs, []) : [
-          for node in try(sg.nodes, []) : [
-            [for site in try(node.sites, []) : [site.name]]
-          ]
-        ]
-      ]
-    ]
-  ]))
   service_graphs_sites = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for sg in try(template.service_graphs, []) : [
-          for site_name in try(local.service_graph_sites_names, []) : {
+          for site_name in try(template.sites, []) : {
             key                = "${schema.name}/${template.name}/${sg.name}/${site_name}"
             schema_id          = mso_schema.schema[schema.name].id
             template_name      = template.name
