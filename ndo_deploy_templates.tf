@@ -76,5 +76,8 @@ resource "mso_schema_template_deploy_ndo" "template3" {
   schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
   template_name = each.value.template_name
 
-  depends_on = [mso_schema_template_deploy_ndo.template2]
+  depends_on = [
+    mso_schema_template_deploy_ndo.template,
+    mso_schema_template_deploy_ndo.template2,
+  ]
 }
