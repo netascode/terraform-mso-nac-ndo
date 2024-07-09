@@ -398,15 +398,16 @@ locals {
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for vrf in try(template.vrfs, []) : {
-          key                    = "${schema.name}/${template.name}/${vrf.name}"
-          schema_id              = mso_schema.schema[schema.name].id
-          template_name          = template.name
-          name                   = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          display_name           = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
-          layer3_multicast       = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast)
-          vzany                  = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
-          ip_data_plane_learning = try(vrf.data_plane_learning, local.defaults.ndo.schemas.templates.vrfs.data_plane_learning) ? "enabled" : "disabled"
-          preferred_group        = try(vrf.preferred_group, local.defaults.ndo.schemas.templates.vrfs.preferred_group)
+          key                           = "${schema.name}/${template.name}/${vrf.name}"
+          schema_id                     = mso_schema.schema[schema.name].id
+          template_name                 = template.name
+          name                          = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          display_name                  = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
+          layer3_multicast              = try(vrf.l3_multicast, local.defaults.ndo.schemas.templates.vrfs.l3_multicast)
+          vzany                         = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
+          ip_data_plane_learning        = try(vrf.data_plane_learning, local.defaults.ndo.schemas.templates.vrfs.data_plane_learning) ? "enabled" : "disabled"
+          preferred_group               = try(vrf.preferred_group, local.defaults.ndo.schemas.templates.vrfs.preferred_group)
+          site_aware_policy_enforcement = try(vrf.site_aware_policy_enforcement, local.defaults.ndo.schemas.templates.vrfs.site_aware_policy_enforcement)
         }
       ]
     ]
@@ -414,15 +415,16 @@ locals {
 }
 
 resource "mso_schema_template_vrf" "schema_template_vrf" {
-  for_each               = { for vrf in local.vrfs : vrf.key => vrf }
-  schema_id              = each.value.schema_id
-  template               = each.value.template_name
-  name                   = each.value.name
-  display_name           = each.value.display_name
-  layer3_multicast       = each.value.layer3_multicast
-  vzany                  = each.value.vzany
-  ip_data_plane_learning = each.value.ip_data_plane_learning
-  preferred_group        = each.value.preferred_group
+  for_each                      = { for vrf in local.vrfs : vrf.key => vrf }
+  schema_id                     = each.value.schema_id
+  template                      = each.value.template_name
+  name                          = each.value.name
+  display_name                  = each.value.display_name
+  layer3_multicast              = each.value.layer3_multicast
+  vzany                         = each.value.vzany
+  ip_data_plane_learning        = each.value.ip_data_plane_learning
+  preferred_group               = each.value.preferred_group
+  site_aware_policy_enforcement = each.value.site_aware_policy_enforcement
 }
 
 locals {
