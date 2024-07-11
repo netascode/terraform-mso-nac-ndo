@@ -407,7 +407,7 @@ locals {
           vzany                         = try(vrf.vzany, local.defaults.ndo.schemas.templates.vrfs.vzany)
           ip_data_plane_learning        = try(vrf.data_plane_learning, local.defaults.ndo.schemas.templates.vrfs.data_plane_learning) ? "enabled" : "disabled"
           preferred_group               = try(vrf.preferred_group, local.defaults.ndo.schemas.templates.vrfs.preferred_group)
-          site_aware_policy_enforcement = try(vrf.site_aware_policy_enforcement, local.defaults.ndo.schemas.templates.vrfs.site_aware_policy_enforcement)
+          site_aware_policy_enforcement = try(vrf.site_aware_policy_enforcement, null)
         }
       ]
     ]
