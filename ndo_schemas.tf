@@ -1455,9 +1455,9 @@ locals {
             template_name     = template.name
             external_epg_name = epg.name
             l3out_name        = try(site.l3out.name, null)
-            l3out_template    = try(site.l3out.template, null)
-            l3out_schema      = try(site.l3out.schema, null) != null ? mso_schema.schema[site.l3out.schema].id : null
-            l3out_on_apic     = try(site.l3out.on_apic, null)
+            #  l3out_template_name    = try(site.l3out.template, null)
+            #  l3out_schema_id      = try(site.l3out.schema, null) != null ? mso_schema.schema[site.l3out.schema].id : null
+            #  l3out_on_apic     = try(site.l3out.on_apic, null)
           }
         ]
       ]
@@ -1472,9 +1472,9 @@ resource "mso_schema_site_external_epg" "schema_site_external_epg" {
   template_name     = each.value.template_name
   external_epg_name = each.value.external_epg_name
   l3out_name        = each.value.l3out_name
-  l3out_template    = each.value.l3out_template
-  l3out_schema      = each.value.l3out_schema
-  l3out_on_apic     = each.value.l3out_on_apic
+  # l3out_template_name    = each.value.l3out_template
+  # l3out_schema_id      = each.value.l3out_schema
+  # l3out_on_apic     = each.value.l3out_on_apic
 
   depends_on = [
     mso_schema_template_external_epg.schema_template_external_epg,
