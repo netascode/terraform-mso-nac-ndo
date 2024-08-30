@@ -1444,7 +1444,7 @@ resource "mso_schema_template_external_epg" "schema_template_external_epg" {
 }
 
 locals {
-  external_egps_sites = flatten([
+  external_epgs_sites = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
         for epg in try(template.external_endpoint_groups, []) : [
@@ -1466,7 +1466,7 @@ locals {
 }
 
 resource "mso_schema_site_external_epg" "schema_site_external_epg" {
-  for_each          = { for site in local.external_egps_sites : site.key => site }
+  for_each          = { for site in local.external_epgs_sites : site.key => site }
   schema_id         = each.value.schema_id
   site_id           = each.value.site_id
   template_name     = each.value.template_name
