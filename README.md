@@ -161,6 +161,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_site_bd_l3out.schema_site_bd_l3out](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_bd_l3out) | resource |
 | [mso_schema_site_bd_subnet.schema_site_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_bd_subnet) | resource |
 | [mso_schema_site_contract_service_graph.schema_site_contract_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_contract_service_graph) | resource |
+| [mso_schema_site_external_epg.schema_site_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_external_epg) | resource |
 | [mso_schema_site_external_epg_selector.schema_site_external_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_external_epg_selector) | resource |
 | [mso_schema_site_service_graph.schema_site_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_service_graph) | resource |
 | [mso_schema_site_vrf.schema_site_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/schema_site_vrf) | resource |
