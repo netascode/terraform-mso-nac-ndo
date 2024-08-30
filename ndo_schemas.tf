@@ -1446,6 +1446,44 @@ resource "mso_schema_template_external_epg" "schema_template_external_epg" {
 }
 
 locals {
+  external_epgs_sites = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for epg in try(template.external_endpoint_groups, []) : [
+          for site in try(epg.sites, []) : {
+            key               = try(site.l3out.name, null) != null ? "${schema.name}/${template.name}/${epg.name}/${site.name}/${site.l3out.name}" : "${schema.name}/${template.name}/${epg.name}/${site.name}"
+            schema_id         = mso_schema.schema[schema.name].id
+            site_id           = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+            template_name     = template.name
+            external_epg_name = epg.name
+            l3out_name        = try(site.l3out.name, null)
+            #  l3out_template_name    = try(site.l3out.template, null)
+            #  l3out_schema_id      = try(site.l3out.schema, null) != null ? mso_schema.schema[site.l3out.schema].id : null
+            #  l3out_on_apic     = try(site.l3out.on_apic, null)
+          }
+        ]
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_site_external_epg" "schema_site_external_epg" {
+  for_each          = { for site in local.external_epgs_sites : site.key => site }
+  schema_id         = each.value.schema_id
+  site_id           = each.value.site_id
+  template_name     = each.value.template_name
+  external_epg_name = each.value.external_epg_name
+  l3out_name        = each.value.l3out_name
+  # l3out_template_name    = each.value.l3out_template
+  # l3out_schema_id      = each.value.l3out_schema
+  # l3out_on_apic     = each.value.l3out_on_apic
+
+  depends_on = [
+    mso_schema_template_external_epg.schema_template_external_epg,
+  ]
+}
+
+locals {
   external_epgs_contracts = flatten([
     for schema in local.schemas : [
       for template in try(schema.templates, []) : [
