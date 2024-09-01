@@ -1,3 +1,8 @@
+## 0.9.1
+
+- Add Add support for site-aware policy enforcement mode
+- NDO: Add support for site-specific external EPG settings
+
 ## 0.9.0
 
 - Add `custom_epg_name` attribute to EPG VMM domain
