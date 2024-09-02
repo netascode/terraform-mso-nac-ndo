@@ -1,7 +1,7 @@
-## 0.9.1
+## 0.9.1 (unreleased)
 
 - Add Add support for site-aware policy enforcement mode
-- NDO: Add support for site-specific external EPG settings
+- Add support for site-specific external EPG settings
 
 ## 0.9.0
 
