@@ -1,4 +1,4 @@
-## 0.9.1 (unreleased)
+## 0.9.1
 
 - Add Add support for site-aware policy enforcement mode
 - Add support for site-specific external EPG settings
