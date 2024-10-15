@@ -12,14 +12,9 @@ locals {
   ])
 }
 
-data "mso_schema" "schema" {
-  for_each = { for schema in local.unmanaged_schemas : schema.name => schema }
-  name     = each.value.name
-}
-
 resource "mso_schema_template_deploy_ndo" "template" {
   for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
-  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
+  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : local.schema_ids[each.value.schema_name].id
   template_name = each.value.template_name
 
   depends_on = [
@@ -66,7 +61,7 @@ resource "mso_schema_template_deploy_ndo" "template" {
 
 resource "mso_schema_template_deploy_ndo" "template2" {
   for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 2 }
-  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
+  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : local.schema_ids[each.value.schema_name].id
   template_name = each.value.template_name
 
   depends_on = [mso_schema_template_deploy_ndo.template]
@@ -74,7 +69,7 @@ resource "mso_schema_template_deploy_ndo" "template2" {
 
 resource "mso_schema_template_deploy_ndo" "template3" {
   for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 3 }
-  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : data.mso_schema.schema[each.value.schema_name].id
+  schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : local.schema_ids[each.value.schema_name].id
   template_name = each.value.template_name
 
   depends_on = [
