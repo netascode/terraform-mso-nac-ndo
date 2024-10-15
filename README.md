@@ -189,9 +189,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/site) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/resources/tenant) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/rest) | data source |
+| [mso_rest.schemas](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/rest) | data source |
-| [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/schema) | data source |
-| [mso_schema.template_schema](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/schema) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/site) | data source |
 | [mso_site.template_site](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/site) | data source |
 | [mso_site.tenant_site](https://registry.terraform.io/providers/CiscoDevNet/mso/1.2.2/docs/data-sources/site) | data source |
