@@ -570,6 +570,13 @@ locals {
           multi_destination_flooding      = local.multi_destination_flooding_map[try(bd.multi_destination_flooding, local.defaults.ndo.schemas.templates.bridge_domains.multi_destination_flooding)]
           unknown_multicast_flooding      = local.unknown_multicast_map[try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast)]
           ipv6_unknown_multicast_flooding = local.unknown_multicast_map[try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast)]
+          dhcp_policies = [
+            for pol in try(bd.dhcp_policies, []) : {
+              key                     = "${bd.name}/${pol.dhcp_relay_policy}"
+              name                    = pol.dhcp_relay_policy
+              dhcp_option_policy_name = try(pol.dhcp_option_policy, null)
+            }
+          ]
         }
       ]
     ]
@@ -597,6 +604,14 @@ resource "mso_schema_template_bd" "schema_template_bd" {
   ipv6_unknown_multicast_flooding = each.value.ipv6_unknown_multicast_flooding
   multi_destination_flooding      = each.value.multi_destination_flooding
   unknown_multicast_flooding      = each.value.unknown_multicast_flooding
+
+  dynamic "dhcp_policies" {
+    for_each = { for pol in try(each.value.dhcp_policies, []) : pol.key => pol }
+    content {
+      name                    = dhcp_policies.value.name
+      dhcp_option_policy_name = dhcp_policies.value.dhcp_option_policy_name
+    }
+  }
 
   depends_on = [mso_schema_template_vrf.schema_template_vrf]
 }
