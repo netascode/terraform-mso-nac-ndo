@@ -1088,7 +1088,7 @@ locals {
                   deployment_immediacy = try(sp.deployment_immediacy, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.deployment_immediacy)
                   vlan                 = try(sp.vlan, null)
                   micro_seg_vlan       = try(sp.useg_vlan, null)
-                  fex                  = try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type) == "vpc" ? "${sp.fex}-${sp.fex_2}" : try(sp.fex, null)
+                  fex                  = try(sp.type, local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.type) == "vpc" && try(sp.fex, null) != null && try(sp.fex_2, null) != null ? "${sp.fex}-${sp.fex_2}" : try(sp.fex, null)
                 }
               ]
             } if try(site.static_ports, null) != null
