@@ -22,8 +22,6 @@ There are six configuration sections which can be selectively enabled or disable
 
 The full data model documentation is available here: https://developer.cisco.com/docs/nexus-as-code/#!data-model
 
-The module currently supports only NDO version 3.7.
-
 ## Examples
 
 Configuring a Tenant using YAML:
