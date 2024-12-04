@@ -1451,8 +1451,8 @@ resource "mso_schema_site_external_epg" "schema_site_external_epg" {
   template_name       = each.value.template_name
   external_epg_name   = each.value.external_epg_name
   l3out_name          = each.value.l3out_name
-  l3out_template_name = each.value.l3out_template
-  l3out_schema_id     = each.value.l3out_schema
+  l3out_template_name = each.value.l3out_template_name
+  l3out_schema_id     = each.value.l3out_schema_id
   l3out_on_apic       = each.value.l3out_on_apic
 
   depends_on = [
