@@ -1,3 +1,10 @@
+## 0.9.2 (Unreleased)
+
+- Enhance support for site-specific external EPGs
+- Optimize retrieval of schema IDs
+- Add support for FEX VPC static port configuration under EPG
+- Add support for DHCP policies configuration under BD
+
 ## 0.9.1
 
 - Add support for site-aware policy enforcement mode
