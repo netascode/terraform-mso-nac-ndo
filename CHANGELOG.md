@@ -1,4 +1,4 @@
-## 0.9.2 (Unreleased)
+## 0.9.2
 
 - Enhance support for site-specific external EPGs
 - Optimize retrieval of schema IDs
