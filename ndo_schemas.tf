@@ -570,6 +570,7 @@ locals {
           multi_destination_flooding      = local.multi_destination_flooding_map[try(bd.multi_destination_flooding, local.defaults.ndo.schemas.templates.bridge_domains.multi_destination_flooding)]
           unknown_multicast_flooding      = local.unknown_multicast_map[try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast)]
           ipv6_unknown_multicast_flooding = local.unknown_multicast_map[try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast)]
+          ep_move_detection_mode          = try(bd.ep_move_detection_mode, local.defaults.ndo.schemas.templates.bridge_domains.ep_move_detection_mode)
           dhcp_policies = [
             for pol in try(bd.dhcp_policies, []) : {
               key                     = "${bd.name}/${pol.dhcp_relay_policy}"
@@ -604,6 +605,7 @@ resource "mso_schema_template_bd" "schema_template_bd" {
   ipv6_unknown_multicast_flooding = each.value.ipv6_unknown_multicast_flooding
   multi_destination_flooding      = each.value.multi_destination_flooding
   unknown_multicast_flooding      = each.value.unknown_multicast_flooding
+  ep_move_detection_mode          = each.value.ep_move_detection_mode
 
   dynamic "dhcp_policies" {
     for_each = { for pol in try(each.value.dhcp_policies, []) : pol.key => pol }
