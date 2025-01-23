@@ -36,7 +36,7 @@ locals {
         podId                          = try(pod.id, local.defaults.sites.pods.id)
         name                           = "pod-${try(pod.id, local.defaults.sites.pods.id)}"
         msiteDataPlaneUnicastTep       = try(pod.unicast_tep, "")
-        msiteDataPlaneRoutableTEPPools = []
+        msiteDataPlaneRoutableTEPPools = flatten([for pool in try(pod.external_tep_pools, []) : [pool.ip]])
         faults                         = []
         spines = [for spine in try(pod.spines, []) : {
           nodeId                = spine.id
