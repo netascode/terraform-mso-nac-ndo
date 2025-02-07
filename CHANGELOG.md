@@ -1,3 +1,7 @@
+## 0.9.3
+
+- Add support for EP move detection mode under BD
+
 ## 0.9.2
 
 - Enhance support for site-specific external EPGs
