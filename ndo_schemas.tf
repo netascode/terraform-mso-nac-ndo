@@ -134,7 +134,10 @@ locals {
                 filter_schema_id     = contains(local.managed_schemas, try(filter.schema, schema.name)) ? mso_schema.schema[try(filter.schema, schema.name)].id : local.schema_ids[filter.schema].id
                 filter_template_name = try(filter.template, template.name)
                 filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-                directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+                directives = concat(
+                  try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? ["log"] : [],
+                  try(filter.policy_compression, local.defaults.ndo.schemas.templates.contracts.filters.policy_compression) ? ["no_stats"] : []
+                )
               }
             ],
             [
@@ -144,7 +147,10 @@ locals {
                 filter_schema_id     = contains(local.managed_schemas, try(filter.schema, schema.name)) ? mso_schema.schema[try(filter.schema, schema.name)].id : local.schema_ids[filter.schema].id
                 filter_template_name = try(filter.template, template.name)
                 filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-                directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+                directives = concat(
+                  try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? ["log"] : [],
+                  try(filter.policy_compression, local.defaults.ndo.schemas.templates.contracts.filters.policy_compression) ? ["no_stats"] : []
+                )
               }
             ],
             [
@@ -154,7 +160,10 @@ locals {
                 filter_schema_id     = contains(local.managed_schemas, try(filter.schema, schema.name)) ? mso_schema.schema[try(filter.schema, schema.name)].id : local.schema_ids[filter.schema].id
                 filter_template_name = try(filter.template, template.name)
                 filter_name          = "${filter.name}${local.defaults.ndo.schemas.templates.filters.name_suffix}"
-                directives           = [try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? "log" : "none"]
+                directives = concat(
+                  try(filter.log, local.defaults.ndo.schemas.templates.contracts.filters.log) ? ["log"] : [],
+                  try(filter.policy_compression, local.defaults.ndo.schemas.templates.contracts.filters.policy_compression) ? ["no_stats"] : []
+                )
               }
             ]
           ))
