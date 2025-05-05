@@ -171,6 +171,7 @@ defaults:
           type: bothWay
           filters:
             log: false
+            policy_compression: false
         service_graphs:
           name_suffix: ""
           device_name_suffix: ""
