@@ -1,3 +1,11 @@
+## 1.0.0 (unreleased)
+
+- Add support for external TEP Pools
+- Enhance contract filter chain with `policy_compression` attribute
+- BREAKING CHANGE: Remove support for NDO 3.7
+- Add support for NDO 4.3
+- Add support for NDO 4.4
+
 ## 0.9.3
 
 - Add support for EP move detection mode under BD
