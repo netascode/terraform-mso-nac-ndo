@@ -101,7 +101,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.3.0 |
 | <a name="requirement_mso"></a> [mso](#requirement\_mso) | = 1.4.0 |
-| <a name="requirement_utils"></a> [utils](#requirement\_utils) | 0.3.0-beta1 |
+| <a name="requirement_utils"></a> [utils](#requirement\_utils) | 1.0.0 |
 
 ## Inputs
 
@@ -133,7 +133,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 |------|---------|
 | <a name="provider_local"></a> [local](#provider\_local) | >= 2.3.0 |
 | <a name="provider_mso"></a> [mso](#provider\_mso) | = 1.4.0 |
-| <a name="provider_utils"></a> [utils](#provider\_utils) | 0.3.0-beta1 |
+| <a name="provider_utils"></a> [utils](#provider\_utils) | 1.0.0 |
 
 ## Resources
 
@@ -194,8 +194,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_site.tenant_site](https://registry.terraform.io/providers/CiscoDevNet/mso/1.4.0/docs/data-sources/site) | data source |
 | [mso_tenant.template_tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/1.4.0/docs/data-sources/tenant) | data source |
 | [mso_user.tenant_user](https://registry.terraform.io/providers/CiscoDevNet/mso/1.4.0/docs/data-sources/user) | data source |
-| [utils_yaml_merge.defaults](https://registry.terraform.io/providers/netascode/utils/0.3.0-beta1/docs/data-sources/yaml_merge) | data source |
-| [utils_yaml_merge.model](https://registry.terraform.io/providers/netascode/utils/0.3.0-beta1/docs/data-sources/yaml_merge) | data source |
+| [utils_yaml_merge.defaults](https://registry.terraform.io/providers/netascode/utils/1.0.0/docs/data-sources/yaml_merge) | data source |
+| [utils_yaml_merge.model](https://registry.terraform.io/providers/netascode/utils/1.0.0/docs/data-sources/yaml_merge) | data source |
 
 ## Modules
 
