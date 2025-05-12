@@ -188,7 +188,7 @@ resource "mso_schema_template_contract" "schema_template_contract" {
       filter_template_name = filter_relationship.value.filter_template_name
       filter_name          = filter_relationship.value.filter_name
       filter_type          = filter_relationship.value.filter_type
-      directives           = filter_relationship.value.directives
+      directives           = filter_relationship.value.directives != [] ? filter_relationship.value.directives : ["none"]
     }
   }
 
