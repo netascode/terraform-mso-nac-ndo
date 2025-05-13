@@ -5,6 +5,7 @@
 - BREAKING CHANGE: Remove support for NDO 3.7
 - Add support for NDO 4.3
 - Add support for NDO 4.4
+- Use Terraform functions to merge YAML content instead of data sources
 
 ## 0.9.3
 
