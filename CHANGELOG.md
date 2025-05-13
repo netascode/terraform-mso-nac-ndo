@@ -1,4 +1,4 @@
-## 1.0.0 (unreleased)
+## 1.0.0
 
 - Add support for external TEP Pools
 - Enhance contract filter chain with `policy_compression` attribute
