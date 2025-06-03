@@ -1,6 +1,7 @@
 ## 1.0.1 (unreleased)
 
 - Fix handling of errors when merging invalid YAML content
+- Fix incorrect merge of booleans in defaults file
 
 ## 1.0.0
 
