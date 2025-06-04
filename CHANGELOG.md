@@ -1,7 +1,7 @@
-## 1.0.1 (unreleased)
+## 1.0.1
 
 - Fix handling of errors when merging invalid YAML content
-- Fix incorrect merge of booleans in defaults file
+- Fix merging of boolean values, where values of `false` were not merged consistently
 
 ## 1.0.0
 
