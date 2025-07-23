@@ -101,7 +101,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.3.0 |
 | <a name="requirement_mso"></a> [mso](#requirement\_mso) | >= 1.5.0 |
-| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 1.0.2 |
+| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 0.2.5 |
 
 ## Inputs
 
