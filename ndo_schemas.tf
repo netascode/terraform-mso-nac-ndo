@@ -41,6 +41,7 @@ locals {
           schema_id     = mso_schema.schema[schema.name].id
           template_name = template.name
           site_name     = site
+          deploy_order  = try(template.deploy_order, 1)
         }
       ]
     ]
@@ -53,13 +54,52 @@ data "mso_site" "template_site" {
 }
 
 resource "mso_schema_site" "schema_site" {
-  for_each            = { for site in local.template_sites : site.key => site }
+  for_each            = { for site in local.template_sites : site.key => site if local.ndo.undeploy_order == false }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
   undeploy_on_destroy = true
 
   depends_on = [mso_schema.schema]
+}
+
+
+### 
+resource "mso_schema_site" "schema_site1" {
+  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 1 && local.ndo.undeploy_order }
+  schema_id           = each.value.schema_id
+  template_name       = each.value.template_name
+  site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  undeploy_on_destroy = true
+
+  depends_on = [mso_schema.schema]
+}
+
+resource "mso_schema_site" "schema_site2" {
+  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 2 && local.ndo.undeploy_order }
+  schema_id           = each.value.schema_id
+  template_name       = each.value.template_name
+  site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  undeploy_on_destroy = true
+
+  depends_on = [
+    mso_schema.schema,
+    mso_schema_site.schema_site1
+  ]
+}
+
+resource "mso_schema_site" "schema_site3" {
+  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 3 && local.ndo.undeploy_order }
+  schema_id           = each.value.schema_id
+  template_name       = each.value.template_name
+  site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  undeploy_on_destroy = true
+
+  depends_on = [
+    mso_schema.schema,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2
+  ]
 }
 
 locals {
@@ -229,6 +269,9 @@ resource "mso_rest" "schema_site_contract" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_contract.schema_template_contract,
   ]
 }
@@ -357,6 +400,9 @@ resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_rest.schema_site_contract,
     mso_schema_template_service_graph.schema_template_service_graph,
     mso_schema_site_service_graph.schema_site_service_graph,
@@ -425,6 +471,9 @@ resource "mso_schema_site_vrf" "schema_site_vrf" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_vrf.schema_template_vrf,
   ]
 }
@@ -658,6 +707,9 @@ resource "mso_schema_site_bd" "schema_site_bd" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_bd.schema_template_bd,
   ]
 }
@@ -825,6 +877,9 @@ resource "mso_schema_site_anp" "schema_site_anp" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_anp.schema_template_anp,
   ]
 }
@@ -1644,6 +1699,9 @@ resource "mso_schema_site_external_epg_selector" "schema_site_external_epg_selec
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_external_epg_selector.schema_template_external_epg_selector,
   ]
 }
@@ -1757,6 +1815,9 @@ resource "mso_schema_site_service_graph" "schema_site_service_graph" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_service_graph.schema_template_service_graph,
   ]
 }
@@ -1769,6 +1830,9 @@ resource "mso_rest" "schema_site_service_graph" {
 
   depends_on = [
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_service_graph.schema_template_service_graph,
   ]
 }
