@@ -147,6 +147,9 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
 | [mso_schema_site.schema_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
+| [mso_schema_site.schema_site1](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
+| [mso_schema_site.schema_site2](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
+| [mso_schema_site.schema_site3](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site) | resource |
 | [mso_schema_site_anp.schema_site_anp](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp) | resource |
 | [mso_schema_site_anp_epg.schema_site_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg) | resource |
 | [mso_schema_site_anp_epg_bulk_staticport.schema_site_anp_epg_bulk_staticport](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_site_anp_epg_bulk_staticport) | resource |
