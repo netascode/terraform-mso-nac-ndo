@@ -2,6 +2,7 @@
 defaults:
   ndo:
     version: "3.7.2h"
+    undeploy_order: false
     remote_locations:
       port: 22
       path: "/"
