@@ -1,3 +1,7 @@
+## 1.1.0
+
+- Add attribute `undeploy_order` for NDO to allow for controlling ordered undeployment of templates within schema
+
 ## 1.0.1
 
 - Fix handling of errors when merging invalid YAML content
