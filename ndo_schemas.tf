@@ -66,7 +66,7 @@ resource "mso_schema_site" "schema_site" {
 
 ### 
 resource "mso_schema_site" "schema_site1" {
-  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 1 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
+  for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 1 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
@@ -76,7 +76,7 @@ resource "mso_schema_site" "schema_site1" {
 }
 
 resource "mso_schema_site" "schema_site2" {
-  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 2 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
+  for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 2 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
@@ -89,7 +89,7 @@ resource "mso_schema_site" "schema_site2" {
 }
 
 resource "mso_schema_site" "schema_site3" {
-  for_each            = { for site in local.template_sites : site.key => site if var.deploy_templates && site.deploy_order == 3 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
+  for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 3 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
   site_id             = var.manage_sites ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
