@@ -4,6 +4,7 @@ locals {
       for template in try(schema.templates, []) : template.tenant
     ]
   ]))
+  managed_tenants = [for tenant in local.tenants : tenant.name]
   managed_schemas = [for schema in local.schemas : schema.name]
   schema_ids      = { for schema in try(jsondecode(data.mso_rest.schemas.content).schemas, []) : schema.displayName => { "id" : schema.id } }
 }
@@ -13,7 +14,7 @@ data "mso_rest" "schemas" {
 }
 
 data "mso_tenant" "template_tenant" {
-  for_each = toset([for tenant in local.template_tenants : tenant if !var.manage_tenants && var.manage_schemas])
+  for_each = toset([for tenant in local.template_tenants : tenant if !contains(local.managed_tenants, tenant) && var.manage_schemas])
   name     = each.value
 }
 
@@ -26,7 +27,7 @@ resource "mso_schema" "schema" {
       name          = template.value.name
       display_name  = template.value.name
       description   = try(template.value.description, null)
-      tenant_id     = var.manage_tenants ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
+      tenant_id     = contains(local.managed_tenants, template.value.tenant) ? mso_tenant.tenant[template.value.tenant].id : data.mso_tenant.template_tenant[template.value.tenant].id
       template_type = try(template.value.type, local.defaults.ndo.schemas.templates.type) == "autonomous" ? "aci_autonomous" : "aci_multi_site"
     }
   }
