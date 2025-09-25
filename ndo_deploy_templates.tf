@@ -20,6 +20,9 @@ resource "mso_schema_template_deploy_ndo" "template" {
   depends_on = [
     mso_schema.schema,
     mso_schema_site.schema_site,
+    mso_schema_site.schema_site1,
+    mso_schema_site.schema_site2,
+    mso_schema_site.schema_site3,
     mso_schema_template_filter_entry.schema_template_filter_entry,
     mso_schema_template_contract.schema_template_contract,
     mso_rest.schema_site_contract,
