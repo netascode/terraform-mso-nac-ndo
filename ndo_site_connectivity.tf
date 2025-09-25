@@ -13,7 +13,7 @@ locals {
       id                         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
       apicSiteId                 = site.id
       platform                   = "on-premise"
-      fabricId                   = 1
+      fabricId                   = try(site.fabric_id, local.defaults.ndo.sites.fabric_id)
       msiteEnabled               = try(site.multisite, local.defaults.ndo.sites.multisite)
       msiteDataPlaneMulticastTep = try(site.multicast_tep, "")
       bgpAsn                     = try(site.bgp.as, "")

@@ -13,6 +13,7 @@ defaults:
         type: "informational"
         state: "active"
     sites:
+      fabric_id: 1
       location:
         long: 0
         lat: 0
