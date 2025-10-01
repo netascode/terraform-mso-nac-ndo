@@ -59,6 +59,8 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_schema_template_service_graph.schema_template_service_graph,
     mso_schema_site_service_graph.schema_site_service_graph,
     mso_rest.schema_site_service_graph,
+    mso_rest.provider_redirect_policy,
+    mso_rest.consumer_redirect_policy,
   ]
 }
 

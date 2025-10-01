@@ -141,6 +141,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 |------|------|
 | [local_sensitive_file.defaults](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/sensitive_file) | resource |
 | [mso_remote_location.remote_location](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/remote_location) | resource |
+| [mso_rest.consumer_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
+| [mso_rest.provider_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.schema_site_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.schema_site_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |

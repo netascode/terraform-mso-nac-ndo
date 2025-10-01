@@ -390,12 +390,12 @@ resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_
   dynamic "node_relationship" {
     for_each = { for node_relationship in try(each.value.node_relationship, []) : node_relationship.key => node_relationship }
     content {
-      provider_connector_cluster_interface      = node_relationship.value.provider[0].connector_cluster_interface
-      provider_connector_redirect_policy_tenant = node_relationship.value.provider[0].connector_redirect_policy != null ? node_relationship.value.provider[0].connector_redirect_policy_tenant : null
-      provider_connector_redirect_policy        = node_relationship.value.provider[0].connector_redirect_policy
-      consumer_connector_cluster_interface      = node_relationship.value.consumer[0].connector_cluster_interface
-      consumer_connector_redirect_policy_tenant = node_relationship.value.consumer[0].connector_redirect_policy != null ? node_relationship.value.consumer[0].connector_redirect_policy_tenant : null
-      consumer_connector_redirect_policy        = node_relationship.value.consumer[0].connector_redirect_policy
+      provider_connector_cluster_interface = node_relationship.value.provider[0].connector_cluster_interface
+      #    provider_connector_redirect_policy_tenant = node_relationship.value.provider[0].connector_redirect_policy != null ? node_relationship.value.provider[0].connector_redirect_policy_tenant : null
+      #    provider_connector_redirect_policy        = node_relationship.value.provider[0].connector_redirect_policy
+      consumer_connector_cluster_interface = node_relationship.value.consumer[0].connector_cluster_interface
+      #    consumer_connector_redirect_policy_tenant = node_relationship.value.consumer[0].connector_redirect_policy != null ? node_relationship.value.consumer[0].connector_redirect_policy_tenant : null
+      #    consumer_connector_redirect_policy        = node_relationship.value.consumer[0].connector_redirect_policy
     }
   }
 
@@ -409,6 +409,109 @@ resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_
     mso_schema_site_service_graph.schema_site_service_graph,
     mso_rest.schema_site_service_graph,
   ]
+}
+
+locals {
+  provider_redirect_config = merge(flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : {
+          "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}" = {
+            schema_id = mso_schema.schema[schema.name].id
+            payload = flatten([
+              for site_name in try(template.sites, []) : [
+                for node in try(contract.service_graph.nodes, []) : [
+                  for site in try(node.provider.sites, []) : {
+                    op   = "add"
+                    path = "/sites/${var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/providerConnector/redirectPolicy"
+                    value = {
+                      dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${try("${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}", "")}"
+                    }
+                  } if site.name == site_name && try(site.redirect_policy, null) != null
+                ]
+              ]
+            ])
+            node_relationships = flatten([
+              for site_name in try(template.sites, []) : [
+                for node in try(contract.service_graph.nodes, []) : [
+                  for site in try(node.provider.sites, []) : {
+                    site_key                  = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
+                    connector_redirect_policy = try("${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}", null)
+                  } if site.name == site_name && try(site.redirect_policy, null) != null
+                ]
+              ]
+            ])
+          }
+        } if try(contract.service_graph.name, null) != null
+      ]
+    ]
+  ])...)
+}
+resource "mso_rest" "provider_redirect_policy" {
+  depends_on = [
+    mso_schema_site_contract_service_graph.schema_site_contract_service_graph,
+  ]
+
+  for_each = { for k, v in local.provider_redirect_config : k => v if length(v.node_relationships) > 0 }
+  path     = "api/v1/schemas/${each.value.schema_id}"
+  method   = "PATCH"
+  retrigger = anytrue([
+    for node_rel in each.value.node_relationships :
+    node_rel.connector_redirect_policy != try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].provider_connector_redirect_policy, null)
+  ])
+  payload = jsonencode(each.value.payload)
+}
+
+locals {
+  consumer_redirect_config = merge(flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : {
+          "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}" = {
+            schema_id = mso_schema.schema[schema.name].id
+            payload = flatten([
+              for site_name in try(template.sites, []) : [
+                for node in try(contract.service_graph.nodes, []) : [
+                  for site in try(node.consumer.sites, []) : {
+                    op   = "add"
+                    path = "/sites/${var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/consumerConnector/redirectPolicy"
+                    value = {
+                      dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${try("${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}", "")}"
+                    }
+                  } if site.name == site_name && try(site.redirect_policy, null) != null
+                ]
+              ]
+            ])
+            node_relationships = flatten([
+              for site_name in try(template.sites, []) : [
+                for node in try(contract.service_graph.nodes, []) : [
+                  for site in try(node.consumer.sites, []) : {
+                    site_key                  = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
+                    connector_redirect_policy = try("${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}", null)
+                  } if site.name == site_name && try(site.redirect_policy, null) != null
+                ]
+              ]
+            ])
+          }
+        } if try(contract.service_graph.name, null) != null
+      ]
+    ]
+  ])...)
+}
+
+resource "mso_rest" "consumer_redirect_policy" {
+  depends_on = [
+    mso_schema_site_contract_service_graph.schema_site_contract_service_graph,
+  ]
+
+  for_each = { for k, v in local.consumer_redirect_config : k => v if length(v.node_relationships) > 0 }
+  path     = "api/v1/schemas/${each.value.schema_id}"
+  method   = "PATCH"
+  retrigger = anytrue([
+    for node_rel in each.value.node_relationships :
+    node_rel.connector_redirect_policy != try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].consumer_connector_redirect_policy, null)
+  ])
+  payload = jsonencode(each.value.payload)
 }
 
 locals {
