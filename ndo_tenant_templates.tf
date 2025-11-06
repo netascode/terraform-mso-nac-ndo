@@ -2,6 +2,11 @@ locals {
   tenant_templates_tenants = [
     for template in local.tenant_templates : template.tenant
   ]
+  template_ids = { for template in try(jsondecode(data.mso_rest.templates.content), []) : template.templateName => { "id" : template.templateId } if template.templateType == "tenantPolicy" }
+}
+
+data "mso_rest" "templates" {
+  path = "api/v1/templates/summaries"
 }
 
 data "mso_tenant" "tenant_templates_tenant" {
@@ -129,6 +134,11 @@ resource "mso_tenant_policies_dhcp_relay_policy" "tenant_policies_dhcp_relay_pol
       dhcp_server_vrf_preference = dhcp_relay_providers.value.use_server_vrf
     }
   }
+
+  depends_on = [
+    mso_schema_template_anp_epg.schema_template_anp_epg,
+    mso_schema_template_external_epg.schema_template_external_epg
+  ]
 }
 
 locals {
