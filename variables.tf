@@ -59,6 +59,17 @@ variable "managed_schemas" {
   default     = []
 }
 
+variable "manage_tenant_templates" {
+  description = "Flag to indicate if tenant templates should be managed."
+  type        = bool
+  default     = false
+}
+
+variable "managed_tenant_templates" {
+  description = "List of tenant template names to be managed. By default all tenant templates will be managed."
+  type        = list(string)
+  default     = []
+}
 variable "deploy_templates" {
   description = "Flag to indicate if templates should be deployed."
   type        = bool

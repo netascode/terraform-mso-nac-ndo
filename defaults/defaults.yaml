@@ -180,3 +180,27 @@ defaults:
           logical_interface_name_suffix: ""
           redirect_policy_name_suffix: ""
           node_type: "firewall"
+    tenant_templates:
+      tenant_policies:
+        dhcp_relay_policies:
+          name_suffix: ""
+          providers:
+            use_server_vrf: false
+        ip_sla_policies:
+          name_suffix: ""
+          multiplier: 3
+          frequency: 60
+          sla_type: icmp
+          port: 0
+          http_version: HTTP10
+          http_uri: /
+          request_data_size: 28
+          timeout: 900
+          threshold: 900
+          type_of_service: 0
+          ipv6_traffic_class: 0
+        multicast_route_maps:
+          name_suffix: ""
+          entries:
+            rp_ip: 0.0.0.0
+            action: permit

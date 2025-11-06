@@ -112,8 +112,10 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | <a name="input_manage_site_connectivity"></a> [manage\_site\_connectivity](#input\_manage\_site\_connectivity) | Flag to indicate if site connectivity be managed. | `bool` | `false` | no |
 | <a name="input_manage_sites"></a> [manage\_sites](#input\_manage\_sites) | Flag to indicate if sites should be managed. | `bool` | `false` | no |
 | <a name="input_manage_system"></a> [manage\_system](#input\_manage\_system) | Flag to indicate if system level configuration should be managed. | `bool` | `false` | no |
+| <a name="input_manage_tenant_templates"></a> [manage\_tenant\_templates](#input\_manage\_tenant\_templates) | Flag to indicate if tenant templates should be managed. | `bool` | `false` | no |
 | <a name="input_manage_tenants"></a> [manage\_tenants](#input\_manage\_tenants) | Flag to indicate if tenants be managed. | `bool` | `false` | no |
 | <a name="input_managed_schemas"></a> [managed\_schemas](#input\_managed\_schemas) | List of schema names to be managed. By default all schemas will be managed. | `list(string)` | `[]` | no |
+| <a name="input_managed_tenant_templates"></a> [managed\_tenant\_templates](#input\_managed\_tenant\_templates) | List of tenant template names to be managed. By default all tenant templates will be managed. | `list(string)` | `[]` | no |
 | <a name="input_managed_tenants"></a> [managed\_tenants](#input\_managed\_tenants) | List of tenant names to be managed. By default all tenants will be managed. | `list(string)` | `[]` | no |
 | <a name="input_model"></a> [model](#input\_model) | As an alternative to YAML files, a native Terraform data structure can be provided as well. | `map(any)` | `{}` | no |
 | <a name="input_write_default_values_file"></a> [write\_default\_values\_file](#input\_write\_default\_values\_file) | Write all default values to a YAML file. Value is a path pointing to the file to be created. | `string` | `""` | no |
@@ -188,15 +190,23 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_vrf.schema_template_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf) | resource |
 | [mso_schema_template_vrf_contract.schema_template_vrf_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf_contract) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |
+| [mso_template.tenant_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant) | resource |
+| [mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_dhcp_relay_policy) | resource |
+| [mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_monitoring_policy) | resource |
+| [mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_route_map_policy_multicast) | resource |
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.schemas](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
+| [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_anp_epg) | data source |
+| [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.template_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.tenant_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
+| [mso_site.tenant_templates_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_tenant.template_tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/tenant) | data source |
+| [mso_tenant.tenant_templates_tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/tenant) | data source |
 | [mso_user.tenant_user](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/user) | data source |
 
 ## Modules
