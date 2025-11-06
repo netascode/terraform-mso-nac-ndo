@@ -12,6 +12,7 @@ locals {
   ])
 }
 
+
 resource "mso_schema_template_deploy_ndo" "template" {
   for_each      = { for template in local.deploy_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
   schema_id     = var.manage_schemas ? mso_schema.schema[each.value.schema_name].id : local.schema_ids[each.value.schema_name].id
@@ -80,3 +81,49 @@ resource "mso_schema_template_deploy_ndo" "template3" {
     mso_schema_template_deploy_ndo.template2,
   ]
 }
+
+locals {
+  unmanaged_templates = [for template in try(local.ndo.tenant_templates, []) : template if !var.manage_tenant_templates && var.deploy_templates]
+  deploy_tenant_templates = flatten([
+    for template in concat(local.tenant_templates, local.unmanaged_templates) : {
+      key           = template.name
+      template_name = template.name
+      deploy_order  = try(template.deploy_order, 1)
+    }
+  ])
+}
+resource "mso_schema_template_deploy_ndo" "tenant_template" {
+  for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_type = "tenant"
+  template_name = each.value.template_name
+
+  depends_on = [
+    mso_template.tenant_template,
+    mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
+    mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
+    mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast,
+  ]
+}
+
+resource "mso_schema_template_deploy_ndo" "tenant_template2" {
+  for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 2 }
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_type = "tenant"
+  template_name = each.value.template_name
+
+  depends_on = [mso_schema_template_deploy_ndo.tenant_template]
+}
+
+resource "mso_schema_template_deploy_ndo" "tenant_template3" {
+  for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 3 }
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_type = "tenant"
+  template_name = each.value.template_name
+
+  depends_on = [
+    mso_schema_template_deploy_ndo.tenant_template,
+    mso_schema_template_deploy_ndo.tenant_template2,
+  ]
+}
+
