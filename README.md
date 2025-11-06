@@ -180,6 +180,9 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.template2](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.template3](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.tenant_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.tenant_template2](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.tenant_template3](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg) | resource |
 | [mso_schema_template_external_epg_contract.schema_template_external_epg_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_contract) | resource |
 | [mso_schema_template_external_epg_selector.schema_template_external_epg_selector](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_external_epg_selector) | resource |
@@ -199,6 +202,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.schemas](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
+| [mso_rest.templates](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_anp_epg) | data source |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
