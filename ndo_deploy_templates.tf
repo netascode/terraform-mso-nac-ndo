@@ -94,7 +94,7 @@ locals {
 }
 resource "mso_schema_template_deploy_ndo" "tenant_template" {
   for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
-  template_id = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
   template_type = "tenant"
   template_name = each.value.template_name
 
@@ -103,12 +103,12 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
     mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
     mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
     mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast,
-    ]
+  ]
 }
 
 resource "mso_schema_template_deploy_ndo" "tenant_template2" {
   for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 2 }
-  template_id = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
   template_type = "tenant"
   template_name = each.value.template_name
 
@@ -117,7 +117,7 @@ resource "mso_schema_template_deploy_ndo" "tenant_template2" {
 
 resource "mso_schema_template_deploy_ndo" "tenant_template3" {
   for_each      = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 3 }
-  template_id = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
+  template_id   = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
   template_type = "tenant"
   template_name = each.value.template_name
 
