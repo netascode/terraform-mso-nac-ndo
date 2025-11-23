@@ -391,9 +391,11 @@ resource "mso_schema_site_contract_service_graph" "schema_site_contract_service_
     for_each = { for node_relationship in try(each.value.node_relationship, []) : node_relationship.key => node_relationship }
     content {
       provider_connector_cluster_interface = node_relationship.value.provider[0].connector_cluster_interface
+      # Commented out due to issue with deploying PBRs in a multisite scenario, with workaround in mso_rest.provider_redirect_policy
       #    provider_connector_redirect_policy_tenant = node_relationship.value.provider[0].connector_redirect_policy != null ? node_relationship.value.provider[0].connector_redirect_policy_tenant : null
       #    provider_connector_redirect_policy        = node_relationship.value.provider[0].connector_redirect_policy
       consumer_connector_cluster_interface = node_relationship.value.consumer[0].connector_cluster_interface
+      # Commented out due to issue with deploying PBRs in a multisite scenario, with workaround in mso_rest.consumer_redirect_policy
       #    consumer_connector_redirect_policy_tenant = node_relationship.value.consumer[0].connector_redirect_policy != null ? node_relationship.value.consumer[0].connector_redirect_policy_tenant : null
       #    consumer_connector_redirect_policy        = node_relationship.value.consumer[0].connector_redirect_policy
     }
@@ -422,13 +424,12 @@ locals {
               for site_name in try(template.sites, []) : [
                 for node in try(contract.service_graph.nodes, []) : [
                   for site in try(node.provider.sites, []) : {
-                    op = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].provider_connector_redirect_policy, "") != "" ? "remove" : "add"
-                    #op   = "add"
+                    op   = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].provider_connector_redirect_policy, "") != "" ? "remove" : "add"
                     path = "/sites/${var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/providerConnector/redirectPolicy"
                     value = try(site.redirect_policy, null) != null ? {
                       dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
                     } : {}
-                  } if site.name == site_name # && try(site.redirect_policy, null) != null
+                  } if site.name == site_name
                 ]
               ]
             ])
@@ -438,7 +439,7 @@ locals {
                   for site in try(node.provider.sites, []) : {
                     site_key                  = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
                     connector_redirect_policy = try(site.redirect_policy, null) != null ? "${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}" : ""
-                  } if site.name == site_name #&& try(site.redirect_policy, null) != null
+                  } if site.name == site_name
                 ]
               ]
             ])
@@ -451,15 +452,6 @@ locals {
 
 
 resource "mso_rest" "provider_redirect_policy" {
-  #for_each = {
-  #  for k, v in local.provider_redirect_config : k => v
-  #  if anytrue([
-  #    for node_rel in v.node_relationships :
-  #    # Only include if at least one side has a value (not both empty) AND they're different
-  #    (node_rel.connector_redirect_policy != "" || try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].provider_connector_redirect_policy, "") != "") &&
-  #    (node_rel.connector_redirect_policy != try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].provider_connector_redirect_policy, ""))
-  #  ])
-  #}
   for_each = { for k, v in local.provider_redirect_config : k => v }
   path     = "api/v1/schemas/${each.value.schema_id}"
   method   = "PATCH"
@@ -487,13 +479,12 @@ locals {
               for site_name in try(template.sites, []) : [
                 for node in try(contract.service_graph.nodes, []) : [
                   for site in try(node.consumer.sites, []) : {
-                    op = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].consumer_connector_redirect_policy, "") != "" ? "remove" : "add"
-                    #op   = "add"
+                    op   = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].consumer_connector_redirect_policy, "") != "" ? "remove" : "add"
                     path = "/sites/${var.manage_sites ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/consumerConnector/redirectPolicy"
                     value = try(site.redirect_policy, null) != null ? {
                       dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
                     } : {}
-                  } if site.name == site_name #&& try(site.redirect_policy, null) != null
+                  } if site.name == site_name
                 ]
               ]
             ])
@@ -503,7 +494,7 @@ locals {
                   for site in try(node.consumer.sites, []) : {
                     site_key                  = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
                     connector_redirect_policy = try(site.redirect_policy, null) != null ? "${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}" : ""
-                  } if site.name == site_name #&& try(site.redirect_policy, null) != null
+                  } if site.name == site_name
                 ]
               ]
             ])
@@ -515,16 +506,6 @@ locals {
 }
 
 resource "mso_rest" "consumer_redirect_policy" {
-  #for_each = {
-  #  for k, v in local.consumer_redirect_config : k => v
-  #  if anytrue([
-  #    for node_rel in v.node_relationships :
-  #    # Only include if at least one side has a value (not both empty) AND they're different
-  #    (node_rel.connector_redirect_policy != "" || try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].consumer_connector_redirect_policy, "") != "") &&
-  #    (node_rel.connector_redirect_policy != try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph[node_rel.site_key].node_relationship[0].consumer_connector_redirect_policy, ""))
-  #  ])
-  #}
-
   for_each = { for k, v in local.consumer_redirect_config : k => v }
   path     = "api/v1/schemas/${each.value.schema_id}"
   method   = "PATCH"
