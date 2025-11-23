@@ -100,8 +100,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.3.0 |
-| <a name="requirement_mso"></a> [mso](#requirement\_mso) | >= 1.5.1 |
-| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 1.0.2 |
+| <a name="requirement_mso"></a> [mso](#requirement\_mso) | >= 1.6.0 |
+| <a name="requirement_utils"></a> [utils](#requirement\_utils) | >= 1.0.2, < 2.0.0 |
 
 ## Inputs
 
@@ -132,7 +132,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | Name | Version |
 |------|---------|
 | <a name="provider_local"></a> [local](#provider\_local) | >= 2.3.0 |
-| <a name="provider_mso"></a> [mso](#provider\_mso) | >= 1.5.1 |
+| <a name="provider_mso"></a> [mso](#provider\_mso) | >= 1.6.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Resources
