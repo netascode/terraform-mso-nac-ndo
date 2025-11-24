@@ -4,11 +4,11 @@ terraform {
   required_providers {
     mso = {
       source  = "CiscoDevNet/mso"
-      version = ">= 1.5.1"
+      version = ">= 1.6.0"
     }
     utils = {
       source  = "netascode/utils"
-      version = ">= 1.0.2"
+      version = ">= 1.0.2, < 2.0.0"
     }
     local = {
       source  = "hashicorp/local"
