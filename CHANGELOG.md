@@ -1,3 +1,13 @@
+# CHANGELOG
+
+## 1.2.0
+
+- Add support for custom `fabric_id` configuration
+- Remove inter-dependency between managing schema configuration and deployment
+- Ensure all unmanaged tenants can be referenced in schema templates
+- Add workaround for configuring `redirect_policy` under contract with service graph in a multisite scenario
+
+
 ## 1.1.0
 
 - Add attribute `undeploy_order` for NDO to allow for controlling ordered undeployment of templates within schema
