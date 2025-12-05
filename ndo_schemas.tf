@@ -1617,7 +1617,7 @@ locals {
             external_epg_name   = epg.name
             l3out_name          = try(site.l3out.name, null)
             l3out_template_name = try(site.l3out.template, null)
-            l3out_schema_id     = try(site.l3out.schema, null) != null ? mso_schema.schema[site.l3out.schema].id : null
+            l3out_schema_id     = try(site.l3out.schema, null) != null ? contains(local.managed_schemas, try(site.l3out.schema, schema.name)) ? mso_schema.schema[try(site.l3out.schema, schema.name)].id : local.schema_ids[site.l3out.schema].id : null
             l3out_on_apic       = try(site.l3out.on_apic, null)
           }
         ]
