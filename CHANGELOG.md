@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.1
+
+- Fix L3out schema ID references for non-managed schemas
+
 ## 1.2.0
 
 - Add support for custom `fabric_id` configuration
