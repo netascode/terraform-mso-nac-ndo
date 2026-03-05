@@ -396,5 +396,8 @@ $RECYCLE.BIN/
 *.tfstate.backup
 *.tfplan
 
+# DS_Store
+.DS_Store
+
 # Claude
 .claude
