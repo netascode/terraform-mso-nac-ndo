@@ -36,8 +36,7 @@ locals {
     for template in local.tenant_templates : [{
       name   = template.name
       tenant = contains(local.managed_tenants, template.tenant) ? mso_tenant.tenant[template.tenant].id : data.mso_tenant.tenant_templates_tenant[template.tenant].id
-      sites  = [for site in try(template.sites, []) : data.mso_site.tenant_templates_site[site].id]
-    }]
+    sites = [for site in try(template.sites, []) : var.manage_sites ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id] }]
   ])
 }
 
@@ -104,6 +103,7 @@ locals {
           name           = provider.name
           type           = provider.type
           ip             = provider.ip
+          schema         = provider.schema
           use_server_vrf = try(provider.use_server_vrf, local.defaults.ndo.tenant_templates.tenant_policies.dhcp_relay_policies.providers.use_server_vrf)
           epg_path       = provider.type == "epg" ? "${provider.schema}/${provider.template}/${try(provider.application_profile, "")}/${try(provider.endpoint_group, "")}" : null
           ext_epg_path   = provider.type == "external_epg" ? "${provider.schema}/${provider.template}/${try(provider.external_endpoint_group, "")}" : null
