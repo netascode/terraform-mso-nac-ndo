@@ -188,9 +188,9 @@ defaults:
             use_server_vrf: false
         ip_sla_policies:
           name_suffix: ""
+          sla_type: icmp
           multiplier: 3
           frequency: 60
-          sla_type: icmp
           port: 0
           http_version: HTTP10
           http_uri: /
