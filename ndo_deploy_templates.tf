@@ -85,9 +85,9 @@ resource "mso_schema_template_deploy_ndo" "template3" {
 }
 
 locals {
-  unmanaged_templates = [for template in try(local.ndo.tenant_templates, []) : template if !var.manage_tenant_templates && var.deploy_templates]
+  unmanaged_templates = [for template in try(local.ndo.tenant_templates.tenant_policies, []) : template if !var.manage_tenant_templates && var.deploy_templates]
   deploy_tenant_templates = flatten([
-    for template in concat(local.tenant_templates, local.unmanaged_templates) : {
+    for template in try(concat(local.tenant_templates, local.unmanaged_templates), {}) : {
       key           = template.name
       template_name = template.name
       deploy_order  = try(template.deploy_order, 1)
