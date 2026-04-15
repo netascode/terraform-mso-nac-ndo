@@ -1149,6 +1149,7 @@ resource "mso_schema_template_anp_epg_contract" "schema_template_anp_epg_contrac
 
   depends_on = [
     mso_schema_template_anp_epg.schema_template_anp_epg,
+    mso_schema_template_anp_epg.schema_template_anp_epg_subnet,
     mso_schema_template_contract.schema_template_contract,
     mso_rest.consumer_redirect_policy,
     mso_rest.provider_redirect_policy,
