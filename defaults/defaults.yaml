@@ -1,7 +1,7 @@
 ---
 defaults:
   ndo:
-    version: "3.7.2h"
+    version: "4.2.3o"
     undeploy_order: false
     remote_locations:
       port: 22
@@ -55,14 +55,6 @@ defaults:
         stale_interval: 300
         graceful_restart: true
         max_as: 0
-    policies:
-      dhcp_relays:
-        name_suffix: ""
-      dhcp_options:
-        name_suffix: ""
-        options:
-          name_suffix: ""
-          id: 1
     tenants:
       orchestrator_only: true
     schemas:
