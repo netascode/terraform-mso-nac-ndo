@@ -27,7 +27,7 @@ locals {
 }
 
 data "mso_site" "tenant_templates_site" {
-  for_each = toset(distinct([for site in local.tenant_templates_sites : site.site_name if !var.manage_sites && var.manage_tenant_templates]))
+  for_each = toset(distinct([for site in local.tenant_templates_sites : site.site_name if(!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_tenant_templates]))
   name     = each.value
 }
 
@@ -36,7 +36,7 @@ locals {
     for template in local.tenant_templates : [{
       name   = template.name
       tenant = contains(local.managed_tenants, template.tenant) ? mso_tenant.tenant[template.tenant].id : data.mso_tenant.tenant_templates_tenant[template.tenant].id
-    sites = [for site in try(template.sites, []) : var.manage_sites ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id] }]
+    sites = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id] }]
   ])
 }
 

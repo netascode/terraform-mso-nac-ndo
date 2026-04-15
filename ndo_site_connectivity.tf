@@ -10,7 +10,7 @@ locals {
       maxAsLimit             = try(local.ndo.fabric_connectivity.bgp.max_as, local.defaults.ndo.fabric_connectivity.bgp.max_as)
     }
     sites = var.manage_site_connectivity ? [for site in try(local.ndo.sites, []) : {
-      id                         = var.manage_sites ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+      id                         = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
       apicSiteId                 = site.id
       platform                   = "on-premise"
       fabricId                   = try(site.fabric_id, local.defaults.ndo.sites.fabric_id)
@@ -61,7 +61,7 @@ locals {
 }
 
 data "mso_site" "site" {
-  for_each = toset([for site in try(local.ndo.sites, []) : site.name if !var.manage_sites && var.manage_site_connectivity])
+  for_each = toset([for site in try(local.ndo.sites, []) : site.name if(!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_site_connectivity])
   name     = each.value
 }
 
