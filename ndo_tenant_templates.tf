@@ -27,7 +27,7 @@ locals {
 }
 
 data "mso_site" "tenant_templates_site" {
-  for_each = toset(distinct([for site in local.tenant_templates_sites : site.site_name if (!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_tenant_templates]))
+  for_each = toset(distinct([for site in local.tenant_templates_sites : site.site_name if(!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_tenant_templates]))
   name     = each.value
 }
 

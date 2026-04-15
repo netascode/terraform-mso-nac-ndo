@@ -61,7 +61,7 @@ locals {
 }
 
 data "mso_site" "site" {
-  for_each = toset([for site in try(local.ndo.sites, []) : site.name if (!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_site_connectivity])
+  for_each = toset([for site in try(local.ndo.sites, []) : site.name if(!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_site_connectivity])
   name     = each.value
 }
 
