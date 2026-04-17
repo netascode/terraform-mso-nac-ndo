@@ -4,7 +4,7 @@ terraform {
   required_providers {
     mso = {
       source  = "CiscoDevNet/mso"
-      version = ">= 1.6.0"
+      version = ">= 2.0.0"
     }
     utils = {
       source  = "netascode/utils"
