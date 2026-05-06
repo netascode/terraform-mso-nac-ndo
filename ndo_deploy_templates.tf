@@ -94,7 +94,7 @@ locals {
       key           = template.name
       template_name = template.name
       deploy_order  = try(template.deploy_order, 1)
-    }
+    } if length(try(template.sites, [])) > 0
   ])
 }
 resource "mso_schema_template_deploy_ndo" "tenant_template" {
@@ -132,6 +132,27 @@ resource "mso_schema_template_deploy_ndo" "tenant_template3" {
   depends_on = [
     mso_schema_template_deploy_ndo.tenant_template,
     mso_schema_template_deploy_ndo.tenant_template2,
+  ]
+}
+
+locals {
+  deploy_service_device_templates = flatten([
+    for template in local.service_device_templates : {
+      key           = template.name
+      template_name = template.name
+    } if var.deploy_templates && length(try(template.sites, [])) > 0
+  ])
+}
+
+resource "mso_schema_template_deploy_ndo" "service_device_template" {
+  for_each            = { for template in local.deploy_service_device_templates : template.key => template if var.deploy_templates }
+  template_id         = mso_template.service_device_template[each.value.template_name].id
+  template_type       = "service_device"
+  template_name       = each.value.template_name
+  undeploy_on_destroy = true
+
+  depends_on = [
+    mso_rest.service_device_cluster_site,
   ]
 }
 

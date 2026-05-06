@@ -1,7 +1,7 @@
 ---
 defaults:
   ndo:
-    version: "4.2.3o"
+    version: "3.7.2h"
     undeploy_order: false
     remote_locations:
       port: 22
@@ -55,6 +55,14 @@ defaults:
         stale_interval: 300
         graceful_restart: true
         max_as: 0
+    policies:
+      dhcp_relays:
+        name_suffix: ""
+      dhcp_options:
+        name_suffix: ""
+        options:
+          name_suffix: ""
+          id: 1
     tenants:
       orchestrator_only: true
     schemas:
@@ -173,6 +181,40 @@ defaults:
           redirect_policy_name_suffix: ""
           node_type: "firewall"
     tenant_templates:
+      service_device:
+        cluster:
+          name_suffix: ""
+          device_mode: layer3
+          connectivity_mode: twoArm
+          sites:
+            domain_type: physical
+            high_availability_mode: active-standby
+            trunking_port: false
+            promiscuous_mode: false
+            vmm_type: VMware
+          interfaces:
+            name_suffix: ""
+            redirect: false
+            advanced_settings: false
+            preferred_group: false
+            load_balance_hashing: sourceDestinationAndProtocol
+            pod_aware_redirection: false
+            anycast: false
+            rewrite_source_mac: false
+            advanced_tracking_options: false
+            config_static_mac: false
+            tag_based_sorting: false
+            resilient_hash: false
+            backup_redirect_ip: false
+            threshold:
+              min_threshold: 0
+              max_threshold: 100
+              down_action: permit
+            pbr:
+              weight: 1
+            fabric_interfaces:
+              type: port
+
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""
