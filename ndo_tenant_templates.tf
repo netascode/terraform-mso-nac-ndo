@@ -219,20 +219,6 @@ resource "mso_tenant_policies_route_map_policy_multicast" "tenant_policies_route
 }
 
 locals {
-  service_device_template_tenants = [
-    for template in local.service_device_templates : template.tenant
-  ]
-
-  service_device_template_sites = flatten(distinct([
-    for template in local.service_device_templates : [
-      for site in try(template.sites, []) : {
-        key           = "${template.name}/${site}"
-        template_name = template.name
-        site_name     = site
-      }
-    ]
-  ]))
-
   service_device_policies = flatten([
     for template in local.service_device_templates : [{
       name   = template.name
