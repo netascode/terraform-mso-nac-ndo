@@ -217,3 +217,326 @@ resource "mso_tenant_policies_route_map_policy_multicast" "tenant_policies_route
     }
   }
 }
+
+locals {
+  service_device_policies = flatten([
+    for template in local.service_device_templates : [{
+      name   = template.name
+      tenant = contains(local.managed_tenants, template.tenant) ? mso_tenant.tenant[template.tenant].id : data.mso_tenant.tenant_templates_tenant[template.tenant].id
+      sites  = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id]
+    }]
+  ])
+}
+
+
+
+resource "mso_template" "service_device_template" {
+  for_each      = { for template in local.service_device_policies : template.name => template }
+  template_name = each.value.name
+  template_type = "service_device"
+  tenant_id     = each.value.tenant
+  sites         = each.value.sites
+}
+
+locals {
+  service_device_clusters = flatten([
+    for template in local.service_device_templates : [
+      for cluster in try(template.cluster, []) : {
+        key           = "service_device/${template.name}/${cluster.name}"
+        template_name = template.name
+        name          = cluster.name
+        device_type   = try(cluster.device_type, "firewall")
+        device_mode   = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)
+        interfaces = [for iface in try(cluster.interfaces, []) : {
+          name                      = iface.name
+          interface_type            = try(iface.interface_type, "bd")
+          redirect                  = try(iface.interface_type, "bd") != "l3out" && (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect))
+          bd_uuid_key               = try(iface.interface_type, "bd") == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
+          external_epg_uuid_key     = try(iface.interface_type, "bd") == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_epg, "")}" : null
+          ipsla_key                 = try(iface.ip_sla, null) != null ? "${try(iface.ip_sla.template, template.name)}/${try(iface.ip_sla.name, "")}" : null
+          advanced_tracking_options = try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)
+          preferred_group           = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.preferred_group)
+          rewrite_source_mac        = try(iface.rewrite_source_mac, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.rewrite_source_mac)
+          anycast                   = try(iface.anycast, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.anycast)
+          config_static_mac         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.config_static_mac) : null
+          is_backup_redirect_ip     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.backup_redirect_ip, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.backup_redirect_ip) : null
+          load_balance_hashing      = try(iface.load_balance_hashing, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.load_balance_hashing)
+          pod_aware_redirection     = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection)
+          resilient_hashing         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.resilient_hash) : null
+          tag_based_sorting         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.tag_based_sorting, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.tag_based_sorting) : null
+          min_threshold             = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.threshold.min_threshold, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.threshold.min_threshold) : null
+          max_threshold             = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.threshold.max_threshold, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.threshold.max_threshold) : null
+          threshold_down_action     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(iface.threshold.down_action, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.threshold.down_action) : null
+        }]
+      }
+    ]
+  ])
+
+  service_device_bd_lookups = distinct(flatten([
+    for cluster in local.service_device_clusters : [
+      for iface in cluster.interfaces : {
+        key      = iface.bd_uuid_key
+        schema   = split("/", iface.bd_uuid_key)[0]
+        template = split("/", iface.bd_uuid_key)[1]
+        name     = split("/", iface.bd_uuid_key)[2]
+      } if iface.bd_uuid_key != null
+    ]
+  ]))
+
+  service_device_external_epg_lookups = distinct(flatten([
+    for cluster in local.service_device_clusters : [
+      for iface in cluster.interfaces : {
+        key      = iface.external_epg_uuid_key
+        schema   = split("/", iface.external_epg_uuid_key)[0]
+        template = split("/", iface.external_epg_uuid_key)[1]
+        name     = split("/", iface.external_epg_uuid_key)[2]
+      } if iface.external_epg_uuid_key != null
+    ]
+  ]))
+
+
+}
+
+data "mso_schema_template_bd" "service_device_bd" {
+  for_each      = { for bd in local.service_device_bd_lookups : bd.key => bd if(!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, bd.schema))) }
+  schema_id     = local.schema_ids[each.value.schema].id
+  template_name = each.value.template
+  name          = each.value.name
+}
+
+data "mso_schema_template_external_epg" "service_device_external_epg" {
+  for_each          = { for epg in local.service_device_external_epg_lookups : epg.key => epg if(!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, epg.schema))) }
+  schema_id         = local.schema_ids[each.value.schema].id
+  template_name     = each.value.template
+  external_epg_name = each.value.name
+}
+
+
+
+locals {
+  service_device_cluster_sites = flatten([
+    for template in local.service_device_templates : [
+      for cluster in try(template.cluster, []) : [
+        for site_name in try(template.sites, []) : {
+          key                    = "service_device/${template.name}/${cluster.name}/${site_name}"
+          template_name          = template.name
+          cluster_name           = cluster.name
+          site_name              = site_name
+          site_id                = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
+          device_mode            = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)
+          domain_type            = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type)
+          domain_name            = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_name, "")
+          vmm_type               = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).vmm_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.vmm_type)
+          trunking_port          = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).trunking_port, local.defaults.ndo.tenant_templates.service_device.cluster.sites.trunking_port)
+          promiscuous_mode       = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).promiscuous_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.promiscuous_mode)
+          high_availability_mode = contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null
+          interfaces = [for iface in try(cluster.interfaces, []) : {
+            name = iface.name
+            vlan = try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).vlan, null)
+            elag = try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).elag, "")
+            pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)) && try(iface.interface_type, "bd") != "l3out" ? [for pbr in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).pbr_destinations, []) : {
+              ip                     = try(pbr.ip, null)
+              mac                    = try(pbr.mac, null)
+              tag                    = try(pbr.tag, null)
+              pod_id                 = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod_id, 1) : null
+              weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pbr.weight) : null
+              additional_tracking_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.additional_tracking_ip, null) : null
+              is_backup              = try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.resilient_hash) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.backup, false) : null
+            }] : []
+            fabric_interfaces = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "physical" ? [for fi in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).fabric_interfaces, []) : {
+              type    = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
+              pod     = try(fi.pod, 1)
+              node    = try(fi.node, null)
+              node_2  = try(fi.node_2, null)
+              port    = try(fi.port, null)
+              module  = try(fi.module, 1)
+              channel = try(fi.channel, null)
+              tag     = try(fi.tag, null)
+              vlan    = try(fi.vlan, null)
+            }] : []
+            vmm_interfaces = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? [for fi in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).fabric_interfaces, []) : {
+              type     = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
+              pod      = try(fi.pod, 1)
+              node     = try(fi.node, null)
+              node_2   = try(fi.node_2, null)
+              port     = try(fi.port, null)
+              module   = try(fi.module, 1)
+              channel  = try(fi.channel, null)
+              vmm_name = try(fi.vmm_name, null)
+              vnic     = try(fi.vnic, null)
+            }] : []
+          }]
+        }
+      ]
+    ]
+  ])
+
+  service_device_cluster_site_payloads = {
+    for template in local.service_device_templates : template.name => {
+      patch = concat([{
+        op   = "replace"
+        path = "/deviceTemplate/template/devices"
+        value = [
+          for cluster in [for c in local.service_device_clusters : c if c.template_name == template.name] :
+          merge(
+            {
+              name             = cluster.name
+              deviceLocation   = "onPremise"
+              deviceType       = cluster.device_type
+              deviceMode       = cluster.device_mode
+              connectivityMode = length(cluster.interfaces) == 0 ? "" : (length(cluster.interfaces) == 1 && cluster.device_mode == "layer3" ? "oneArm" : (length(cluster.interfaces) == 2 ? "twoArm" : "other"))
+              interfaces = [for iface in cluster.interfaces : merge(concat(
+                [{
+                  name                = iface.name
+                  deviceInterfaceType = iface.interface_type
+                  redirect            = iface.redirect
+                }],
+                iface.bd_uuid_key != null ? [{
+                  bdRef = !var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", iface.bd_uuid_key)[0])) ? data.mso_schema_template_bd.service_device_bd[iface.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd["${split("/", iface.bd_uuid_key)[0]}/${split("/", iface.bd_uuid_key)[1]}/${split("/", iface.bd_uuid_key)[2]}"].uuid
+                }] : [],
+                iface.external_epg_uuid_key != null ? [{
+                  externalEpgRef = !var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", iface.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.service_device_external_epg[iface.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg["${split("/", iface.external_epg_uuid_key)[0]}/${split("/", iface.external_epg_uuid_key)[1]}/${split("/", iface.external_epg_uuid_key)[2]}"].uuid
+                }] : [],
+                iface.ipsla_key != null ? [{
+                  ipslaMonitoringRef = mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[split("/", iface.ipsla_key)[1]].uuid
+                }] : [],
+                (iface.advanced_tracking_options || iface.preferred_group || iface.rewrite_source_mac || iface.anycast || iface.redirect) ? [{
+                  isAdvancedIntfConfig = true
+                  advancedIntfConfig = merge(concat(
+                    [{
+                      preferredGroup          = iface.preferred_group
+                      advancedTrackingOptions = iface.advanced_tracking_options
+                    }],
+                    iface.redirect ? [{
+                      loadBalanceHashing  = iface.load_balance_hashing
+                      podAwareRedirection = iface.pod_aware_redirection
+                      anycast             = iface.anycast
+                      rewriteSourceMac    = iface.rewrite_source_mac
+                    }] : [],
+                    iface.advanced_tracking_options ? [{
+                      configStaticMac  = iface.config_static_mac
+                      tag              = iface.tag_based_sorting
+                      resilientHashing = iface.resilient_hashing
+                    }] : [],
+                    iface.advanced_tracking_options && iface.resilient_hashing == true ? [{
+                      isBackupRedirectIP = iface.is_backup_redirect_ip
+                    }] : [],
+                    iface.advanced_tracking_options && iface.min_threshold != null ? [{
+                      thresholdForRedirectDestination = true
+                      thresholdForRedirect = {
+                        minThreshold        = iface.min_threshold
+                        maxThreshold        = iface.max_threshold
+                        thresholdDownAction = iface.threshold_down_action
+                      }
+                    }] : [],
+                  )...)
+                }] : [],
+              )...)]
+            }
+          )
+        ]
+        }], [{
+        op   = "replace"
+        path = "/deviceTemplate/sites"
+        value = [
+          for site_name in try(template.sites, []) :
+          {
+            siteId = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
+            devices = [
+              for site in [for s in local.service_device_cluster_sites : s if s.template_name == template.name && s.site_name == site_name] :
+              merge(
+                {
+                  name             = site.cluster_name
+                  isPhysicalDomain = site.domain_type == "physical" || contains(["layer2", "layer1"], site.device_mode)
+                  domainDn         = site.domain_type == "physical" ? "uni/phys-${site.domain_name}" : "uni/vmmp-${site.vmm_type}/dom-${site.domain_name}"
+                },
+                contains(["layer2", "layer1"], site.device_mode) ? { highAvailabilityMode = site.high_availability_mode } : {},
+                site.domain_type == "vmm" ? {
+                  trunkingPort     = site.trunking_port
+                  promiscuous_mode = site.promiscuous_mode
+                } : {},
+                {
+                  interfaces = [for iface in site.interfaces : merge(
+                    { name = iface.name },
+                    iface.vlan != null && site.high_availability_mode != "activeActive" ? { vlan = iface.vlan } : {},
+                    length(iface.pbr_destinations) > 0 ? {
+                      pbrDestinations = [for pbr in iface.pbr_destinations : merge(
+                        pbr.ip != null ? { ip = pbr.ip } : {},
+                        pbr.mac != null ? { mac = pbr.mac } : {},
+                        pbr.tag != null ? { tag = pbr.tag } : {},
+                        pbr.pod_id != null ? { podID = tostring(pbr.pod_id) } : {},
+                        pbr.weight != null ? { weight = pbr.weight } : {},
+                        pbr.additional_tracking_ip != null ? { additionalTrackingIP = pbr.additional_tracking_ip } : {},
+                        pbr.is_backup != null ? { isBackUp = pbr.is_backup } : {},
+                      )]
+                    } : {},
+                    site.domain_type == "physical" && length(iface.fabric_interfaces) > 0 ? {
+                      fabricToDeviceConnectivity = [for fi in iface.fabric_interfaces : merge(
+                        {
+                          portType = fi.type
+                          podID    = tostring(fi.pod)
+                        },
+                        fi.tag != null && contains(["layer2", "layer1"], site.device_mode) ? { tag = fi.tag } : {},
+                        fi.vlan != null && site.high_availability_mode == "activeActive" ? { vlan = fi.vlan } : {},
+                        fi.type == "port" ? {
+                          path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[eth${fi.module}/${fi.port}]"
+                          nodeID = tostring(fi.node)
+                        } : {},
+                        fi.type == "vpc" ? {
+                          path   = "topology/pod-${fi.pod}/protpaths-${fi.node}-${fi.node_2}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
+                          nodeID = "${fi.node},${fi.node_2}"
+                        } : {},
+                        fi.type == "dpc" ? {
+                          path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
+                          nodeID = tostring(fi.node)
+                        } : {},
+                      )]
+                    } : {},
+                    site.domain_type == "vmm" ? merge(
+                      { enhancedLagPolicy = iface.elag },
+                      length(iface.vmm_interfaces) > 0 ? {
+                        vmmIntfInfo = [for fi in iface.vmm_interfaces : merge(
+                          {
+                            vmName   = fi.vmm_name
+                            vNicName = fi.vnic
+                            portType = fi.type
+                            podID    = tostring(fi.pod)
+                          },
+                          fi.type == "port" ? {
+                            path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[eth${fi.module}/${fi.port}]"
+                            nodeID = tostring(fi.node)
+                          } : {},
+                          fi.type == "vpc" ? {
+                            path   = "topology/pod-${fi.pod}/protpaths-${fi.node}-${fi.node_2}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
+                            nodeID = "${fi.node},${fi.node_2}"
+                          } : {},
+                          fi.type == "dpc" ? {
+                            path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
+                            nodeID = tostring(fi.node)
+                          } : {},
+                        )]
+                      } : {},
+                    ) : {},
+                  )]
+                }
+              )
+            ]
+          }
+        ]
+      }])
+    } if length(try(template.sites, [])) > 0 || length(try(template.cluster, [])) > 0
+  }
+}
+
+resource "mso_rest" "service_device_cluster_site" {
+  for_each = local.service_device_cluster_site_payloads
+  path     = "api/v1/templates/${mso_template.service_device_template[each.key].id}"
+  method   = "PATCH"
+  payload  = jsonencode(each.value.patch)
+
+  depends_on = [
+    mso_schema_template_bd.schema_template_bd,
+    mso_schema_template_external_epg.schema_template_external_epg,
+    mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
+  ]
+}

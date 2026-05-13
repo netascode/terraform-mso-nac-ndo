@@ -7,6 +7,7 @@ locals {
   ndo_version               = regex("^[0-9]+[.][0-9]+", local.ndo_version_full)
   ndo_platform_version      = regex("^[0-9]+[.][0-9]+", local.ndo_platform_version_full)
   tenant_templates          = [for template in try(local.ndo.tenant_templates.tenant_policies, []) : template if var.manage_tenant_templates && (length(var.managed_tenant_templates) == 0 || contains(var.managed_tenant_templates, template.name))]
+  service_device_templates  = [for template in try(local.ndo.tenant_templates.service_device, []) : template if var.manage_tenant_templates]
 }
 
 data "mso_rest" "ndo_version" {
