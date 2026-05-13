@@ -179,6 +179,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_bd.schema_template_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_bd) | resource |
 | [mso_schema_template_bd_subnet.schema_template_bd_subnet](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_bd_subnet) | resource |
 | [mso_schema_template_contract.schema_template_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract) | resource |
+| [mso_schema_template_contract_service_chaining.schema_template_contract_service_chaining](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_service_chaining) | resource |
 | [mso_schema_template_contract_service_graph.schema_template_contract_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_service_graph) | resource |
 | [mso_schema_template_deploy_ndo.service_device_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
@@ -206,6 +207,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.schemas](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
+| [mso_rest.service_device_template_content](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.templates](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_anp_epg) | data source |
