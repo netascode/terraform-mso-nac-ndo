@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.0.0
+
+- BREAKING CHANGE: Remove support for old DHCP relay and DHCP option policies 
+- Add support for configuring new tenant policy templates: DHCP relay policies, IP SLA policies and multicast route maps (currently it is not supported to attach these policies in a schema template configuration)
+- Add partial support for ND 4.1. In this version only working configurations are: schemas, tenant templates, tenants and site fabric connectivity. Other system level configurations are not backwards compatible.
+- Add dependency between EPG Contract and EPG Subnet
+- Add support to undeploy templates automatically when destroyed
+
 ## 1.2.1
 
 - Fix L3out schema ID references for non-managed schemas
