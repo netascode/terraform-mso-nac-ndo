@@ -313,6 +313,40 @@ data "mso_schema_template_external_epg" "service_device_external_epg" {
 
 
 
+resource "mso_service_device_cluster" "service_device_cluster" {
+  for_each    = { for cluster in local.service_device_clusters : cluster.key => cluster }
+  template_id = mso_template.service_device_template[each.value.template_name].id
+  name        = each.value.name
+  device_type = each.value.device_type
+  device_mode = each.value.device_mode
+  dynamic "interface_properties" {
+    for_each = { for iface in each.value.interfaces : iface.name => iface }
+    content {
+      name                         = interface_properties.value.name
+      bd_uuid                      = interface_properties.value.bd_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.bd_uuid_key)[0])) ? data.mso_schema_template_bd.service_device_bd[interface_properties.value.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd["${split("/", interface_properties.value.bd_uuid_key)[0]}/${split("/", interface_properties.value.bd_uuid_key)[1]}/${split("/", interface_properties.value.bd_uuid_key)[2]}"].uuid) : null
+      external_epg_uuid            = interface_properties.value.external_epg_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.service_device_external_epg[interface_properties.value.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg["${split("/", interface_properties.value.external_epg_uuid_key)[0]}/${split("/", interface_properties.value.external_epg_uuid_key)[1]}/${split("/", interface_properties.value.external_epg_uuid_key)[2]}"].uuid) : null
+      ipsla_monitoring_policy_uuid = interface_properties.value.ipsla_key != null ? mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[split("/", interface_properties.value.ipsla_key)[1]].uuid : null
+      preferred_group              = interface_properties.value.preferred_group
+      rewrite_source_mac           = interface_properties.value.rewrite_source_mac
+      anycast                      = interface_properties.value.anycast
+      config_static_mac            = interface_properties.value.config_static_mac
+      is_backup_redirect_ip        = interface_properties.value.is_backup_redirect_ip
+      load_balance_hashing         = interface_properties.value.load_balance_hashing
+      pod_aware_redirection        = interface_properties.value.pod_aware_redirection
+      resilient_hashing            = interface_properties.value.resilient_hashing
+      tag_based_sorting            = interface_properties.value.tag_based_sorting
+      min_threshold                = interface_properties.value.min_threshold
+      max_threshold                = interface_properties.value.max_threshold
+      threshold_down_action        = interface_properties.value.threshold_down_action
+    }
+  }
+  depends_on = [
+    mso_schema_template_bd.schema_template_bd,
+    mso_schema_template_external_epg.schema_template_external_epg,
+    mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
+  ]
+}
+
 locals {
   service_device_cluster_sites = flatten([
     for template in local.service_device_templates : [
@@ -371,172 +405,72 @@ locals {
     ]
   ])
 
-  service_device_cluster_site_payloads = {
-    for template in local.service_device_templates : template.name => {
-      patch = concat([{
-        op   = "replace"
-        path = "/deviceTemplate/template/devices"
-        value = [
-          for cluster in [for c in local.service_device_clusters : c if c.template_name == template.name] :
-          merge(
-            {
-              name             = cluster.name
-              deviceLocation   = "onPremise"
-              deviceType       = cluster.device_type
-              deviceMode       = cluster.device_mode
-              connectivityMode = length(cluster.interfaces) == 0 ? "" : (length(cluster.interfaces) == 1 && cluster.device_mode == "layer3" ? "oneArm" : (length(cluster.interfaces) == 2 ? "twoArm" : "other"))
-              interfaces = [for iface in cluster.interfaces : merge(concat(
-                [{
-                  name                = iface.name
-                  deviceInterfaceType = iface.interface_type
-                  redirect            = iface.redirect
-                }],
-                iface.bd_uuid_key != null ? [{
-                  bdRef = !var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", iface.bd_uuid_key)[0])) ? data.mso_schema_template_bd.service_device_bd[iface.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd["${split("/", iface.bd_uuid_key)[0]}/${split("/", iface.bd_uuid_key)[1]}/${split("/", iface.bd_uuid_key)[2]}"].uuid
-                }] : [],
-                iface.external_epg_uuid_key != null ? [{
-                  externalEpgRef = !var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", iface.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.service_device_external_epg[iface.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg["${split("/", iface.external_epg_uuid_key)[0]}/${split("/", iface.external_epg_uuid_key)[1]}/${split("/", iface.external_epg_uuid_key)[2]}"].uuid
-                }] : [],
-                iface.ipsla_key != null ? [{
-                  ipslaMonitoringRef = mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[split("/", iface.ipsla_key)[1]].uuid
-                }] : [],
-                (iface.advanced_tracking_options || iface.preferred_group || iface.rewrite_source_mac || iface.anycast || iface.redirect) ? [{
-                  isAdvancedIntfConfig = true
-                  advancedIntfConfig = merge(concat(
-                    [{
-                      preferredGroup          = iface.preferred_group
-                      advancedTrackingOptions = iface.advanced_tracking_options
-                    }],
-                    iface.redirect ? [{
-                      loadBalanceHashing  = iface.load_balance_hashing
-                      podAwareRedirection = iface.pod_aware_redirection
-                      anycast             = iface.anycast
-                      rewriteSourceMac    = iface.rewrite_source_mac
-                    }] : [],
-                    iface.advanced_tracking_options ? [{
-                      configStaticMac  = iface.config_static_mac
-                      tag              = iface.tag_based_sorting
-                      resilientHashing = iface.resilient_hashing
-                    }] : [],
-                    iface.advanced_tracking_options && iface.resilient_hashing == true ? [{
-                      isBackupRedirectIP = iface.is_backup_redirect_ip
-                    }] : [],
-                    iface.advanced_tracking_options && iface.min_threshold != null ? [{
-                      thresholdForRedirectDestination = true
-                      thresholdForRedirect = {
-                        minThreshold        = iface.min_threshold
-                        maxThreshold        = iface.max_threshold
-                        thresholdDownAction = iface.threshold_down_action
-                      }
-                    }] : [],
-                  )...)
-                }] : [],
-              )...)]
-            }
-          )
-        ]
-        }], [{
-        op   = "replace"
-        path = "/deviceTemplate/sites"
-        value = [
-          for site_name in try(template.sites, []) :
-          {
-            siteId = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
-            devices = [
-              for site in [for s in local.service_device_cluster_sites : s if s.template_name == template.name && s.site_name == site_name] :
-              merge(
-                {
-                  name             = site.cluster_name
-                  isPhysicalDomain = site.domain_type == "physical" || contains(["layer2", "layer1"], site.device_mode)
-                  domainDn         = site.domain_type == "physical" ? "uni/phys-${site.domain_name}" : "uni/vmmp-${site.vmm_type}/dom-${site.domain_name}"
-                },
-                contains(["layer2", "layer1"], site.device_mode) ? { highAvailabilityMode = site.high_availability_mode } : {},
-                site.domain_type == "vmm" ? {
-                  trunkingPort     = site.trunking_port
-                  promiscuous_mode = site.promiscuous_mode
-                } : {},
-                {
-                  interfaces = [for iface in site.interfaces : merge(
-                    { name = iface.name },
-                    iface.vlan != null && site.high_availability_mode != "activeActive" ? { vlan = iface.vlan } : {},
-                    length(iface.pbr_destinations) > 0 ? {
-                      pbrDestinations = [for pbr in iface.pbr_destinations : merge(
-                        pbr.ip != null ? { ip = pbr.ip } : {},
-                        pbr.mac != null ? { mac = pbr.mac } : {},
-                        pbr.tag != null ? { tag = pbr.tag } : {},
-                        pbr.pod_id != null ? { podID = tostring(pbr.pod_id) } : {},
-                        pbr.weight != null ? { weight = pbr.weight } : {},
-                        pbr.additional_tracking_ip != null ? { additionalTrackingIP = pbr.additional_tracking_ip } : {},
-                        pbr.is_backup != null ? { isBackUp = pbr.is_backup } : {},
-                      )]
-                    } : {},
-                    site.domain_type == "physical" && length(iface.fabric_interfaces) > 0 ? {
-                      fabricToDeviceConnectivity = [for fi in iface.fabric_interfaces : merge(
-                        {
-                          portType = fi.type
-                          podID    = tostring(fi.pod)
-                        },
-                        fi.tag != null && contains(["layer2", "layer1"], site.device_mode) ? { tag = fi.tag } : {},
-                        fi.vlan != null && site.high_availability_mode == "activeActive" ? { vlan = fi.vlan } : {},
-                        fi.type == "port" ? {
-                          path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[eth${fi.module}/${fi.port}]"
-                          nodeID = tostring(fi.node)
-                        } : {},
-                        fi.type == "vpc" ? {
-                          path   = "topology/pod-${fi.pod}/protpaths-${fi.node}-${fi.node_2}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
-                          nodeID = "${fi.node},${fi.node_2}"
-                        } : {},
-                        fi.type == "dpc" ? {
-                          path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
-                          nodeID = tostring(fi.node)
-                        } : {},
-                      )]
-                    } : {},
-                    site.domain_type == "vmm" ? merge(
-                      { enhancedLagPolicy = iface.elag },
-                      length(iface.vmm_interfaces) > 0 ? {
-                        vmmIntfInfo = [for fi in iface.vmm_interfaces : merge(
-                          {
-                            vmName   = fi.vmm_name
-                            vNicName = fi.vnic
-                            portType = fi.type
-                            podID    = tostring(fi.pod)
-                          },
-                          fi.type == "port" ? {
-                            path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[eth${fi.module}/${fi.port}]"
-                            nodeID = tostring(fi.node)
-                          } : {},
-                          fi.type == "vpc" ? {
-                            path   = "topology/pod-${fi.pod}/protpaths-${fi.node}-${fi.node_2}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
-                            nodeID = "${fi.node},${fi.node_2}"
-                          } : {},
-                          fi.type == "dpc" ? {
-                            path   = "topology/pod-${fi.pod}/paths-${fi.node}/pathep-[${fi.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}]"
-                            nodeID = tostring(fi.node)
-                          } : {},
-                        )]
-                      } : {},
-                    ) : {},
-                  )]
-                }
-              )
-            ]
-          }
-        ]
-      }])
-    } if length(try(template.sites, [])) > 0 || length(try(template.cluster, [])) > 0
-  }
 }
 
-resource "mso_rest" "service_device_cluster_site" {
-  for_each = local.service_device_cluster_site_payloads
-  path     = "api/v1/templates/${mso_template.service_device_template[each.key].id}"
-  method   = "PATCH"
-  payload  = jsonencode(each.value.patch)
+resource "mso_service_device_cluster_site" "service_device_cluster_site" {
+  for_each    = { for site in local.service_device_cluster_sites : site.key => site }
+  template_id = mso_template.service_device_template[each.value.template_name].id
+  name        = each.value.cluster_name
+  site_id     = each.value.site_id
+
+  domain_dn = each.value.domain_type == "physical" ? "uni/phys-${each.value.domain_name}" : "uni/vmmp-${each.value.vmm_type}/dom-${each.value.domain_name}"
+
+  high_availability_mode = each.value.high_availability_mode
+  trunking_port          = each.value.domain_type == "vmm" ? each.value.trunking_port : null
+  promiscuous_mode       = each.value.domain_type == "vmm" ? each.value.promiscuous_mode : null
+
+  dynamic "interfaces" {
+    for_each = each.value.interfaces
+    content {
+      name = interfaces.value.name
+      vlan = interfaces.value.vlan != null && each.value.high_availability_mode != "activeActive" ? interfaces.value.vlan : null
+
+      dynamic "fabric_to_device_connectivity" {
+        for_each = each.value.domain_type == "physical" ? interfaces.value.fabric_interfaces : []
+        content {
+          pod_id    = tostring(fabric_to_device_connectivity.value.pod)
+          node_id   = fabric_to_device_connectivity.value.type == "vpc" ? [tostring(fabric_to_device_connectivity.value.node), tostring(fabric_to_device_connectivity.value.node_2)] : [tostring(fabric_to_device_connectivity.value.node)]
+          path      = fabric_to_device_connectivity.value.type == "port" ? "eth${fabric_to_device_connectivity.value.module}/${fabric_to_device_connectivity.value.port}" : "${fabric_to_device_connectivity.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
+          port_type = fabric_to_device_connectivity.value.type
+
+          # Placeholder:
+          # tag  = fabric_to_device_connectivity.value.tag
+          # vlan = fabric_to_device_connectivity.value.vlan != null && each.value.high_availability_mode == "activeActive" ? fabric_to_device_connectivity.value.vlan : null
+        }
+      }
+
+      dynamic "vm_information" {
+        for_each = each.value.domain_type == "vmm" ? interfaces.value.vmm_interfaces : []
+        content {
+          vm_name   = vm_information.value.vmm_name
+          vnic_name = vm_information.value.vnic
+
+          # Placeholder:
+          # port_type = vm_information.value.type
+          # pod_id    = tostring(vm_information.value.pod)
+          # path      = vm_information.value.type == "port" ? "eth${vm_information.value.module}/${vm_information.value.port}" : "${vm_information.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
+          # node_id   = vm_information.value.type == "vpc" ? [tostring(vm_information.value.node), tostring(vm_information.value.node_2)] : [tostring(vm_information.value.node)]
+        }
+      }
+
+      enhanced_lag_policy = each.value.domain_type == "vmm" ? interfaces.value.elag : null
+
+      dynamic "pbr_destinations" {
+        for_each = interfaces.value.pbr_destinations
+        content {
+          ip                     = pbr_destinations.value.ip
+          mac                    = pbr_destinations.value.mac
+          pod_id                 = pbr_destinations.value.pod_id != null ? tostring(pbr_destinations.value.pod_id) : null
+          additional_tracking_ip = pbr_destinations.value.additional_tracking_ip
+          weight                 = pbr_destinations.value.weight
+          is_backup              = pbr_destinations.value.is_backup
+          tag                    = pbr_destinations.value.tag
+        }
+      }
+    }
+  }
 
   depends_on = [
-    mso_schema_template_bd.schema_template_bd,
-    mso_schema_template_external_epg.schema_template_external_epg,
-    mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
+    mso_service_device_cluster.service_device_cluster,
   ]
 }

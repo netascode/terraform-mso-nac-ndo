@@ -528,7 +528,7 @@ data "mso_rest" "service_device_template_content" {
   for_each = { for template in local.service_device_policies : template.name => template }
   path     = "api/v1/templates/${mso_template.service_device_template[each.key].id}"
 
-  depends_on = [mso_rest.service_device_cluster_site]
+  depends_on = [mso_service_device_cluster_site.service_device_cluster_site]
 }
 
 locals {
@@ -599,7 +599,7 @@ resource "mso_schema_template_contract_service_chaining" "schema_template_contra
 
   depends_on = [
     mso_schema_template_contract.schema_template_contract,
-    mso_rest.service_device_cluster_site,
+    mso_service_device_cluster_site.service_device_cluster_site,
   ]
 }
 

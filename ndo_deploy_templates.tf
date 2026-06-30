@@ -152,7 +152,7 @@ resource "mso_schema_template_deploy_ndo" "service_device_template" {
   undeploy_on_destroy = true
 
   depends_on = [
-    mso_rest.service_device_cluster_site,
+    mso_service_device_cluster_site.service_device_cluster_site,
   ]
 }
 
