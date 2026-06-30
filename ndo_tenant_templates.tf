@@ -432,10 +432,8 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
           node_id   = fabric_to_device_connectivity.value.type == "vpc" ? [tostring(fabric_to_device_connectivity.value.node), tostring(fabric_to_device_connectivity.value.node_2)] : [tostring(fabric_to_device_connectivity.value.node)]
           path      = fabric_to_device_connectivity.value.type == "port" ? "eth${fabric_to_device_connectivity.value.module}/${fabric_to_device_connectivity.value.port}" : "${fabric_to_device_connectivity.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
           port_type = fabric_to_device_connectivity.value.type
-
-          # Placeholder:
-          # tag  = fabric_to_device_connectivity.value.tag
-          # vlan = fabric_to_device_connectivity.value.vlan != null && each.value.high_availability_mode == "activeActive" ? fabric_to_device_connectivity.value.vlan : null
+          tag       = fabric_to_device_connectivity.value.tag
+          vlan      = fabric_to_device_connectivity.value.vlan != null && each.value.high_availability_mode == "activeActive" ? fabric_to_device_connectivity.value.vlan : null
         }
       }
 

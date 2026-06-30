@@ -147,7 +147,6 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_rest.provider_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.schema_site_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.schema_site_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
-| [mso_rest.service_device_cluster_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.site_connectivity](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_schema.schema](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema) | resource |
@@ -197,6 +196,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_service_graph.schema_template_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_service_graph) | resource |
 | [mso_schema_template_vrf.schema_template_vrf](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf) | resource |
 | [mso_schema_template_vrf_contract.schema_template_vrf_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_vrf_contract) | resource |
+| [mso_service_device_cluster.service_device_cluster](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/service_device_cluster) | resource |
+| [mso_service_device_cluster_site.service_device_cluster_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/service_device_cluster_site) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |
 | [mso_template.service_device_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
 | [mso_template.tenant_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
