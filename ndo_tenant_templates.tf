@@ -366,7 +366,7 @@ locals {
           high_availability_mode = contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null
           interfaces = [for iface in try(cluster.interfaces, []) : {
             name = iface.name
-            vlan = try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).vlan, null)
+            vlan = try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).vlan, null) != null && (contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null) != "activeActive" ? try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).vlan, null) : null
             elag = try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).elag, "")
             pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)) && try(iface.interface_type, "bd") != "l3out" ? [for pbr in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).pbr_destinations, []) : {
               ip                     = try(pbr.ip, null)
@@ -385,8 +385,8 @@ locals {
               port    = try(fi.port, null)
               module  = try(fi.module, 1)
               channel = try(fi.channel, null)
-              tag     = try(fi.tag, null)
-              vlan    = try(fi.vlan, null)
+              tag     = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer1" ? fi.tag : null
+              vlan    = try(fi.vlan, null) != null && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? fi.vlan : null
             }] : []
             vmm_interfaces = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? [for fi in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).fabric_interfaces, []) : {
               type     = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
@@ -433,7 +433,7 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
           path      = fabric_to_device_connectivity.value.type == "port" ? "eth${fabric_to_device_connectivity.value.module}/${fabric_to_device_connectivity.value.port}" : "${fabric_to_device_connectivity.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
           port_type = fabric_to_device_connectivity.value.type
           tag       = fabric_to_device_connectivity.value.tag
-          vlan      = fabric_to_device_connectivity.value.vlan != null && each.value.high_availability_mode == "activeActive" ? fabric_to_device_connectivity.value.vlan : null
+          vlan      = fabric_to_device_connectivity.value.vlan
         }
       }
 
