@@ -196,3 +196,9 @@ defaults:
           entries:
             rp_ip: 0.0.0.0
             action: permit
+        bgp_peer_prefix_policies:
+          name_suffix: ""
+          action: reject
+          max_prefixes: 20000
+          threshold: 75
+          restart_time: 65534
