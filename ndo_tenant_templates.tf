@@ -262,6 +262,22 @@ locals {
   ])
 }
 
+resource "mso_tenant_policies_dhcp_option_policy" "tenant_policies_dhcp_option_policy" {
+  for_each    = { for policy in local.dhcp_option_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "options" {
+    for_each = each.value.options
+    content {
+      name = options.value.name
+      id   = options.value.id
+      data = options.value.data
+    }
+  }
+}
+
 locals {
   custom_qos_policies = flatten([
     for template in local.tenant_templates : [
@@ -286,22 +302,6 @@ locals {
       }
     ]
   ])
-}
-
-resource "mso_tenant_policies_dhcp_option_policy" "tenant_policies_dhcp_option_policy" {
-  for_each    = { for policy in local.dhcp_option_policies : policy.name => policy }
-  template_id = mso_template.tenant_template[each.value.template_name].id
-  name        = each.value.name
-  description = each.value.description
-
-  dynamic "options" {
-    for_each = each.value.options
-    content {
-      name = options.value.name
-      id   = options.value.id
-      data = options.value.data
-    }
-  }
 }
 
 resource "mso_tenant_policies_custom_qos_policy" "tenant_policies_custom_qos_policy" {
