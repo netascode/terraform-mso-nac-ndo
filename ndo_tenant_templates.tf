@@ -244,3 +244,36 @@ resource "mso_tenant_policies_bgp_peer_prefix_policy" "tenant_policies_bgp_peer_
   threshold_percentage   = each.value.threshold
   restart_time           = each.value.restart_time
 }
+
+locals {
+  dhcp_option_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.dhcp_option_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        options = [for option in try(policy.options, []) : {
+          name = option.name
+          id   = try(option.id, null)
+          data = try(option.data, null)
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_dhcp_option_policy" "tenant_policies_dhcp_option_policy" {
+  for_each    = { for policy in local.dhcp_option_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "options" {
+    for_each = each.value.options
+    content {
+      name = options.value.name
+      id   = options.value.id
+      data = options.value.data
+    }
+  }
+}
