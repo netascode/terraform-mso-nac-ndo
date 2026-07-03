@@ -277,3 +277,58 @@ resource "mso_tenant_policies_dhcp_option_policy" "tenant_policies_dhcp_option_p
     }
   }
 }
+
+locals {
+  custom_qos_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.custom_qos_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        dscp_mappings = [for mapping in try(policy.dscp_mappings, []) : {
+          dscp_from   = try(mapping.dscp_from, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_from)
+          dscp_to     = try(mapping.dscp_to, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_to)
+          dscp_target = try(mapping.dscp_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_target)
+          cos_target  = try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.cos_target)
+          priority    = try(mapping.priority, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.priority)
+        }]
+        cos_mappings = [for mapping in try(policy.cos_mappings, []) : {
+          dot1p_from  = try(mapping.dot1p_from, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_from)
+          dot1p_to    = try(mapping.dot1p_to, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_to)
+          dscp_target = try(mapping.dscp_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dscp_target)
+          cos_target  = try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.cos_target)
+          priority    = try(mapping.priority, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.priority)
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_custom_qos_policy" "tenant_policies_custom_qos_policy" {
+  for_each    = { for policy in local.custom_qos_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "dscp_mappings" {
+    for_each = each.value.dscp_mappings
+    content {
+      dscp_from    = dscp_mappings.value.dscp_from
+      dscp_to      = dscp_mappings.value.dscp_to
+      dscp_target  = dscp_mappings.value.dscp_target
+      target_cos   = dscp_mappings.value.cos_target
+      qos_priority = dscp_mappings.value.priority
+    }
+  }
+
+  dynamic "cos_mappings" {
+    for_each = each.value.cos_mappings
+    content {
+      dot1p_from   = cos_mappings.value.dot1p_from
+      dot1p_to     = cos_mappings.value.dot1p_to
+      dscp_target  = cos_mappings.value.dscp_target
+      target_cos   = cos_mappings.value.cos_target
+      qos_priority = cos_mappings.value.priority
+    }
+  }
+}
