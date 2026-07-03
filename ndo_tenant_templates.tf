@@ -244,3 +244,90 @@ resource "mso_tenant_policies_bgp_peer_prefix_policy" "tenant_policies_bgp_peer_
   threshold_percentage   = each.value.threshold
   restart_time           = each.value.restart_time
 }
+
+locals {
+  l3out_interface_routing_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.l3out_interface_routing_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        bfd_multi_hop_settings = try(policy.bfd_multi_hop_settings, null) != null ? {
+          admin_state           = try(policy.bfd_multi_hop_settings.admin_state, null)
+          detection_multiplier  = try(policy.bfd_multi_hop_settings.detection_multiplier, null)
+          min_receive_interval  = try(policy.bfd_multi_hop_settings.min_receive_interval, null)
+          min_transmit_interval = try(policy.bfd_multi_hop_settings.min_transmit_interval, null)
+        } : null
+        bfd_settings = try(policy.bfd_settings, null) != null ? {
+          admin_state           = try(policy.bfd_settings.admin_state, null)
+          detection_multiplier  = try(policy.bfd_settings.detection_multiplier, null)
+          min_receive_interval  = try(policy.bfd_settings.min_receive_interval, null)
+          min_transmit_interval = try(policy.bfd_settings.min_transmit_interval, null)
+          echo_receive_interval = try(policy.bfd_settings.echo_receive_interval, null)
+          echo_admin_state      = try(policy.bfd_settings.echo_admin_state, null)
+          interface_control     = try(policy.bfd_settings.interface_control, null)
+        } : null
+        ospf_interface_settings = try(policy.ospf_interface_settings, null) != null ? {
+          network_type          = try(policy.ospf_interface_settings.network_type, null)
+          priority              = try(policy.ospf_interface_settings.priority, null)
+          cost_of_interface     = try(policy.ospf_interface_settings.cost_of_interface, null)
+          hello_interval        = try(policy.ospf_interface_settings.hello_interval, null)
+          dead_interval         = try(policy.ospf_interface_settings.dead_interval, null)
+          retransmit_interval   = try(policy.ospf_interface_settings.retransmit_interval, null)
+          transmit_delay        = try(policy.ospf_interface_settings.transmit_delay, null)
+          advertise_subnet      = try(policy.ospf_interface_settings.advertise_subnet, null)
+          bfd                   = try(policy.ospf_interface_settings.bfd, null)
+          mtu_ignore            = try(policy.ospf_interface_settings.mtu_ignore, null)
+          passive_participation = try(policy.ospf_interface_settings.passive_participation, null)
+        } : null
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_l3out_interface_routing_policy" "tenant_policies_l3out_interface_routing_policy" {
+  for_each    = { for policy in local.l3out_interface_routing_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "bfd_multi_hop_settings" {
+    for_each = each.value.bfd_multi_hop_settings != null ? [each.value.bfd_multi_hop_settings] : []
+    content {
+      admin_state           = bfd_multi_hop_settings.value.admin_state
+      detection_multiplier  = bfd_multi_hop_settings.value.detection_multiplier
+      min_receive_interval  = bfd_multi_hop_settings.value.min_receive_interval
+      min_transmit_interval = bfd_multi_hop_settings.value.min_transmit_interval
+    }
+  }
+
+  dynamic "bfd_settings" {
+    for_each = each.value.bfd_settings != null ? [each.value.bfd_settings] : []
+    content {
+      admin_state           = bfd_settings.value.admin_state
+      detection_multiplier  = bfd_settings.value.detection_multiplier
+      min_receive_interval  = bfd_settings.value.min_receive_interval
+      min_transmit_interval = bfd_settings.value.min_transmit_interval
+      echo_receive_interval = bfd_settings.value.echo_receive_interval
+      echo_admin_state      = bfd_settings.value.echo_admin_state
+      interface_control     = bfd_settings.value.interface_control
+    }
+  }
+
+  dynamic "ospf_interface_settings" {
+    for_each = each.value.ospf_interface_settings != null ? [each.value.ospf_interface_settings] : []
+    content {
+      network_type          = ospf_interface_settings.value.network_type
+      priority              = ospf_interface_settings.value.priority
+      cost_of_interface     = ospf_interface_settings.value.cost_of_interface
+      hello_interval        = ospf_interface_settings.value.hello_interval
+      dead_interval         = ospf_interface_settings.value.dead_interval
+      retransmit_interval   = ospf_interface_settings.value.retransmit_interval
+      transmit_delay        = ospf_interface_settings.value.transmit_delay
+      advertise_subnet      = ospf_interface_settings.value.advertise_subnet
+      bfd                   = ospf_interface_settings.value.bfd
+      mtu_ignore            = ospf_interface_settings.value.mtu_ignore
+      passive_participation = ospf_interface_settings.value.passive_participation
+    }
+  }
+}

@@ -202,3 +202,5 @@ defaults:
           max_prefixes: 20000
           threshold: 75
           restart_time: 65534
+        l3out_interface_routing_policies:
+          name_suffix: ""
