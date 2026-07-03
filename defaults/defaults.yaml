@@ -204,3 +204,17 @@ defaults:
           restart_time: 65534
         dhcp_option_policies:
           name_suffix: ""
+        custom_qos_policies:
+          name_suffix: ""
+          dscp_mappings:
+            dscp_from: unspecified
+            dscp_to: unspecified
+            dscp_target: unspecified
+            cos_target: unspecified
+            priority: unspecified
+          cos_mappings:
+            dot1p_from: unspecified
+            dot1p_to: unspecified
+            dscp_target: unspecified
+            cos_target: unspecified
+            priority: unspecified
