@@ -217,3 +217,30 @@ resource "mso_tenant_policies_route_map_policy_multicast" "tenant_policies_route
     }
   }
 }
+
+locals {
+  bgp_peer_prefix_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.bgp_peer_prefix_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        action        = try(policy.action, local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.action)
+        max_prefixes  = try(policy.max_prefixes, local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.max_prefixes)
+        threshold     = try(policy.threshold, local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.threshold)
+        restart_time  = try(policy.restart_time, local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.restart_time)
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_bgp_peer_prefix_policy" "tenant_policies_bgp_peer_prefix_policy" {
+  for_each               = { for policy in local.bgp_peer_prefix_policies : policy.name => policy }
+  template_id            = mso_template.tenant_template[each.value.template_name].id
+  name                   = each.value.name
+  description            = each.value.description
+  action                 = each.value.action
+  max_number_of_prefixes = each.value.max_prefixes
+  threshold_percentage   = each.value.threshold
+  restart_time           = each.value.restart_time
+}
