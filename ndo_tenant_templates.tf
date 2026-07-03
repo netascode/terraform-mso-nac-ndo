@@ -183,6 +183,49 @@ resource "mso_tenant_policies_ipsla_monitoring_policy" "tenant_policies_ipsla_mo
 }
 
 locals {
+  ipsla_track_lists = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.ipsla_track_lists, []) : {
+        name           = policy.name
+        template_name  = template.name
+        description    = try(policy.description, null)
+        type           = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.type)
+        threshold_up   = try(policy.threshold_up, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_up)
+        threshold_down = try(policy.threshold_down, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_down)
+        members = [for member in try(policy.members, []) : {
+          destination_ip               = member.destination_ip
+          ipsla_monitoring_policy_name = member.ip_sla_policy
+          scope_type                   = member.scope_type
+          scope_key                    = member.scope_type == "bd" ? "${member.schema}/${member.template}/${member.bridge_domain}" : "${member.schema}/${member.template}/${member.l3out}"
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_ipsla_track_list" "tenant_policies_ipsla_track_list" {
+  for_each       = { for policy in local.ipsla_track_lists : policy.name => policy }
+  template_id    = mso_template.tenant_template[each.value.template_name].id
+  name           = each.value.name
+  description    = each.value.description
+  type           = each.value.type
+  threshold_up   = each.value.threshold_up
+  threshold_down = each.value.threshold_down
+
+  dynamic "members" {
+    for_each = each.value.members
+    content {
+      destination_ip               = members.value.destination_ip
+      ipsla_monitoring_policy_uuid = mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[members.value.ipsla_monitoring_policy_name].uuid
+      scope_type                   = members.value.scope_type
+      scope_uuid                   = members.value.scope_type == "bd" ? mso_schema_template_bd.schema_template_bd[members.value.scope_key].uuid : mso_schema_template_l3out.schema_template_l3out[members.value.scope_key].uuid
+    }
+  }
+
+  depends_on = [mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy]
+}
+
+locals {
   multicast_route_maps = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.multicast_route_maps, []) : {
