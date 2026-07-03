@@ -200,6 +200,7 @@ defaults:
             vmm_type: VMware
           interfaces:
             name_suffix: ""
+            interface_type: bd
             redirect: false
             advanced_settings: false
             preferred_group: false
