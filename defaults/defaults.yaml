@@ -191,11 +191,13 @@ defaults:
           threshold: 900
           type_of_service: 0
           ipv6_traffic_class: 0
-        ipsla_track_lists:
+        ip_sla_track_lists:
           name_suffix: ""
           type: percentage
-          threshold_up: 0
-          threshold_down: 0
+          percentage_up: 1
+          percentage_down: 0
+          weight_up: 1
+          weight_down: 0
         multicast_route_maps:
           name_suffix: ""
           entries:
