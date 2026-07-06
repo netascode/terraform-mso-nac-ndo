@@ -183,6 +183,49 @@ resource "mso_tenant_policies_ipsla_monitoring_policy" "tenant_policies_ipsla_mo
 }
 
 locals {
+  ipsla_track_lists = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.ipsla_track_lists, []) : {
+        name           = policy.name
+        template_name  = template.name
+        description    = try(policy.description, null)
+        type           = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.type)
+        threshold_up   = try(policy.threshold_up, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_up)
+        threshold_down = try(policy.threshold_down, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_down)
+        members = [for member in try(policy.members, []) : {
+          destination_ip               = member.destination_ip
+          ipsla_monitoring_policy_name = member.ip_sla_policy
+          scope_type                   = member.scope_type
+          scope_key                    = member.scope_type == "bd" ? "${member.schema}/${member.template}/${member.bridge_domain}" : "${member.schema}/${member.template}/${member.l3out}"
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_ipsla_track_list" "tenant_policies_ipsla_track_list" {
+  for_each       = { for policy in local.ipsla_track_lists : policy.name => policy }
+  template_id    = mso_template.tenant_template[each.value.template_name].id
+  name           = each.value.name
+  description    = each.value.description
+  type           = each.value.type
+  threshold_up   = each.value.threshold_up
+  threshold_down = each.value.threshold_down
+
+  dynamic "members" {
+    for_each = each.value.members
+    content {
+      destination_ip               = members.value.destination_ip
+      ipsla_monitoring_policy_uuid = mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[members.value.ipsla_monitoring_policy_name].uuid
+      scope_type                   = members.value.scope_type
+      scope_uuid                   = members.value.scope_type == "bd" ? mso_schema_template_bd.schema_template_bd[members.value.scope_key].uuid : mso_schema_template_l3out.schema_template_l3out[members.value.scope_key].uuid
+    }
+  }
+
+  depends_on = [mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy]
+}
+
+locals {
   multicast_route_maps = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.multicast_route_maps, []) : {
@@ -243,6 +286,104 @@ resource "mso_tenant_policies_bgp_peer_prefix_policy" "tenant_policies_bgp_peer_
   max_number_of_prefixes = each.value.max_prefixes
   threshold_percentage   = each.value.threshold
   restart_time           = each.value.restart_time
+}
+
+locals {
+  dhcp_option_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.dhcp_option_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        options = [for option in try(policy.options, []) : {
+          name = option.name
+          id   = try(option.id, null)
+          data = try(option.data, null)
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_dhcp_option_policy" "tenant_policies_dhcp_option_policy" {
+  for_each    = { for policy in local.dhcp_option_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "options" {
+    for_each = each.value.options
+    content {
+      name = options.value.name
+      id   = options.value.id
+      data = options.value.data
+    }
+  }
+}
+
+locals {
+  cos_int_to_name = {
+    "0" = "background"
+    "1" = "best_effort"
+    "2" = "excellent_effort"
+    "3" = "critical_applications"
+    "4" = "video"
+    "5" = "voice"
+    "6" = "internetwork_control"
+    "7" = "network_control"
+  }
+  custom_qos_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.custom_qos_policies, []) : {
+        name          = policy.name
+        template_name = template.name
+        description   = try(policy.description, null)
+        dscp_mappings = [for mapping in try(policy.dscp_mappings, []) : {
+          dscp_from   = try(mapping.dscp_from, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_from)
+          dscp_to     = try(mapping.dscp_to, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_to)
+          dscp_target = try(mapping.dscp_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.dscp_target)
+          cos_target  = try(local.cos_int_to_name[tostring(try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.cos_target))], try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.cos_target))
+          priority    = try(mapping.priority, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.dscp_mappings.priority)
+        }]
+        cos_mappings = [for mapping in try(policy.cos_mappings, []) : {
+          dot1p_from  = try(local.cos_int_to_name[tostring(try(mapping.dot1p_from, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_from))], try(mapping.dot1p_from, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_from))
+          dot1p_to    = try(local.cos_int_to_name[tostring(try(mapping.dot1p_to, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_to))], try(mapping.dot1p_to, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dot1p_to))
+          dscp_target = try(mapping.dscp_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.dscp_target)
+          cos_target  = try(local.cos_int_to_name[tostring(try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.cos_target))], try(mapping.cos_target, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.cos_target))
+          priority    = try(mapping.priority, local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.cos_mappings.priority)
+        }]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_custom_qos_policy" "tenant_policies_custom_qos_policy" {
+  for_each    = { for policy in local.custom_qos_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "dscp_mappings" {
+    for_each = each.value.dscp_mappings
+    content {
+      dscp_from    = dscp_mappings.value.dscp_from
+      dscp_to      = dscp_mappings.value.dscp_to
+      dscp_target  = dscp_mappings.value.dscp_target
+      target_cos   = dscp_mappings.value.cos_target
+      qos_priority = dscp_mappings.value.priority
+    }
+  }
+
+  dynamic "cos_mappings" {
+    for_each = each.value.cos_mappings
+    content {
+      dot1p_from   = cos_mappings.value.dot1p_from
+      dot1p_to     = cos_mappings.value.dot1p_to
+      dscp_target  = cos_mappings.value.dscp_target
+      target_cos   = cos_mappings.value.cos_target
+      qos_priority = cos_mappings.value.priority
+    }
+  }
 }
 
 locals {

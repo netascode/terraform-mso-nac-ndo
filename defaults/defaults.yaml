@@ -191,6 +191,13 @@ defaults:
           threshold: 900
           type_of_service: 0
           ipv6_traffic_class: 0
+        ip_sla_track_lists:
+          name_suffix: ""
+          type: percentage
+          percentage_up: 1
+          percentage_down: 0
+          weight_up: 1
+          weight_down: 0
         multicast_route_maps:
           name_suffix: ""
           entries:
@@ -202,5 +209,21 @@ defaults:
           max_prefixes: 20000
           threshold: 75
           restart_time: 65534
+        dhcp_option_policies:
+          name_suffix: ""
+        custom_qos_policies:
+          name_suffix: ""
+          dscp_mappings:
+            dscp_from: unspecified
+            dscp_to: unspecified
+            dscp_target: unspecified
+            cos_target: unspecified
+            priority: unspecified
+          cos_mappings:
+            dot1p_from: unspecified
+            dot1p_to: unspecified
+            dscp_target: unspecified
+            cos_target: unspecified
+            priority: unspecified
         l3out_interface_routing_policies:
           name_suffix: ""
