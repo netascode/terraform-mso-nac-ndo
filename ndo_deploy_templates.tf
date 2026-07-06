@@ -153,6 +153,9 @@ resource "mso_schema_template_deploy_ndo" "service_device_template" {
 
   depends_on = [
     mso_service_device_cluster_site.service_device_cluster_site,
+    mso_schema_template_deploy_ndo.tenant_template,
+    mso_schema_template_deploy_ndo.tenant_template2,
+    mso_schema_template_deploy_ndo.tenant_template3,
   ]
 }
 
