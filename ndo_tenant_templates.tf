@@ -185,13 +185,15 @@ resource "mso_tenant_policies_ipsla_monitoring_policy" "tenant_policies_ipsla_mo
 locals {
   ipsla_track_lists = flatten([
     for template in local.tenant_templates : [
-      for policy in try(template.ipsla_track_lists, []) : {
-        name           = policy.name
-        template_name  = template.name
-        description    = try(policy.description, null)
-        type           = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.type)
-        threshold_up   = try(policy.threshold_up, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_up)
-        threshold_down = try(policy.threshold_down, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_down)
+      for policy in try(template.ip_sla_track_lists, []) : {
+        name            = policy.name
+        template_name   = template.name
+        description     = try(policy.description, null)
+        type            = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.type)
+        percentage_up   = try(policy.percentage_up, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.percentage_up)
+        percentage_down = try(policy.percentage_down, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.percentage_down)
+        weight_up       = try(policy.weight_up, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.weight_up)
+        weight_down     = try(policy.weight_down, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.weight_down)
         members = [for member in try(policy.members, []) : {
           destination_ip               = member.destination_ip
           ipsla_monitoring_policy_name = member.ip_sla_policy
@@ -209,8 +211,8 @@ resource "mso_tenant_policies_ipsla_track_list" "tenant_policies_ipsla_track_lis
   name           = each.value.name
   description    = each.value.description
   type           = each.value.type
-  threshold_up   = each.value.threshold_up
-  threshold_down = each.value.threshold_down
+  threshold_up   = each.value.type == "percentage" ? each.value.percentage_up : each.value.weight_up
+  threshold_down = each.value.type == "percentage" ? each.value.percentage_down : each.value.weight_down
 
   dynamic "members" {
     for_each = each.value.members
@@ -382,6 +384,93 @@ resource "mso_tenant_policies_custom_qos_policy" "tenant_policies_custom_qos_pol
       dscp_target  = cos_mappings.value.dscp_target
       target_cos   = cos_mappings.value.cos_target
       qos_priority = cos_mappings.value.priority
+    }
+  }
+}
+
+locals {
+  l3out_interface_routing_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.l3out_interface_routing_policies, []) : {
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.name_suffix}"
+        template_name = template.name
+        description   = try(policy.description, null)
+        bfd_multi_hop_settings = try(policy.bfd_multi_hop_settings, null) != null ? {
+          admin_state           = try(policy.bfd_multi_hop_settings.admin_state, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_multi_hop_settings.admin_state) != null ? (policy.bfd_multi_hop_settings.admin_state ? "enabled" : "disabled") : null
+          detection_multiplier  = try(policy.bfd_multi_hop_settings.detection_multiplier, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_multi_hop_settings.detection_multiplier)
+          min_receive_interval  = try(policy.bfd_multi_hop_settings.min_rx_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_multi_hop_settings.min_rx_interval)
+          min_transmit_interval = try(policy.bfd_multi_hop_settings.min_tx_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_multi_hop_settings.min_tx_interval)
+        } : null
+        bfd_settings = try(policy.bfd_settings, null) != null ? {
+          admin_state           = try(policy.bfd_settings.admin_state, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.admin_state) ? "enabled" : "disabled"
+          detection_multiplier  = try(policy.bfd_settings.detection_multiplier, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.detection_multiplier)
+          min_receive_interval  = try(policy.bfd_settings.min_rx_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.min_rx_interval)
+          min_transmit_interval = try(policy.bfd_settings.min_tx_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.min_tx_interval)
+          echo_receive_interval = try(policy.bfd_settings.echo_rx_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.echo_rx_interval)
+          echo_admin_state      = try(policy.bfd_settings.echo_admin_state, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.echo_admin_state) ? "enabled" : "disabled"
+          interface_control     = try(policy.bfd_settings.interface_control, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.bfd_settings.interface_control)
+        } : null
+        ospf_interface_settings = try(policy.ospf_interface_settings, null) != null ? {
+          network_type          = try(policy.ospf_interface_settings.network_type, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.network_type) == "point-to-point" ? "point_to_point" : try(policy.ospf_interface_settings.network_type, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.network_type) == "broadcast" ? "broadcast" : null
+          priority              = try(policy.ospf_interface_settings.priority, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.priority)
+          interface_cost        = try(policy.ospf_interface_settings.interface_cost, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.interface_cost)
+          hello_interval        = try(policy.ospf_interface_settings.hello_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.hello_interval)
+          dead_interval         = try(policy.ospf_interface_settings.dead_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.dead_interval)
+          retransmit_interval   = try(policy.ospf_interface_settings.retransmit_interval, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.retransmit_interval)
+          transmit_delay        = try(policy.ospf_interface_settings.transmit_delay, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.transmit_delay)
+          advertise_subnet      = try(policy.ospf_interface_settings.advertise_subnet, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.advertise_subnet)
+          bfd                   = try(policy.ospf_interface_settings.bfd, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.bfd)
+          mtu_ignore            = try(policy.ospf_interface_settings.mtu_ignore, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.mtu_ignore)
+          passive_participation = try(policy.ospf_interface_settings.passive_participation, local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.ospf_interface_settings.passive_participation)
+        } : null
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_l3out_interface_routing_policy" "tenant_policies_l3out_interface_routing_policy" {
+  for_each    = { for policy in local.l3out_interface_routing_policies : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+  description = each.value.description
+
+  dynamic "bfd_multi_hop_settings" {
+    for_each = each.value.bfd_multi_hop_settings != null ? [each.value.bfd_multi_hop_settings] : []
+    content {
+      admin_state           = bfd_multi_hop_settings.value.admin_state
+      detection_multiplier  = bfd_multi_hop_settings.value.detection_multiplier
+      min_receive_interval  = bfd_multi_hop_settings.value.min_receive_interval
+      min_transmit_interval = bfd_multi_hop_settings.value.min_transmit_interval
+    }
+  }
+
+  dynamic "bfd_settings" {
+    for_each = each.value.bfd_settings != null ? [each.value.bfd_settings] : []
+    content {
+      admin_state           = bfd_settings.value.admin_state
+      detection_multiplier  = bfd_settings.value.detection_multiplier
+      min_receive_interval  = bfd_settings.value.min_receive_interval
+      min_transmit_interval = bfd_settings.value.min_transmit_interval
+      echo_receive_interval = bfd_settings.value.echo_receive_interval
+      echo_admin_state      = bfd_settings.value.echo_admin_state
+      interface_control     = bfd_settings.value.interface_control
+    }
+  }
+
+  dynamic "ospf_interface_settings" {
+    for_each = each.value.ospf_interface_settings != null ? [each.value.ospf_interface_settings] : []
+    content {
+      network_type          = ospf_interface_settings.value.network_type
+      priority              = ospf_interface_settings.value.priority
+      cost_of_interface     = ospf_interface_settings.value.interface_cost
+      hello_interval        = ospf_interface_settings.value.hello_interval
+      dead_interval         = ospf_interface_settings.value.dead_interval
+      retransmit_interval   = ospf_interface_settings.value.retransmit_interval
+      transmit_delay        = ospf_interface_settings.value.transmit_delay
+      advertise_subnet      = ospf_interface_settings.value.advertise_subnet
+      bfd                   = ospf_interface_settings.value.bfd
+      mtu_ignore            = ospf_interface_settings.value.mtu_ignore
+      passive_participation = ospf_interface_settings.value.passive_participation
     }
   }
 }

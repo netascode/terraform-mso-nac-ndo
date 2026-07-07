@@ -108,7 +108,12 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
     mso_template.tenant_template,
     mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
     mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
+    mso_tenant_policies_ipsla_track_list.tenant_policies_ipsla_track_list,
     mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast,
+    mso_tenant_policies_bgp_peer_prefix_policy.tenant_policies_bgp_peer_prefix_policy,
+    mso_tenant_policies_dhcp_option_policy.tenant_policies_dhcp_option_policy,
+    mso_tenant_policies_custom_qos_policy.tenant_policies_custom_qos_policy,
+    mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy,
   ]
 }
 
