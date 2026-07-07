@@ -56,8 +56,8 @@ locals {
           key                 = "${provider.schema}/${provider.template}/${provider.application_profile}/${provider.endpoint_group}"
           schema              = provider.schema
           template            = provider.template
-          application_profile = try(provider.application_profile, null)
-          endpoint_group      = try(provider.endpoint_group, null)
+          application_profile = try("${provider.application_profile}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}", null)
+          endpoint_group      = try("${provider.endpoint_group}${local.defaults.ndo.schemas.templates.endpoint_groups.name_suffix}", null)
         } if provider.type == "epg"
       ]
     ]
@@ -69,7 +69,7 @@ locals {
           key                     = "${provider.schema}/${provider.template}/${provider.external_endpoint_group}"
           schema                  = provider.schema
           template                = provider.template
-          external_endpoint_group = try(provider.external_endpoint_group, null)
+          external_endpoint_group = try("${provider.external_endpoint_group}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}", null)
         } if provider.type == "external_epg"
       ]
     ]
@@ -115,7 +115,7 @@ locals {
 
 resource "mso_tenant_policies_dhcp_relay_policy" "tenant_policies_dhcp_relay_policy" {
   for_each    = { for policy in local.dhcp_relay_policies : policy.name => policy }
-  name        = each.value.name
+  name        = "${each.value.name}${local.defaults.ndo.tenant_templates.tenant_policies.dhcp_relay_policies.name_suffix}"
   template_id = mso_template.tenant_template[each.value.template_name].id
   description = each.value.description
   dynamic "dhcp_relay_providers" {
@@ -145,7 +145,7 @@ locals {
   ipsla_policies = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.ip_sla_policies, []) : {
-        name               = policy.name
+        name               = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_policies.name_suffix}"
         template_name      = template.name
         description        = try(policy.description, null)
         sla_type           = try(policy.sla_type, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_policies.sla_type)
@@ -186,7 +186,7 @@ locals {
   ipsla_track_lists = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.ip_sla_track_lists, []) : {
-        name            = policy.name
+        name            = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.name_suffix}"
         template_name   = template.name
         description     = try(policy.description, null)
         type            = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.type)
@@ -196,7 +196,7 @@ locals {
         weight_down     = try(policy.weight_down, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.weight_down)
         members = [for member in try(policy.members, []) : {
           destination_ip               = member.destination_ip
-          ipsla_monitoring_policy_name = member.ip_sla_policy
+          ipsla_monitoring_policy_name = "${member.ip_sla_policy}${local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_policies.name_suffix}"
           scope_type                   = member.scope_type
           scope_key                    = member.scope_type == "bd" ? "${member.schema}/${member.template}/${member.bridge_domain}" : "${member.schema}/${member.template}/${member.l3out}"
         }]
@@ -231,7 +231,7 @@ locals {
   multicast_route_maps = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.multicast_route_maps, []) : {
-        name          = policy.name
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.multicast_route_maps.name_suffix}"
         template_name = template.name
         description   = try(policy.description, null)
         entries = [for entry in try(policy.entries, []) : {
@@ -267,7 +267,7 @@ locals {
   bgp_peer_prefix_policies = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.bgp_peer_prefix_policies, []) : {
-        name          = policy.name
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.name_suffix}"
         template_name = template.name
         description   = try(policy.description, null)
         action        = try(policy.action, local.defaults.ndo.tenant_templates.tenant_policies.bgp_peer_prefix_policies.action)
@@ -294,7 +294,7 @@ locals {
   dhcp_option_policies = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.dhcp_option_policies, []) : {
-        name          = policy.name
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.dhcp_option_policies.name_suffix}"
         template_name = template.name
         description   = try(policy.description, null)
         options = [for option in try(policy.options, []) : {
@@ -337,7 +337,7 @@ locals {
   custom_qos_policies = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.custom_qos_policies, []) : {
-        name          = policy.name
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.custom_qos_policies.name_suffix}"
         template_name = template.name
         description   = try(policy.description, null)
         dscp_mappings = [for mapping in try(policy.dscp_mappings, []) : {
