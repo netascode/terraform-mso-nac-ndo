@@ -114,6 +114,7 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
     mso_tenant_policies_dhcp_option_policy.tenant_policies_dhcp_option_policy,
     mso_tenant_policies_custom_qos_policy.tenant_policies_custom_qos_policy,
     mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy,
+    mso_tenant_policies_mld_snooping_policy.tenant_policies_mld_snooping_policy,
   ]
 }
 
