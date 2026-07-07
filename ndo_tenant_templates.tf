@@ -185,13 +185,15 @@ resource "mso_tenant_policies_ipsla_monitoring_policy" "tenant_policies_ipsla_mo
 locals {
   ipsla_track_lists = flatten([
     for template in local.tenant_templates : [
-      for policy in try(template.ipsla_track_lists, []) : {
-        name           = policy.name
-        template_name  = template.name
-        description    = try(policy.description, null)
-        type           = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.type)
-        threshold_up   = try(policy.threshold_up, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_up)
-        threshold_down = try(policy.threshold_down, local.defaults.ndo.tenant_templates.tenant_policies.ipsla_track_lists.threshold_down)
+      for policy in try(template.ip_sla_track_lists, []) : {
+        name            = policy.name
+        template_name   = template.name
+        description     = try(policy.description, null)
+        type            = try(policy.type, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.type)
+        percentage_up   = try(policy.percentage_up, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.percentage_up)
+        percentage_down = try(policy.percentage_down, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.percentage_down)
+        weight_up       = try(policy.weight_up, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.weight_up)
+        weight_down     = try(policy.weight_down, local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_track_lists.weight_down)
         members = [for member in try(policy.members, []) : {
           destination_ip               = member.destination_ip
           ipsla_monitoring_policy_name = member.ip_sla_policy
@@ -209,8 +211,8 @@ resource "mso_tenant_policies_ipsla_track_list" "tenant_policies_ipsla_track_lis
   name           = each.value.name
   description    = each.value.description
   type           = each.value.type
-  threshold_up   = each.value.threshold_up
-  threshold_down = each.value.threshold_down
+  threshold_up   = each.value.type == "percentage" ? each.value.percentage_up : each.value.weight_up
+  threshold_down = each.value.type == "percentage" ? each.value.percentage_down : each.value.weight_down
 
   dynamic "members" {
     for_each = each.value.members
@@ -390,7 +392,7 @@ locals {
   l3out_interface_routing_policies = flatten([
     for template in local.tenant_templates : [
       for policy in try(template.l3out_interface_routing_policies, []) : {
-        name          = policy.name
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.l3out_interface_routing_policies.name_suffix}"
         template_name = template.name
         description   = try(policy.description, null)
         bfd_multi_hop_settings = try(policy.bfd_multi_hop_settings, null) != null ? {
@@ -409,7 +411,7 @@ locals {
           interface_control     = try(policy.bfd_settings.interface_control, null)
         } : null
         ospf_interface_settings = try(policy.ospf_interface_settings, null) != null ? {
-          network_type          = try(policy.ospf_interface_settings.network_type, null)
+          network_type          = try(policy.ospf_interface_settings.network_type, null) == "point-to-point" ? "point_to_point" : try(policy.ospf_interface_settings.network_type, null) == "broadcast" ? "broadcast" : null
           priority              = try(policy.ospf_interface_settings.priority, null)
           cost                  = try(policy.ospf_interface_settings.cost, null)
           hello_interval        = try(policy.ospf_interface_settings.hello_interval, null)
