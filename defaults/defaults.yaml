@@ -227,3 +227,24 @@ defaults:
             priority: unspecified
         l3out_interface_routing_policies:
           name_suffix: ""
+          bfd_multi_hop_settings:
+            admin_state: true
+            detection_multiplier: 3
+            min_rx_interval: 250
+            min_tx_interval: 250
+          bfd_settings:
+            admin_state: true
+            detection_multiplier: 3
+            min_rx_interval: 50
+            min_tx_interval: 50
+            echo_rx_interval: 50
+            echo_admin_state: true
+            interface_control: false
+          ospf_interface_settings:
+            network_type: broadcast
+            priority: 1
+            interface_cost: 0
+            hello_interval: 10
+            dead_interval: 40
+            retransmit_interval: 5
+            transmit_delay: 1
