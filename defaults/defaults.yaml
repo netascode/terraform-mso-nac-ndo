@@ -248,3 +248,14 @@ defaults:
             dead_interval: 40
             retransmit_interval: 5
             transmit_delay: 1
+        mld_snooping_policies:
+          name_suffix: ""
+          admin_state: false
+          fast_leave_control: false
+          querier_control: false
+          querier_version: v2
+          query_interval: 125
+          query_response_interval: 10
+          last_member_query_interval: 1
+          start_query_interval: 31
+          start_query_count: 2
