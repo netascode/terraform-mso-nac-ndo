@@ -394,24 +394,24 @@ locals {
         template_name = template.name
         description   = try(policy.description, null)
         bfd_multi_hop_settings = try(policy.bfd_multi_hop_settings, null) != null ? {
-          admin_state           = try(policy.bfd_multi_hop_settings.admin_state, null)
+          admin_state           = try(policy.bfd_multi_hop_settings.admin_state, null) != null ? (policy.bfd_multi_hop_settings.admin_state ? "enabled" : "disabled") : null
           detection_multiplier  = try(policy.bfd_multi_hop_settings.detection_multiplier, null)
-          min_receive_interval  = try(policy.bfd_multi_hop_settings.min_receive_interval, null)
-          min_transmit_interval = try(policy.bfd_multi_hop_settings.min_transmit_interval, null)
+          min_receive_interval  = try(policy.bfd_multi_hop_settings.min_rx_interval, null)
+          min_transmit_interval = try(policy.bfd_multi_hop_settings.min_tx_interval, null)
         } : null
         bfd_settings = try(policy.bfd_settings, null) != null ? {
-          admin_state           = try(policy.bfd_settings.admin_state, null)
+          admin_state           = try(policy.bfd_settings.admin_state, null) != null ? (policy.bfd_settings.admin_state ? "enabled" : "disabled") : null
           detection_multiplier  = try(policy.bfd_settings.detection_multiplier, null)
-          min_receive_interval  = try(policy.bfd_settings.min_receive_interval, null)
-          min_transmit_interval = try(policy.bfd_settings.min_transmit_interval, null)
-          echo_receive_interval = try(policy.bfd_settings.echo_receive_interval, null)
-          echo_admin_state      = try(policy.bfd_settings.echo_admin_state, null)
+          min_receive_interval  = try(policy.bfd_settings.min_rx_interval, null)
+          min_transmit_interval = try(policy.bfd_settings.min_tx_interval, null)
+          echo_receive_interval = try(policy.bfd_settings.echo_rx_interval, null)
+          echo_admin_state      = try(policy.bfd_settings.echo_admin_state, null) != null ? (policy.bfd_settings.echo_admin_state ? "enabled" : "disabled") : null
           interface_control     = try(policy.bfd_settings.interface_control, null)
         } : null
         ospf_interface_settings = try(policy.ospf_interface_settings, null) != null ? {
           network_type          = try(policy.ospf_interface_settings.network_type, null)
           priority              = try(policy.ospf_interface_settings.priority, null)
-          cost_of_interface     = try(policy.ospf_interface_settings.cost_of_interface, null)
+          cost                  = try(policy.ospf_interface_settings.cost, null)
           hello_interval        = try(policy.ospf_interface_settings.hello_interval, null)
           dead_interval         = try(policy.ospf_interface_settings.dead_interval, null)
           retransmit_interval   = try(policy.ospf_interface_settings.retransmit_interval, null)
@@ -460,7 +460,7 @@ resource "mso_tenant_policies_l3out_interface_routing_policy" "tenant_policies_l
     content {
       network_type          = ospf_interface_settings.value.network_type
       priority              = ospf_interface_settings.value.priority
-      cost_of_interface     = ospf_interface_settings.value.cost_of_interface
+      cost_of_interface     = ospf_interface_settings.value.cost
       hello_interval        = ospf_interface_settings.value.hello_interval
       dead_interval         = ospf_interface_settings.value.dead_interval
       retransmit_interval   = ospf_interface_settings.value.retransmit_interval
