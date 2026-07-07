@@ -474,3 +474,40 @@ resource "mso_tenant_policies_l3out_interface_routing_policy" "tenant_policies_l
     }
   }
 }
+
+locals {
+  mld_snooping_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.mld_snooping_policies, []) : {
+        name                       = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.name_suffix}"
+        template_name              = template.name
+        description                = try(policy.description, null)
+        admin_state                = try(policy.admin_state, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.admin_state) ? "enabled" : "disabled"
+        fast_leave_control         = try(policy.fast_leave_control, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.fast_leave_control)
+        querier_control            = try(policy.querier_control, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.querier_control)
+        querier_version            = try(policy.querier_version, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.querier_version)
+        query_interval             = try(policy.query_interval, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.query_interval)
+        query_response_interval    = try(policy.query_response_interval, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.query_response_interval)
+        last_member_query_interval = try(policy.last_member_query_interval, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.last_member_query_interval)
+        start_query_interval       = try(policy.start_query_interval, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.start_query_interval)
+        start_query_count          = try(policy.start_query_count, local.defaults.ndo.tenant_templates.tenant_policies.mld_snooping_policies.start_query_count)
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_mld_snooping_policy" "tenant_policies_mld_snooping_policy" {
+  for_each                   = { for policy in local.mld_snooping_policies : policy.name => policy }
+  template_id                = mso_template.tenant_template[each.value.template_name].id
+  name                       = each.value.name
+  description                = each.value.description
+  admin_state                = each.value.admin_state
+  fast_leave_control         = each.value.fast_leave_control
+  querier_control            = each.value.querier_control
+  querier_version            = each.value.querier_version
+  query_interval             = each.value.query_interval
+  query_response_interval    = each.value.query_response_interval
+  last_member_query_interval = each.value.last_member_query_interval
+  start_query_interval       = each.value.start_query_interval
+  start_query_count          = each.value.start_query_count
+}
