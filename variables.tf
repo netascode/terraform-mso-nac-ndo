@@ -76,6 +76,18 @@ variable "deploy_templates" {
   default     = false
 }
 
+variable "manage_fabric_templates" {
+  description = "Flag to indicate if fabric templates should be managed."
+  type        = bool
+  default     = false
+}
+
+variable "managed_fabric_templates" {
+  description = "List of fabric template names to be managed. By default all fabric templates will be managed."
+  type        = list(string)
+  default     = []
+}
+
 variable "write_default_values_file" {
   description = "Write all default values to a YAML file. Value is a path pointing to the file to be created."
   type        = string
