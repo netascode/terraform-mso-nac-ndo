@@ -165,6 +165,9 @@ resource "mso_schema_template_deploy_ndo" "fabric_template" {
     mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
     mso_fabric_policies_l3_domain.fabric_policies_l3_domain,
     mso_fabric_policies_mcp_global_policy.fabric_policies_mcp_global_policy,
+    # mso_fabric_policies_macsec_policy.fabric_policies_macsec_policy,
+    mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy,
+    mso_fabric_policies_interface_setting.fabric_policies_interface_setting,
   ]
 }
 

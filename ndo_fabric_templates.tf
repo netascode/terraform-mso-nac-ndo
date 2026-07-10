@@ -148,3 +148,182 @@ resource "mso_fabric_policies_mcp_global_policy" "fabric_policies_mcp_global_pol
   transmission_frequency_sec        = each.value.transmission_frequency_sec
   transmission_frequency_msec       = each.value.transmission_frequency_msec
 }
+
+# locals {
+#   fabric_macsec_policies = flatten([
+#     for template in local.fabric_templates : [
+#       for policy in try(template.macsec_policies, []) : {
+#         key                    = "${template.name}/${policy.name}"
+#         name                   = policy.name
+#         template_name          = template.name
+#         description            = try(policy.description, null)
+#         admin_state            = try(policy.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.admin_state) ? "enabled" : "disabled"
+#         interface_type         = try(policy.type, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.type)
+#         cipher_suite           = replace(replace(replace(replace(try(policy.cipher_suite, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.cipher_suite), "gcm-aes-xpn-256", "256GcmAesXpn"), "gcm-aes-xpn-128", "128GcmAesXpn"), "gcm-aes-256", "256GcmAes"), "gcm-aes-128", "128GcmAes")
+#         window_size            = try(policy.window_size, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.window_size)
+#         security_policy        = replace(replace(try(policy.security_policy, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.security_policy), "should-secure", "shouldSecure"), "must-secure", "mustSecure")
+#         sak_expire_time        = try(policy.sak_expiry_time, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.sak_expiry_time)
+#         confidentiality_offset = try(policy.confidentiality_offset, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.confidentiality_offset)
+#         key_server_priority    = try(policy.key_server_priority, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.key_server_priority)
+#         macsec_keys = [for key in try(policy.keys, []) : {
+#           key_name   = key.key_name
+#           psk        = key.pre_shared_key
+#           start_time = try(key.start_time, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.keys.start_time)
+#           end_time   = try(key.end_time, local.defaults.ndo.fabric_templates.fabric_policies.macsec_policies.keys.end_time)
+#         }]
+#       }
+#     ]
+#   ])
+# }
+
+# resource "mso_fabric_policies_macsec_policy" "fabric_policies_macsec_policy" {
+#   for_each               = { for policy in local.fabric_macsec_policies : policy.key => policy }
+#   template_id            = mso_template.fabric_template[each.value.template_name].id
+#   name                   = each.value.name
+#   description            = each.value.description
+#   admin_state            = each.value.admin_state
+#   interface_type         = each.value.interface_type
+#   cipher_suite           = each.value.cipher_suite
+#   window_size            = each.value.window_size
+#   security_policy        = each.value.security_policy
+#   sak_expire_time        = each.value.sak_expire_time
+#   confidentiality_offset = each.value.confidentiality_offset
+#   key_server_priority    = each.value.key_server_priority
+#
+#   dynamic "macsec_keys" {
+#     for_each = each.value.macsec_keys
+#     content {
+#       key_name   = macsec_keys.value.key_name
+#       psk        = macsec_keys.value.psk
+#       start_time = macsec_keys.value.start_time
+#       end_time   = macsec_keys.value.end_time
+#     }
+#   }
+# }
+
+locals {
+  fabric_synce_interface_policies = flatten([
+    for template in local.fabric_templates : [
+      for policy in try(template.synce_interface_policies, []) : {
+        key             = "${template.name}/${policy.name}"
+        name            = policy.name
+        template_name   = template.name
+        description     = try(policy.description, null)
+        admin_state     = try(policy.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.synce_interface_policies.admin_state) ? "enabled" : "disabled"
+        sync_state_msg  = try(policy.sync_state_message, local.defaults.ndo.fabric_templates.fabric_policies.synce_interface_policies.sync_state_message) ? "enabled" : "disabled"
+        selection_input = try(policy.selection_input, local.defaults.ndo.fabric_templates.fabric_policies.synce_interface_policies.selection_input) ? "enabled" : "disabled"
+        src_priority    = try(policy.source_priority, local.defaults.ndo.fabric_templates.fabric_policies.synce_interface_policies.source_priority)
+        wait_to_restore = try(policy.wait_to_restore, local.defaults.ndo.fabric_templates.fabric_policies.synce_interface_policies.wait_to_restore)
+      }
+    ]
+  ])
+}
+
+resource "mso_fabric_policies_synce_interface_policy" "fabric_policies_synce_interface_policy" {
+  for_each        = { for policy in local.fabric_synce_interface_policies : policy.key => policy }
+  template_id     = mso_template.fabric_template[each.value.template_name].id
+  name            = each.value.name
+  description     = each.value.description
+  admin_state     = each.value.admin_state
+  sync_state_msg  = each.value.sync_state_msg
+  selection_input = each.value.selection_input
+  src_priority    = each.value.src_priority
+  wait_to_restore = each.value.wait_to_restore
+}
+
+locals {
+  fabric_interface_settings = flatten([
+    for template in local.fabric_templates : [
+      for intf in try(template.interfaces_settings, []) : {
+        key                             = "${template.name}/${intf.name}"
+        name                            = intf.name
+        template_name                   = template.name
+        description                     = try(intf.description, null)
+        type                            = try(intf.type, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.type) == "port-channel" ? "portchannel" : "physical"
+        speed                           = try(intf.link_level.speed, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.speed)
+        auto_negotiation                = try(intf.link_level.auto_enforce, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.auto_enforce) ? "on_enforce" : try(intf.link_level.auto, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.auto) ? "on" : "off"
+        link_level_debounce_interval    = try(intf.link_level.debounce_interval, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.debounce_interval)
+        link_level_bring_up_delay       = try(intf.link_level.bring_up_delay, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.bring_up_delay)
+        link_level_fec                  = replace(replace(replace(replace(replace(replace(try(intf.link_level.fec_mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.fec_mode), "disabled", "disable_fec"), "cl91-rs-fec", "cl91_rs_fec"), "cl74-fc-fec", "cl74_fc_fec"), "auto-fec", "auto_fec"), "ieee-rs-fec", "ieee_rs_fec"), "cons16-rs-fec", "cons16_rs_fec")
+        vlan_scope                      = try(intf.l2_interface.vlan_scope, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.vlan_scope)
+        l2_interface_qinq               = replace(replace(replace(try(intf.l2_interface.qinq, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.qinq), "edgePort", "edge_port"), "corePort", "core_port"), "doubleQtagPort", "double_q_tag_port")
+        l2_interface_reflective_relay   = try(intf.l2_interface.reflective_relay, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.reflective_relay) ? "enabled" : "disabled"
+        cdp_admin_state                 = try(intf.cdp.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.cdp.admin_state) ? "enabled" : "disabled"
+        lldp_receive_state              = try(intf.lldp.receive_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.lldp.receive_state) ? "enabled" : "disabled"
+        lldp_transmit_state             = try(intf.lldp.transmit_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.lldp.transmit_state) ? "enabled" : "disabled"
+        stp_bpdu_filter                 = try(intf.stp.bpdu_filter, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.stp.bpdu_filter) ? "enabled" : "disabled"
+        stp_bpdu_guard                  = try(intf.stp.bpdu_guard, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.stp.bpdu_guard) ? "enabled" : "disabled"
+        llfc_transmit_state             = try(intf.llfc.transmit_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.llfc.transmit_state) ? "enabled" : "disabled"
+        llfc_receive_state              = try(intf.llfc.receive_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.llfc.receive_state) ? "enabled" : "disabled"
+        mcp_admin_state                 = try(intf.mcp.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.admin_state) ? "enabled" : "disabled"
+        mcp_strict_mode                 = try(intf.mcp.strict_mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.strict_mode) ? "on" : "off"
+        mcp_initial_delay_time          = try(intf.mcp.initial_delay_time, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.initial_delay_time)
+        mcp_transmission_frequency_sec  = try(intf.mcp.transmission_frequency_sec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.transmission_frequency_sec)
+        mcp_transmission_frequency_msec = try(intf.mcp.transmission_frequency_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.transmission_frequency_msec)
+        mcp_grace_period_sec            = try(intf.mcp.grace_period_sec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_sec)
+        mcp_grace_period_msec           = try(intf.mcp.grace_period_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_msec)
+        pfc_admin_state                 = try(intf.pfc.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.admin_state)
+        port_channel_mode               = replace(replace(replace(replace(replace(replace(try(intf.port_channel.mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.mode), "lacp-active", "lacp_active"), "lacp-passive", "lacp_passive"), "static-channel-mode-on", "static_channel_mode_on"), "mac-pinning-physical-nic-load", "mac_pinning_physical_nic_load"), "mac-pinning", "mac_pinning"), "use-explicit-failover-order", "use_explicit_failover_order")
+        port_channel_controls = toset(concat(
+          try(intf.port_channel.suspend_individual, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.suspend_individual) ? ["susp_individual"] : [],
+          try(intf.port_channel.graceful_convergence, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.graceful_convergence) ? ["graceful_conv"] : [],
+          try(intf.port_channel.fast_select_standby, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.fast_select_standby) ? ["fast_sel_hot_stdby"] : [],
+          try(intf.port_channel.load_defer, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.load_defer) ? ["load_defer"] : [],
+          try(intf.port_channel.symmetric_hash, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.symmetric_hash) ? ["symmetric_hash"] : [],
+        ))
+        port_channel_min_links        = try(intf.port_channel.min_links, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.min_links)
+        port_channel_max_links        = try(intf.port_channel.max_links, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.max_links)
+        load_balance_hashing          = try(intf.port_channel.load_balance_hashing, null) != null ? replace(replace(replace(replace(intf.port_channel.load_balance_hashing, "destination-ip", "destination_ip"), "layer-4-destination-ip", "layer_4_destination_ip"), "layer-4-source-ip", "layer_4_source_ip"), "source-ip", "source_ip") : null
+        synce_uuid_key                = try(intf.synce_policy, null) != null ? "${template.name}/${intf.synce_policy}" : null
+        domain_uuid_keys              = [for domain in try(intf.domains, []) : "${template.name}/${domain}"]
+        access_macsec_policy_uuid_key = null # try(intf.macsec_interface_policy, null) != null ? "${template.name}/${intf.macsec_interface_policy}" : null
+      }
+    ]
+  ])
+}
+
+resource "mso_fabric_policies_interface_setting" "fabric_policies_interface_setting" {
+  for_each                        = { for intf in local.fabric_interface_settings : intf.key => intf }
+  template_id                     = mso_template.fabric_template[each.value.template_name].id
+  name                            = each.value.name
+  description                     = each.value.description
+  type                            = each.value.type
+  speed                           = each.value.speed
+  auto_negotiation                = each.value.auto_negotiation
+  link_level_debounce_interval    = each.value.link_level_debounce_interval
+  link_level_bring_up_delay       = each.value.link_level_bring_up_delay
+  link_level_fec                  = each.value.link_level_fec
+  vlan_scope                      = each.value.vlan_scope
+  l2_interface_qinq               = each.value.l2_interface_qinq
+  l2_interface_reflective_relay   = each.value.l2_interface_reflective_relay
+  cdp_admin_state                 = each.value.cdp_admin_state
+  lldp_receive_state              = each.value.lldp_receive_state
+  lldp_transmit_state             = each.value.lldp_transmit_state
+  stp_bpdu_filter                 = each.value.stp_bpdu_filter
+  stp_bpdu_guard                  = each.value.stp_bpdu_guard
+  llfc_transmit_state             = each.value.llfc_transmit_state
+  llfc_receive_state              = each.value.llfc_receive_state
+  mcp_admin_state                 = each.value.mcp_admin_state
+  mcp_strict_mode                 = each.value.mcp_strict_mode
+  mcp_initial_delay_time          = each.value.mcp_initial_delay_time
+  mcp_transmission_frequency_sec  = each.value.mcp_transmission_frequency_sec
+  mcp_transmission_frequency_msec = each.value.mcp_transmission_frequency_msec
+  mcp_grace_period_sec            = each.value.mcp_grace_period_sec
+  mcp_grace_period_msec           = each.value.mcp_grace_period_msec
+  pfc_admin_state                 = each.value.pfc_admin_state
+  port_channel_mode               = each.value.type == "portchannel" ? each.value.port_channel_mode : null
+  controls                        = each.value.type == "portchannel" ? each.value.port_channel_controls : null
+  port_channel_min_links          = each.value.type == "portchannel" ? each.value.port_channel_min_links : null
+  port_channel_max_links          = each.value.type == "portchannel" ? each.value.port_channel_max_links : null
+  load_balance_hashing            = each.value.type == "portchannel" ? each.value.load_balance_hashing : null
+  synce_uuid                      = each.value.synce_uuid_key != null ? mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy[each.value.synce_uuid_key].uuid : null
+  domain_uuids                    = length(each.value.domain_uuid_keys) > 0 ? toset([for key in each.value.domain_uuid_keys : try(mso_fabric_policies_physical_domain.fabric_policies_physical_domain[key].uuid, mso_fabric_policies_l3_domain.fabric_policies_l3_domain[key].uuid)]) : null
+  access_macsec_policy_uuid       = null # each.value.access_macsec_policy_uuid_key != null ? mso_fabric_policies_macsec_policy.fabric_policies_macsec_policy[each.value.access_macsec_policy_uuid_key].uuid : null
+
+  depends_on = [
+    mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy,
+    # mso_fabric_policies_macsec_policy.fabric_policies_macsec_policy,
+    mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
+    mso_fabric_policies_l3_domain.fabric_policies_l3_domain,
+  ]
+}

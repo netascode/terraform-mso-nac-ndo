@@ -172,6 +172,77 @@ defaults:
           logical_interface_name_suffix: ""
           redirect_policy_name_suffix: ""
           node_type: "firewall"
+    fabric_templates:
+      fabric_policies:
+        mcp_global_policy:
+          admin_state: false
+          enable_mcp_pdu_per_vlan: false
+          loop_detection: 3
+          transmission_frequency_sec: 2
+          transmission_frequency_msec: 0
+          initial_delay: 180
+          port_disable_protection: true
+        macsec_policies:
+          admin_state: true
+          type: fabric
+          cipher_suite: gcm-aes-xpn-256
+          window_size: 0
+          security_policy: should-secure
+          sak_expiry_time: 0
+          confidentiality_offset: offset0
+          key_server_priority: 16
+          keys:
+            start_time: now
+            end_time: infinite
+        synce_interface_policies:
+          admin_state: false
+          sync_state_message: false
+          selection_input: false
+          source_priority: 100
+          wait_to_restore: 5
+        interfaces_settings:
+          type: physical
+          link_level:
+            speed: inherit
+            auto: true
+            auto_enforce: false
+            fec_mode: disabled
+            debounce_interval: 0
+            bring_up_delay: 0
+          l2_interface:
+            vlan_scope: global
+            qinq: disabled
+            reflective_relay: false
+          cdp:
+            admin_state: false
+          lldp:
+            transmit_state: true
+            receive_state: true
+          stp:
+            bpdu_filter: false
+            bpdu_guard: false
+          llfc:
+            transmit_state: false
+            receive_state: false
+          mcp:
+            admin_state: true
+            strict_mode: false
+            initial_delay_time: 0
+            transmission_frequency_sec: 0
+            transmission_frequency_msec: 0
+            grace_period_sec: 0
+            grace_period_msec: 0
+          pfc:
+            admin_state: auto
+          port_channel:
+            mode: static-channel-mode-on
+            suspend_individual: true
+            graceful_convergence: true
+            fast_select_standby: true
+            load_defer: false
+            symmetric_hash: false
+            min_links: 1
+            max_links: 16
     tenant_templates:
       tenant_policies:
         dhcp_relay_policies:
