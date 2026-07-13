@@ -1,7 +1,7 @@
 ---
 defaults:
   ndo:
-    version: "3.7.2h"
+    version: "4.2.3o"
     undeploy_order: false
     remote_locations:
       port: 22
@@ -194,7 +194,7 @@ defaults:
           connectivity_mode: twoArm
           sites:
             domain_type: physical
-            high_availability_mode: active-standby
+            high_availability_mode: activeStandby
             trunking_port: false
             promiscuous_mode: false
             vmm_type: VMware
