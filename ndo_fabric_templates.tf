@@ -3,6 +3,48 @@ locals {
 }
 
 locals {
+  fec_mode_map = {
+    "disabled"       = "disable_fec"
+    "cl91-rs-fec"    = "cl91_rs_fec"
+    "cl74-fc-fec"    = "cl74_fc_fec"
+    "auto-fec"       = "auto_fec"
+    "ieee-rs-fec"    = "ieee_rs_fec"
+    "cons16-rs-fec"  = "cons16_rs_fec"
+    "inherit"        = "inherit"
+  }
+  qinq_map = {
+    "disabled"       = "disabled"
+    "edgePort"       = "edge_port"
+    "corePort"       = "core_port"
+    "doubleQtagPort" = "double_q_tag_port"
+  }
+  port_channel_mode_map = {
+    "lacp-active"                     = "lacp_active"
+    "lacp-passive"                    = "lacp_passive"
+    "static-channel-mode-on"          = "static_channel_mode_on"
+    "mac-pinning"                     = "mac_pinning"
+    "mac-pinning-physical-nic-load"   = "mac_pinning_physical_nic_load"
+    "use-explicit-failover-order"     = "use_explicit_failover_order"
+  }
+  load_balance_hashing_map = {
+    "destination-ip"          = "destination_ip"
+    "layer-4-destination-ip"  = "layer_4_destination_ip"
+    "layer-4-source-ip"       = "layer_4_source_ip"
+    "source-ip"               = "source_ip"
+  }
+  # macsec_cipher_suite_map = {
+  #   "gcm-aes-128"     = "128GcmAes"
+  #   "gcm-aes-256"     = "256GcmAes"
+  #   "gcm-aes-xpn-128" = "128GcmAesXpn"
+  #   "gcm-aes-xpn-256" = "256GcmAesXpn"
+  # }
+  # macsec_security_policy_map = {
+  #   "should-secure" = "shouldSecure"
+  #   "must-secure"   = "mustSecure"
+  # }
+}
+
+locals {
   fabric_templates_sites = flatten(distinct([
     for template in local.fabric_templates : [
       for site in try(template.sites, []) : {
@@ -244,9 +286,9 @@ locals {
         auto_negotiation                = try(intf.link_level.auto_enforce, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.auto_enforce) ? "on_enforce" : try(intf.link_level.auto, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.auto) ? "on" : "off"
         link_level_debounce_interval    = try(intf.link_level.debounce_interval, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.debounce_interval)
         link_level_bring_up_delay       = try(intf.link_level.bring_up_delay, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.bring_up_delay)
-        link_level_fec                  = replace(replace(replace(replace(replace(replace(try(intf.link_level.fec_mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.fec_mode), "disabled", "disable_fec"), "cl91-rs-fec", "cl91_rs_fec"), "cl74-fc-fec", "cl74_fc_fec"), "auto-fec", "auto_fec"), "ieee-rs-fec", "ieee_rs_fec"), "cons16-rs-fec", "cons16_rs_fec")
+        link_level_fec                  = local.fec_mode_map[try(intf.link_level.fec_mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.link_level.fec_mode)]
         vlan_scope                      = try(intf.l2_interface.vlan_scope, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.vlan_scope)
-        l2_interface_qinq               = replace(replace(replace(try(intf.l2_interface.qinq, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.qinq), "edgePort", "edge_port"), "corePort", "core_port"), "doubleQtagPort", "double_q_tag_port")
+        l2_interface_qinq               = local.qinq_map[try(intf.l2_interface.qinq, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.qinq)]
         l2_interface_reflective_relay   = try(intf.l2_interface.reflective_relay, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.l2_interface.reflective_relay) ? "enabled" : "disabled"
         cdp_admin_state                 = try(intf.cdp.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.cdp.admin_state) ? "enabled" : "disabled"
         lldp_receive_state              = try(intf.lldp.receive_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.lldp.receive_state) ? "enabled" : "disabled"
@@ -262,8 +304,8 @@ locals {
         mcp_transmission_frequency_msec = try(intf.mcp.transmission_frequency_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.transmission_frequency_msec)
         mcp_grace_period_sec            = try(intf.mcp.grace_period_sec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_sec)
         mcp_grace_period_msec           = try(intf.mcp.grace_period_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_msec)
-        pfc_admin_state                 = try(intf.pfc.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.admin_state)
-        port_channel_mode               = replace(replace(replace(replace(replace(replace(try(intf.port_channel.mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.mode), "lacp-active", "lacp_active"), "lacp-passive", "lacp_passive"), "static-channel-mode-on", "static_channel_mode_on"), "mac-pinning-physical-nic-load", "mac_pinning_physical_nic_load"), "mac-pinning", "mac_pinning"), "use-explicit-failover-order", "use_explicit_failover_order")
+        pfc_admin_state                 = try(intf.pfc.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.admin_state) ? (try(intf.pfc.auto, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.auto) ? "auto" : "on") : "off"
+        port_channel_mode               = local.port_channel_mode_map[try(intf.port_channel.mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.mode)]
         port_channel_controls = toset(concat(
           try(intf.port_channel.suspend_individual, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.suspend_individual) ? ["susp_individual"] : [],
           try(intf.port_channel.graceful_convergence, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.graceful_convergence) ? ["graceful_conv"] : [],
@@ -273,7 +315,7 @@ locals {
         ))
         port_channel_min_links        = try(intf.port_channel.min_links, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.min_links)
         port_channel_max_links        = try(intf.port_channel.max_links, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.max_links)
-        load_balance_hashing          = try(intf.port_channel.load_balance_hashing, null) != null ? replace(replace(replace(replace(intf.port_channel.load_balance_hashing, "destination-ip", "destination_ip"), "layer-4-destination-ip", "layer_4_destination_ip"), "layer-4-source-ip", "layer_4_source_ip"), "source-ip", "source_ip") : null
+        load_balance_hashing          = try(intf.port_channel.load_balance_hashing, null) != null ? local.load_balance_hashing_map[intf.port_channel.load_balance_hashing] : null
         synce_uuid_key                = try(intf.synce_policy, null) != null ? "${template.name}/${intf.synce_policy}" : null
         domain_uuid_keys              = [for domain in try(intf.domains, []) : "${template.name}/${domain}"]
         access_macsec_policy_uuid_key = null # try(intf.macsec_interface_policy, null) != null ? "${template.name}/${intf.macsec_interface_policy}" : null
@@ -304,12 +346,12 @@ resource "mso_fabric_policies_interface_setting" "fabric_policies_interface_sett
   llfc_transmit_state             = each.value.llfc_transmit_state
   llfc_receive_state              = each.value.llfc_receive_state
   mcp_admin_state                 = each.value.mcp_admin_state
-  mcp_strict_mode                 = each.value.mcp_strict_mode
-  mcp_initial_delay_time          = each.value.mcp_initial_delay_time
-  mcp_transmission_frequency_sec  = each.value.mcp_transmission_frequency_sec
-  mcp_transmission_frequency_msec = each.value.mcp_transmission_frequency_msec
-  mcp_grace_period_sec            = each.value.mcp_grace_period_sec
-  mcp_grace_period_msec           = each.value.mcp_grace_period_msec
+  mcp_strict_mode                 = each.value.mcp_admin_state == "enabled" ? each.value.mcp_strict_mode : null
+  mcp_initial_delay_time          = each.value.mcp_admin_state == "enabled" ? each.value.mcp_initial_delay_time : null
+  mcp_transmission_frequency_sec  = each.value.mcp_admin_state == "enabled" ? each.value.mcp_transmission_frequency_sec : null
+  mcp_transmission_frequency_msec = each.value.mcp_admin_state == "enabled" ? each.value.mcp_transmission_frequency_msec : null
+  mcp_grace_period_sec            = each.value.mcp_admin_state == "enabled" ? each.value.mcp_grace_period_sec : null
+  mcp_grace_period_msec           = each.value.mcp_admin_state == "enabled" ? each.value.mcp_grace_period_msec : null
   pfc_admin_state                 = each.value.pfc_admin_state
   port_channel_mode               = each.value.type == "portchannel" ? each.value.port_channel_mode : null
   controls                        = each.value.type == "portchannel" ? each.value.port_channel_controls : null
