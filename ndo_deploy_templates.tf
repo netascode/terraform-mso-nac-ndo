@@ -105,6 +105,9 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
   undeploy_on_destroy = true
 
   depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
     mso_template.tenant_template,
     mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
     mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
@@ -138,6 +141,59 @@ resource "mso_schema_template_deploy_ndo" "tenant_template3" {
   depends_on = [
     mso_schema_template_deploy_ndo.tenant_template,
     mso_schema_template_deploy_ndo.tenant_template2,
+  ]
+}
+
+locals {
+  unmanaged_fabric_templates = [for template in try(local.ndo.fabric_templates.fabric_policies, []) : template if !var.manage_fabric_templates && var.deploy_templates && !var.manage_schemas]
+  deploy_fabric_templates = flatten([
+    for template in try(concat(local.fabric_templates, local.unmanaged_fabric_templates), {}) : {
+      key           = template.name
+      template_name = template.name
+      deploy_order  = try(template.deploy_order, 1)
+    }
+  ])
+}
+
+resource "mso_schema_template_deploy_ndo" "fabric_template" {
+  for_each            = { for template in local.deploy_fabric_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
+  template_id         = var.manage_fabric_templates ? mso_template.fabric_template[each.value.template_name].id : local.fabric_template_ids[each.value.template_name].id
+  template_type       = "fabric_policy"
+  template_name       = each.value.template_name
+  undeploy_on_destroy = true
+
+  depends_on = [
+    mso_template.fabric_template,
+    mso_fabric_policies_vlan_pool.fabric_policies_vlan_pool,
+    mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
+    mso_fabric_policies_l3_domain.fabric_policies_l3_domain,
+    mso_fabric_policies_mcp_global_policy.fabric_policies_mcp_global_policy,
+    # mso_fabric_policies_macsec_policy.fabric_policies_macsec_policy,
+    mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy,
+    mso_fabric_policies_interface_setting.fabric_policies_interface_setting,
+  ]
+}
+
+resource "mso_schema_template_deploy_ndo" "fabric_template2" {
+  for_each            = { for template in local.deploy_fabric_templates : template.key => template if var.deploy_templates && template.deploy_order == 2 }
+  template_id         = var.manage_fabric_templates ? mso_template.fabric_template[each.value.template_name].id : local.fabric_template_ids[each.value.template_name].id
+  template_type       = "fabric_policy"
+  template_name       = each.value.template_name
+  undeploy_on_destroy = true
+
+  depends_on = [mso_schema_template_deploy_ndo.fabric_template]
+}
+
+resource "mso_schema_template_deploy_ndo" "fabric_template3" {
+  for_each            = { for template in local.deploy_fabric_templates : template.key => template if var.deploy_templates && template.deploy_order == 3 }
+  template_id         = var.manage_fabric_templates ? mso_template.fabric_template[each.value.template_name].id : local.fabric_template_ids[each.value.template_name].id
+  template_type       = "fabric_policy"
+  template_name       = each.value.template_name
+  undeploy_on_destroy = true
+
+  depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
   ]
 }
 
