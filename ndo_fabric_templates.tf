@@ -304,7 +304,7 @@ locals {
         mcp_transmission_frequency_msec = try(intf.mcp.transmission_frequency_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.transmission_frequency_msec)
         mcp_grace_period_sec            = try(intf.mcp.grace_period_sec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_sec)
         mcp_grace_period_msec           = try(intf.mcp.grace_period_msec, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.mcp.grace_period_msec)
-        pfc_admin_state                 = try(intf.pfc.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.admin_state) ? (try(intf.pfc.auto, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.auto) ? "auto" : "on") : "off"
+        pfc_admin_state            = try(intf.pfc.auto, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.auto) ? "auto" : try(intf.pfc.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.pfc.admin_state) ? "on" : "off"
         port_channel_mode               = local.port_channel_mode_map[try(intf.port_channel.mode, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.mode)]
         port_channel_controls = toset(concat(
           try(intf.port_channel.suspend_individual, local.defaults.ndo.fabric_templates.fabric_policies.interfaces_settings.port_channel.suspend_individual) ? ["susp_individual"] : [],
