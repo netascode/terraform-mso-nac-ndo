@@ -250,7 +250,6 @@ locals {
         interfaces = [for iface in try(cluster.interfaces, []) : {
           name                      = iface.name
           interface_type            = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type)
-          redirect                  = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) != "l3out" && (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect))
           bd_uuid_key               = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
           external_epg_uuid_key     = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_endpoint_group, "")}" : null
           redirect                  = try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)
@@ -353,60 +352,64 @@ locals {
   service_device_cluster_sites = flatten([
     for template in local.service_device_templates : [
       for cluster in try(template.cluster, []) : [
-        for site_name in try(template.sites, []) : {
-          key                    = "service_device/${template.name}/${cluster.name}/${site_name}"
-          template_name          = template.name
-          cluster_name           = cluster.name
-          site_name              = site_name
-          site_id                = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
-          device_mode            = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)
-          domain_type            = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type)
-          domain_name            = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_name, null)
-          vmm_type               = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).vmm_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.vmm_type)
-          trunking_port          = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).trunking_port, local.defaults.ndo.tenant_templates.service_device.cluster.sites.trunking_port)
-          promiscuous_mode       = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).promiscuous_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.promiscuous_mode)
-          site_vlan              = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).site_vlan, null)
-          high_availability_mode = contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null
+        for site_name in try(template.sites, []) : [
+          for site in [try([for s in try(cluster.sites, []) : s if s.name == site_name][0], {})] : {
+            key                    = "service_device/${template.name}/${cluster.name}/${site_name}"
+            template_name          = template.name
+            cluster_name           = cluster.name
+            site_name              = site_name
+            site_id                = var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
+            device_mode            = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)
+            domain_type            = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type)
+            domain_name            = try(site.domain_name, null)
+            vmm_type               = try(site.vmm_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.vmm_type)
+            trunking_port          = try(site.trunking_port, local.defaults.ndo.tenant_templates.service_device.cluster.sites.trunking_port)
+            promiscuous_mode       = try(site.promiscuous_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.promiscuous_mode)
+            site_vlan              = try(site.site_vlan, null)
+            high_availability_mode = contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try(site.high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null
 
-          interfaces = [for iface in try(cluster.interfaces, []) : {
-            name        = iface.name
-            vlan        = try(iface.vlan, null)
-            elag        = try((([for s in try(iface.sites, []) : s if s.name == site_name && s.domain_type == "vmm"])[0]).elag, null)
-            domain_name = (contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null) == "activeActive" ? try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).domain_name, null) : null
+            interfaces = [for iface in try(cluster.interfaces, []) : [
+              for iface_site in [try([for s in try(iface.sites, []) : s if s.name == site_name][0], {})] : {
+                name        = iface.name
+                vlan        = try(iface.vlan, null)
+                elag        = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? try(iface_site.elag, null) : null
+                domain_name = try(iface_site.domain_name, null)
 
-            pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)) && try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) != "l3out" ? [for pbr in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).pbr_destinations, []) : {
-              ip                     = try(pbr.ip, null)
-              mac                    = try(pbr.mac, null)
-              tag                    = try(pbr.tag, null)
-              pod_id                 = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod_id, 1) : null
-              weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pbr.weight) : null
-              additional_tracking_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.additional_tracking_ip, null) : null
-              is_backup              = try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.resilient_hash) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.backup, false) : null
-            }] : []
-            fabric_interfaces = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "physical" ? [for fi in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).fabric_interfaces, []) : {
-              type    = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
-              pod     = try(fi.pod, 1)
-              node    = try(fi.node, null)
-              node_2  = try(fi.node_2, null)
-              port    = try(fi.port, "")
-              module  = try(fi.module, 1)
-              channel = try(fi.channel, null)
-              tag     = try(fi.tag, null)
-              vlan    = try(fi.vlan, null)
-            }] : []
-            vmm_interfaces = try((([for s in try(cluster.sites, []) : s if s.name == site_name])[0]).domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? [for fi in try((([for s in try(iface.sites, []) : s if s.name == site_name])[0]).fabric_interfaces, []) : {
-              type     = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
-              pod      = try(fi.pod, 1)
-              node     = try(fi.node, null)
-              node_2   = try(fi.node_2, null)
-              port     = try(fi.port, "")
-              module   = try(fi.module, 1)
-              channel  = try(fi.channel, null)
-              vmm_name = try(fi.vmm_name, null)
-              vnic     = try(fi.vnic, null)
-            }] : []
-          }]
-        }
+                pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)) ? [for pbr in try(iface_site.pbr_destinations, []) : {
+                  ip                     = try(pbr.ip, null)
+                  mac                    = try(pbr.mac, null)
+                  tag                    = try(pbr.tag, null)
+                  pod_id                 = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod_id, 1) : null
+                  weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pbr.weight) : null
+                  additional_tracking_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.additional_tracking_ip, null) : null
+                  is_backup              = try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.resilient_hash) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.backup, false) : null
+                }] : []
+                fabric_interfaces = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "physical" ? [for fi in try(iface_site.fabric_interfaces, []) : {
+                  type    = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
+                  pod     = try(fi.pod, 1)
+                  node    = try(fi.node, null)
+                  node_2  = try(fi.node_2, null)
+                  port    = try(fi.port, "")
+                  module  = try(fi.module, 1)
+                  channel = try(fi.channel, null)
+                  tag     = try(fi.tag, null)
+                  vlan    = try(fi.vlan, null)
+                }] : []
+                vmm_interfaces = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? [for fi in try(iface_site.fabric_interfaces, []) : {
+                  type     = try(fi.type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.fabric_interfaces.type)
+                  pod      = try(fi.pod, 1)
+                  node     = try(fi.node, null)
+                  node_2   = try(fi.node_2, null)
+                  port     = try(fi.port, "")
+                  module   = try(fi.module, 1)
+                  channel  = try(fi.channel, null)
+                  vmm_name = try(fi.vmm_name, null)
+                  vnic     = try(fi.vnic, null)
+                }] : []
+              }
+            ][0]]
+          }
+        ][0]
       ]
     ]
   ])
@@ -430,7 +433,7 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
       name                = interfaces.value.name
       vlan                = interfaces.value.vlan
       enhanced_lag_policy = interfaces.value.elag
-      domain_name         = interfaces.value.domain_name
+      domain_dn           = interfaces.value.domain_name != null ? "uni/phys-${interfaces.value.domain_name}" : null
 
       dynamic "fabric_to_device_connectivity" {
         for_each = each.value.domain_type == "physical" ? interfaces.value.fabric_interfaces : []
