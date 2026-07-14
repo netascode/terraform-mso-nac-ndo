@@ -105,6 +105,9 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
   undeploy_on_destroy = true
 
   depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
     mso_template.tenant_template,
     mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
     mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
