@@ -144,9 +144,11 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | Name | Type |
 |------|------|
 | [local_sensitive_file.defaults](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/sensitive_file) | resource |
+| [mso_fabric_policies_interface_setting.fabric_policies_interface_setting](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_interface_setting) | resource |
 | [mso_fabric_policies_l3_domain.fabric_policies_l3_domain](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_l3_domain) | resource |
 | [mso_fabric_policies_mcp_global_policy.fabric_policies_mcp_global_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_mcp_global_policy) | resource |
 | [mso_fabric_policies_physical_domain.fabric_policies_physical_domain](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_physical_domain) | resource |
+| [mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_synce_interface_policy) | resource |
 | [mso_fabric_policies_vlan_pool.fabric_policies_vlan_pool](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_vlan_pool) | resource |
 | [mso_remote_location.remote_location](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/remote_location) | resource |
 | [mso_rest.consumer_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
