@@ -530,6 +530,7 @@ resource "mso_template" "service_device_template" {
   template_type = "service_device"
   tenant_id     = each.value.tenant
   sites         = each.value.sites
+
 }
 
 locals {
@@ -770,5 +771,6 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
 
   depends_on = [
     mso_service_device_cluster.service_device_cluster,
+    mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
   ]
 }

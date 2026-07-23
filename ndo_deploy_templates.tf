@@ -218,6 +218,9 @@ resource "mso_schema_template_deploy_ndo" "service_device_template" {
     mso_schema_template_deploy_ndo.tenant_template,
     mso_schema_template_deploy_ndo.tenant_template2,
     mso_schema_template_deploy_ndo.tenant_template3,
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
   ]
 }
 
