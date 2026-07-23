@@ -1490,6 +1490,8 @@ locals {
                 mac_changes              = local.ndo_version >= 4.2 ? "reject" : null
                 forged_transmits         = local.ndo_version >= 4.2 ? "reject" : null
                 custom_epg_name          = local.ndo_version >= 4.2 ? try(vmm.custom_epg_name, null) : null
+                enhanced_lag_policy_name = try(vmm.enhanced_lag_policy_name, null)
+                enhanced_lag_policy_dn   = try(vmm.enhanced_lag_policy_name, null) != null ? "uni/vmmp-VMware/dom-${vmm.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.vmm_domain_name_suffix}/vswitchpolcont/enlacplagp-${vmm.enhanced_lag_policy_name}" : null
               }
             ]
           ]
@@ -1525,6 +1527,8 @@ resource "mso_schema_site_anp_epg_domain" "schema_site_anp_epg_domain_vmware" {
   mac_changes              = each.value.mac_changes
   forged_transmits         = each.value.forged_transmits
   custom_epg_name          = each.value.custom_epg_name
+  enhanced_lag_policy_name = each.value.enhanced_lag_policy_name
+  enhanced_lag_policy_dn   = each.value.enhanced_lag_policy_dn
 
   depends_on = [
     mso_schema_site_anp_epg.schema_site_anp_epg,

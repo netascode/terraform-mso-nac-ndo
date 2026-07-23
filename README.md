@@ -101,19 +101,21 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | >= 2.3.0 |
 | <a name="requirement_mso"></a> [mso](#requirement\_mso) | >= 2.0.0 |
-| <a name="requirement_utils"></a> [utils](#requirement\_utils) | = 2.0.0-beta2 |
+| <a name="requirement_utils"></a> [utils](#requirement\_utils) | = 2.0.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_deploy_templates"></a> [deploy\_templates](#input\_deploy\_templates) | Flag to indicate if templates should be deployed. | `bool` | `false` | no |
+| <a name="input_manage_fabric_templates"></a> [manage\_fabric\_templates](#input\_manage\_fabric\_templates) | Flag to indicate if fabric templates should be managed. | `bool` | `false` | no |
 | <a name="input_manage_schemas"></a> [manage\_schemas](#input\_manage\_schemas) | Flag to indicate if schemas should be managed. | `bool` | `false` | no |
 | <a name="input_manage_site_connectivity"></a> [manage\_site\_connectivity](#input\_manage\_site\_connectivity) | Flag to indicate if site connectivity be managed. | `bool` | `false` | no |
 | <a name="input_manage_sites"></a> [manage\_sites](#input\_manage\_sites) | Flag to indicate if sites should be managed. | `bool` | `false` | no |
 | <a name="input_manage_system"></a> [manage\_system](#input\_manage\_system) | Flag to indicate if system level configuration should be managed. | `bool` | `false` | no |
 | <a name="input_manage_tenant_templates"></a> [manage\_tenant\_templates](#input\_manage\_tenant\_templates) | Flag to indicate if tenant templates should be managed. | `bool` | `false` | no |
 | <a name="input_manage_tenants"></a> [manage\_tenants](#input\_manage\_tenants) | Flag to indicate if tenants be managed. | `bool` | `false` | no |
+| <a name="input_managed_fabric_templates"></a> [managed\_fabric\_templates](#input\_managed\_fabric\_templates) | List of fabric template names to be managed. By default all fabric templates will be managed. | `list(string)` | `[]` | no |
 | <a name="input_managed_schemas"></a> [managed\_schemas](#input\_managed\_schemas) | List of schema names to be managed. By default all schemas will be managed. | `list(string)` | `[]` | no |
 | <a name="input_managed_tenant_templates"></a> [managed\_tenant\_templates](#input\_managed\_tenant\_templates) | List of tenant template names to be managed. By default all tenant templates will be managed. | `list(string)` | `[]` | no |
 | <a name="input_managed_tenants"></a> [managed\_tenants](#input\_managed\_tenants) | List of tenant names to be managed. By default all tenants will be managed. | `list(string)` | `[]` | no |
@@ -142,6 +144,12 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | Name | Type |
 |------|------|
 | [local_sensitive_file.defaults](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/sensitive_file) | resource |
+| [mso_fabric_policies_interface_setting.fabric_policies_interface_setting](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_interface_setting) | resource |
+| [mso_fabric_policies_l3_domain.fabric_policies_l3_domain](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_l3_domain) | resource |
+| [mso_fabric_policies_mcp_global_policy.fabric_policies_mcp_global_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_mcp_global_policy) | resource |
+| [mso_fabric_policies_physical_domain.fabric_policies_physical_domain](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_physical_domain) | resource |
+| [mso_fabric_policies_synce_interface_policy.fabric_policies_synce_interface_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_synce_interface_policy) | resource |
+| [mso_fabric_policies_vlan_pool.fabric_policies_vlan_pool](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/fabric_policies_vlan_pool) | resource |
 | [mso_remote_location.remote_location](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/remote_location) | resource |
 | [mso_rest.consumer_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
 | [mso_rest.provider_redirect_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/rest) | resource |
@@ -180,6 +188,9 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_contract.schema_template_contract](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract) | resource |
 | [mso_schema_template_contract_service_chaining.schema_template_contract_service_chaining](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_service_chaining) | resource |
 | [mso_schema_template_contract_service_graph.schema_template_contract_service_graph](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_contract_service_graph) | resource |
+| [mso_schema_template_deploy_ndo.fabric_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.fabric_template2](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
+| [mso_schema_template_deploy_ndo.fabric_template3](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.service_device_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
 | [mso_schema_template_deploy_ndo.template2](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/schema_template_deploy_ndo) | resource |
@@ -199,11 +210,18 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_service_device_cluster.service_device_cluster](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/service_device_cluster) | resource |
 | [mso_service_device_cluster_site.service_device_cluster_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/service_device_cluster_site) | resource |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/site) | resource |
+| [mso_template.fabric_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
 | [mso_template.service_device_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
 | [mso_template.tenant_template](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/template) | resource |
 | [mso_tenant.tenant](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant) | resource |
+| [mso_tenant_policies_bgp_peer_prefix_policy.tenant_policies_bgp_peer_prefix_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_bgp_peer_prefix_policy) | resource |
+| [mso_tenant_policies_custom_qos_policy.tenant_policies_custom_qos_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_custom_qos_policy) | resource |
+| [mso_tenant_policies_dhcp_option_policy.tenant_policies_dhcp_option_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_dhcp_option_policy) | resource |
 | [mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_dhcp_relay_policy) | resource |
 | [mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_monitoring_policy) | resource |
+| [mso_tenant_policies_ipsla_track_list.tenant_policies_ipsla_track_list](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_track_list) | resource |
+| [mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_l3out_interface_routing_policy) | resource |
+| [mso_tenant_policies_mld_snooping_policy.tenant_policies_mld_snooping_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_mld_snooping_policy) | resource |
 | [mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_route_map_policy_multicast) | resource |
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
@@ -215,6 +233,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_bd.service_device_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_bd) | data source |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
 | [mso_schema_template_external_epg.service_device_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
+| [mso_site.fabric_templates_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.template_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.tenant_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
