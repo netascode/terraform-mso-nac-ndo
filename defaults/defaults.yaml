@@ -187,9 +187,9 @@ defaults:
           redirect_policy_name_suffix: ""
           node_type: "firewall"
     tenant_templates:
-      service_device:
+      service_devices:
         cluster:
-          name_suffix: ""
+          name_suffix: "TEST"
           device_mode: layer3
           connectivity_mode: twoArm
           sites:
@@ -221,7 +221,6 @@ defaults:
               weight: 1
             fabric_interfaces:
               type: port
-
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""

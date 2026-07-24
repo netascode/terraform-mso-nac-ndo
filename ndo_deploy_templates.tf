@@ -63,6 +63,8 @@ resource "mso_schema_template_deploy_ndo" "template" {
     mso_rest.schema_site_service_graph,
     mso_rest.provider_redirect_policy,
     mso_rest.consumer_redirect_policy,
+    mso_schema_template_contract_service_chaining.schema_template_contract_service_chaining,
+    mso_schema_template_deploy_ndo.service_device_template,
   ]
 }
 
@@ -105,9 +107,6 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
   undeploy_on_destroy = true
 
   depends_on = [
-    mso_schema_template_deploy_ndo.fabric_template,
-    mso_schema_template_deploy_ndo.fabric_template2,
-    mso_schema_template_deploy_ndo.fabric_template3,
     mso_template.tenant_template,
     mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy,
     mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy,
@@ -215,12 +214,6 @@ resource "mso_schema_template_deploy_ndo" "service_device_template" {
 
   depends_on = [
     mso_service_device_cluster_site.service_device_cluster_site,
-    mso_schema_template_deploy_ndo.tenant_template,
-    mso_schema_template_deploy_ndo.tenant_template2,
-    mso_schema_template_deploy_ndo.tenant_template3,
-    mso_schema_template_deploy_ndo.fabric_template,
-    mso_schema_template_deploy_ndo.fabric_template2,
-    mso_schema_template_deploy_ndo.fabric_template3,
   ]
 }
 

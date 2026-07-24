@@ -560,7 +560,7 @@ locals {
             for idx, node in try(contract.service_chaining.nodes, []) : {
               name        = "node-${idx + 1}"
               device_type = try(node.device_type, local.defaults.ndo.schemas.templates.contracts.service_chaining.nodes.device_type)
-              device_ref  = local.service_device_cluster_uuids["${node.service_device_template}/${node.device}"]
+              device_ref  = local.service_device_cluster_uuids["${node.service_device_template}/${node.device}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"]
               consumer_connector = {
                 interface_name = node.consumer_interface
                 is_redirect    = try(node.consumer_redirect, local.defaults.ndo.schemas.templates.contracts.service_chaining.nodes.consumer_redirect)
