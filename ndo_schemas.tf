@@ -31,6 +31,12 @@ resource "mso_schema" "schema" {
       template_type = try(template.value.type, local.defaults.ndo.schemas.templates.type) == "autonomous" ? "aci_autonomous" : "aci_multi_site"
     }
   }
+
+  depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
+  ]
 }
 
 locals {
@@ -522,6 +528,85 @@ resource "mso_rest" "consumer_redirect_policy" {
     mso_rest.provider_redirect_policy
   ]
 
+}
+
+data "mso_rest" "service_device_template_content" {
+  for_each = { for template in local.service_device_policies : template.name => template }
+  path     = "api/v1/templates/${mso_template.service_device_template[each.key].id}"
+
+  depends_on = [mso_service_device_cluster_site.service_device_cluster_site]
+}
+
+locals {
+  service_device_cluster_uuids = merge(flatten([
+    for key, template_data in data.mso_rest.service_device_template_content : [
+      { for device in try(jsondecode(template_data.content).deviceTemplate.template.devices, []) :
+        "${key}/${device.name}" => device.uuid
+      }
+    ]
+  ])...)
+
+
+  contracts_service_chaining = flatten([
+    for schema in local.schemas : [
+      for template in try(schema.templates, []) : [
+        for contract in try(template.contracts, []) : {
+          key           = "${schema.name}/${template.name}/${contract.name}"
+          schema_id     = mso_schema.schema[schema.name].id
+          template_name = template.name
+          contract_name = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
+          node_filter   = try(contract.service_chaining.node_filter, local.defaults.ndo.schemas.templates.contracts.service_chaining.node_filter)
+          service_nodes = [
+            for idx, node in try(contract.service_chaining.nodes, []) : {
+              name        = "node-${idx + 1}"
+              device_type = try(node.device_type, local.defaults.ndo.schemas.templates.contracts.service_chaining.nodes.device_type)
+              device_ref  = local.service_device_cluster_uuids["${node.service_device_template}/${node.device}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"]
+              consumer_connector = {
+                interface_name = node.consumer_interface
+                is_redirect    = try(node.consumer_redirect, local.defaults.ndo.schemas.templates.contracts.service_chaining.nodes.consumer_redirect)
+              }
+              provider_connector = {
+                interface_name = node.provider_interface
+                is_redirect    = try(node.provider_redirect, local.defaults.ndo.schemas.templates.contracts.service_chaining.nodes.provider_redirect)
+              }
+            }
+          ]
+        } if try(contract.service_chaining, null) != null
+      ]
+    ]
+  ])
+}
+
+resource "mso_schema_template_contract_service_chaining" "schema_template_contract_service_chaining" {
+  for_each      = { for sc in local.contracts_service_chaining : sc.key => sc if local.ndo_version >= 4.2 }
+  schema_id     = each.value.schema_id
+  template_name = each.value.template_name
+  contract_name = each.value.contract_name
+  node_filter   = each.value.node_filter
+
+  dynamic "service_nodes" {
+    for_each = each.value.service_nodes
+    content {
+      name        = service_nodes.value.name
+      device_type = service_nodes.value.device_type
+      device_ref  = service_nodes.value.device_ref
+
+      consumer_connector {
+        interface_name = service_nodes.value.consumer_connector.interface_name
+        is_redirect    = service_nodes.value.consumer_connector.is_redirect
+      }
+
+      provider_connector {
+        interface_name = service_nodes.value.provider_connector.interface_name
+        is_redirect    = service_nodes.value.provider_connector.is_redirect
+      }
+    }
+  }
+
+  depends_on = [
+    mso_schema_template_contract.schema_template_contract,
+    mso_service_device_cluster_site.service_device_cluster_site,
+  ]
 }
 
 locals {
