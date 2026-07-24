@@ -46,6 +46,12 @@ resource "mso_template" "tenant_template" {
   template_type = "tenant"
   tenant_id     = each.value.tenant
   sites         = each.value.sites
+
+  depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
+  ]
 }
 
 locals {

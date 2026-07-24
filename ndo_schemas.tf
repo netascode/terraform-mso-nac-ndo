@@ -31,6 +31,12 @@ resource "mso_schema" "schema" {
       template_type = try(template.value.type, local.defaults.ndo.schemas.templates.type) == "autonomous" ? "aci_autonomous" : "aci_multi_site"
     }
   }
+
+  depends_on = [
+    mso_schema_template_deploy_ndo.fabric_template,
+    mso_schema_template_deploy_ndo.fabric_template2,
+    mso_schema_template_deploy_ndo.fabric_template3,
+  ]
 }
 
 locals {
