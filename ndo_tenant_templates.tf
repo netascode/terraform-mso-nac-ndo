@@ -51,6 +51,10 @@ resource "mso_template" "tenant_template" {
     mso_schema_template_deploy_ndo.fabric_template,
     mso_schema_template_deploy_ndo.fabric_template2,
     mso_schema_template_deploy_ndo.fabric_template3,
+    mso_schema_template_bd.schema_template_bd,
+    mso_schema_site_bd.schema_site_bd,
+    mso_schema_template_external_epg.schema_template_external_epg,
+    mso_schema_site_external_epg.schema_site_external_epg,
   ]
 }
 
@@ -541,10 +545,6 @@ resource "mso_template" "service_device_template" {
     mso_schema_template_deploy_ndo.tenant_template,
     mso_schema_template_deploy_ndo.tenant_template2,
     mso_schema_template_deploy_ndo.tenant_template3,
-    mso_schema_template_bd.schema_template_bd,
-    mso_schema_site_bd.schema_site_bd,
-    mso_schema_template_external_epg.schema_template_external_epg,
-    mso_schema_site_external_epg.schema_site_external_epg,
   ]
 }
 
