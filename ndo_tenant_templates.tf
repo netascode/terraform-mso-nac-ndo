@@ -551,6 +551,7 @@ locals {
         interfaces = [for iface in try(cluster.interfaces, []) : {
           name                      = iface.name
           interface_type            = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type)
+          schema                    = try(iface.schema, null)
           bd_uuid_key               = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
           external_epg_uuid_key     = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.interface_type) == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_endpoint_group, "")}" : null
           redirect                  = try(iface.redirect, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.redirect)
@@ -625,8 +626,8 @@ resource "mso_service_device_cluster" "service_device_cluster" {
     content {
       name                         = interface_properties.value.name
       redirect                     = interface_properties.value.redirect
-      bd_uuid                      = interface_properties.value.bd_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.bd_uuid_key)[0])) ? data.mso_schema_template_bd.service_device_bd[interface_properties.value.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd["${split("/", interface_properties.value.bd_uuid_key)[0]}/${split("/", interface_properties.value.bd_uuid_key)[1]}/${split("/", interface_properties.value.bd_uuid_key)[2]}"].uuid) : null
-      external_epg_uuid            = interface_properties.value.external_epg_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.service_device_external_epg[interface_properties.value.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg["${split("/", interface_properties.value.external_epg_uuid_key)[0]}/${split("/", interface_properties.value.external_epg_uuid_key)[1]}/${split("/", interface_properties.value.external_epg_uuid_key)[2]}"].uuid) : null
+      bd_uuid                      = interface_properties.value.bd_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, interface_properties.value.schema)) ? data.mso_schema_template_bd.service_device_bd[interface_properties.value.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd[interface_properties.value.bd_uuid_key].uuid) : null
+      external_epg_uuid            = interface_properties.value.external_epg_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, interface_properties.value.schema)) ? data.mso_schema_template_external_epg.service_device_external_epg[interface_properties.value.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg[interface_properties.value.external_epg_uuid_key].uuid) : null
       ipsla_monitoring_policy_uuid = interface_properties.value.ipsla_key != null ? mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[split("/", interface_properties.value.ipsla_key)[1]].uuid : null
       preferred_group              = interface_properties.value.preferred_group
       rewrite_source_mac           = interface_properties.value.rewrite_source_mac
