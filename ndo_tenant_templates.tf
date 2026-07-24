@@ -664,8 +664,8 @@ locals {
             domain_type            = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type)
             domain_name            = try(site.domain_name, null)
             vmm_type               = try(site.vmm_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.vmm_type)
-            trunking_port          = try(site.trunking_port, local.defaults.ndo.tenant_templates.service_device.cluster.sites.trunking_port)
-            promiscuous_mode       = try(site.promiscuous_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.promiscuous_mode)
+            trunking_port          = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? try(site.trunking_port, local.defaults.ndo.tenant_templates.service_device.cluster.sites.trunking_port) : null
+            promiscuous_mode       = try(site.domain_type, local.defaults.ndo.tenant_templates.service_device.cluster.sites.domain_type) == "vmm" ? try(site.promiscuous_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.promiscuous_mode) : null
             site_vlan              = try(site.site_vlan, null)
             high_availability_mode = contains(["layer2", "layer1"], try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode)) ? try(site.high_availability_mode, local.defaults.ndo.tenant_templates.service_device.cluster.sites.high_availability_mode) : null
 
@@ -680,7 +680,7 @@ locals {
                   ip                     = try(pbr.ip, null)
                   mac                    = try(pbr.mac, null)
                   tag                    = try(pbr.tag, null)
-                  pod_id                 = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod_id, 1) : null
+                  pod                    = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod, 1) : null
                   weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.pbr.weight) : null
                   additional_tracking_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.additional_tracking_ip, null) : null
                   is_backup              = try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_device.cluster.interfaces.resilient_hash) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_device.cluster.device_mode) == "layer3" ? try(pbr.backup, false) : null
@@ -724,8 +724,8 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
   site_id                = each.value.site_id
   domain_dn              = each.value.domain_name != null ? (each.value.domain_type == "physical" ? "uni/phys-${each.value.domain_name}" : "uni/vmmp-${each.value.vmm_type}/dom-${each.value.domain_name}") : null
   high_availability_mode = each.value.high_availability_mode
-  trunking_port          = each.value.domain_type == "vmm" ? each.value.trunking_port : null
-  promiscuous_mode       = each.value.domain_type == "vmm" ? each.value.promiscuous_mode : null
+  trunking_port          = each.value.trunking_port
+  promiscuous_mode       = each.value.promiscuous_mode
   vlan                   = each.value.site_vlan
 
   dynamic "interfaces" {
@@ -739,8 +739,8 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
       dynamic "fabric_to_device_connectivity" {
         for_each = each.value.domain_type == "physical" ? interfaces.value.fabric_interfaces : []
         content {
-          pod_id    = tostring(fabric_to_device_connectivity.value.pod)
-          node_id   = fabric_to_device_connectivity.value.type == "vpc" ? [tostring(fabric_to_device_connectivity.value.node), tostring(fabric_to_device_connectivity.value.node_2)] : [tostring(fabric_to_device_connectivity.value.node)]
+          pod_id    = fabric_to_device_connectivity.value.pod
+          node_id   = fabric_to_device_connectivity.value.type == "vpc" ? [fabric_to_device_connectivity.value.node, fabric_to_device_connectivity.value.node_2] : [fabric_to_device_connectivity.value.node]
           path      = fabric_to_device_connectivity.value.type == "port" ? "eth${fabric_to_device_connectivity.value.module}/${fabric_to_device_connectivity.value.port}" : "${fabric_to_device_connectivity.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}"
           port_type = fabric_to_device_connectivity.value.type
           tag       = fabric_to_device_connectivity.value.tag
@@ -754,9 +754,9 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
           vm_name   = vm_information.value.vmm_name
           vnic_name = vm_information.value.vnic
           port_type = vm_information.value.type
-          pod_id    = vm_information.value.node != null ? tostring(vm_information.value.pod) : null
+          pod_id    = vm_information.value.node != null ? m_information.value.pod : null
           path      = vm_information.value.node != null ? (vm_information.value.type == "port" ? "eth${vm_information.value.module}/${vm_information.value.port}" : "${vm_information.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}") : null
-          node_id   = vm_information.value.node != null ? vm_information.value.type == "vpc" ? [tostring(vm_information.value.node), tostring(vm_information.value.node_2)] : [tostring(vm_information.value.node)] : null
+          node_id   = vm_information.value.node != null ? vm_information.value.type == "vpc" ? [vm_information.value.node, vm_information.value.node_2] : [vm_information.value.node] : null
         }
       }
 
@@ -765,7 +765,7 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
         content {
           ip                     = pbr_destinations.value.ip
           mac                    = pbr_destinations.value.mac
-          pod_id                 = pbr_destinations.value.pod_id != null ? tostring(pbr_destinations.value.pod_id) : null
+          pod_id                 = pbr_destinations.value.pod != null ? pbr_destinations.value.pod : null
           additional_tracking_ip = pbr_destinations.value.additional_tracking_ip
           weight                 = pbr_destinations.value.weight
           is_backup              = pbr_destinations.value.is_backup
