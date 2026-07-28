@@ -57,7 +57,7 @@ locals {
 }
 
 data "mso_site" "fabric_templates_site" {
-  for_each = toset(distinct([for site in local.fabric_templates_sites : site.site_name if(!var.manage_sites || local.ndo_platform_version == "4.1") && var.manage_fabric_templates]))
+  for_each = toset(distinct([for site in local.fabric_templates_sites : site.site_name if(!var.manage_sites || local.ndo_platform_version == "4.1" || local.ndo_platform_version == "4.2") && var.manage_fabric_templates]))
   name     = each.value
 }
 
@@ -65,7 +65,7 @@ locals {
   fabric_policies = flatten([
     for template in local.fabric_templates : [{
       name  = template.name
-      sites = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" ? mso_site.site[site].id : data.mso_site.fabric_templates_site[site].id]
+      sites = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site].id : data.mso_site.fabric_templates_site[site].id]
     }]
   ])
 }
