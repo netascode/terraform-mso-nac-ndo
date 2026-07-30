@@ -30,7 +30,7 @@ resource "mso_tenant" "tenant" {
   orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only)
 
   dynamic "user_associations" {
-    for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user }
+    for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user if local.ndo_platform_version != "4.2" }
     content {
       user_id = data.mso_user.tenant_user[user_associations.value.name].id
     }
