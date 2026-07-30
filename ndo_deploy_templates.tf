@@ -1,5 +1,5 @@
 locals {
-  unmanaged_schemas = [for schema in try(local.ndo.schemas, []) : schema if !var.manage_schemas && var.deploy_templates && !var.manage_tenant_templates]
+  unmanaged_schemas = [for schema in try(local.ndo.schemas, []) : schema if !var.manage_schemas && !var.manage_tenant_templates && !var.manage_fabric_templates && var.deploy_templates]
   deploy_templates = flatten([
     for schema in concat(local.schemas, local.unmanaged_schemas) : [
       for template in try(schema.templates, {}) : {
@@ -88,7 +88,7 @@ resource "mso_schema_template_deploy_ndo" "template3" {
 }
 
 locals {
-  unmanaged_templates = [for template in try(local.ndo.tenant_templates.tenant_policies, []) : template if !var.manage_tenant_templates && var.deploy_templates && !var.manage_schemas]
+  unmanaged_templates = [for template in try(local.ndo.tenant_templates.tenant_policies, []) : template if !var.manage_schemas && !var.manage_tenant_templates && !var.manage_fabric_templates && var.deploy_templates]
   deploy_tenant_templates = flatten([
     for template in try(concat(local.tenant_templates, local.unmanaged_templates), {}) : {
       key           = template.name
@@ -145,7 +145,7 @@ resource "mso_schema_template_deploy_ndo" "tenant_template3" {
 }
 
 locals {
-  unmanaged_fabric_templates = [for template in try(local.ndo.fabric_templates.fabric_policies, []) : template if !var.manage_fabric_templates && var.deploy_templates && !var.manage_schemas]
+  unmanaged_fabric_templates = [for template in try(local.ndo.fabric_templates.fabric_policies, []) : template if !var.manage_schemas && !var.manage_tenant_templates && !var.manage_fabric_templates && var.deploy_templates]
   deploy_fabric_templates = flatten([
     for template in try(concat(local.fabric_templates, local.unmanaged_fabric_templates), {}) : {
       key           = template.name
