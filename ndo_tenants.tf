@@ -13,7 +13,7 @@ locals {
 }
 
 data "mso_user" "tenant_user" {
-  for_each = toset(local.tenant_users)
+  for_each = local.ndo_platform_version != "4.2" ? toset(local.tenant_users) : []
   username = each.value
 }
 
