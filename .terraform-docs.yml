@@ -80,6 +80,9 @@ output:
   file: README.md
   mode: replace
 
+settings:
+  lockfile: false
+
 sort:
   enabled: true
   by: required
