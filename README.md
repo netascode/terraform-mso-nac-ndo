@@ -135,7 +135,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 
 | Name | Version |
 |------|---------|
-| <a name="provider_local"></a> [local](#provider\_local) | >= 2.3.0 |
+| <a name="provider_local"></a> [local](#provider\_local) | 2.9.0 |
 | <a name="provider_mso"></a> [mso](#provider\_mso) | >= 2.0.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
@@ -213,10 +213,15 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_tenant_policies_custom_qos_policy.tenant_policies_custom_qos_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_custom_qos_policy) | resource |
 | [mso_tenant_policies_dhcp_option_policy.tenant_policies_dhcp_option_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_dhcp_option_policy) | resource |
 | [mso_tenant_policies_dhcp_relay_policy.tenant_policies_dhcp_relay_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_dhcp_relay_policy) | resource |
+| [mso_tenant_policies_endpoint_mac_tag_policy.tenant_policies_endpoint_mac_tag_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_endpoint_mac_tag_policy) | resource |
+| [mso_tenant_policies_igmp_interface_policy.tenant_policies_igmp_interface_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_igmp_interface_policy) | resource |
 | [mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_monitoring_policy) | resource |
 | [mso_tenant_policies_ipsla_track_list.tenant_policies_ipsla_track_list](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_track_list) | resource |
 | [mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_l3out_interface_routing_policy) | resource |
 | [mso_tenant_policies_mld_snooping_policy.tenant_policies_mld_snooping_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_mld_snooping_policy) | resource |
+| [mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_exporter) | resource |
+| [mso_tenant_policies_netflow_monitor.tenant_policies_netflow_monitor](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_monitor) | resource |
+| [mso_tenant_policies_netflow_record.tenant_policies_netflow_record](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_record) | resource |
 | [mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_route_map_policy_multicast) | resource |
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |

@@ -511,3 +511,180 @@ resource "mso_tenant_policies_mld_snooping_policy" "tenant_policies_mld_snooping
   start_query_interval       = each.value.start_query_interval
   start_query_count          = each.value.start_query_count
 }
+
+locals {
+  netflow_record_match_map = {
+    "dst-ip"    = "destination_ip"
+    "dst-ipv4"  = "destination_ipv4"
+    "dst-ipv6"  = "destination_ipv6"
+    "dst-mac"   = "destination_mac"
+    "dst-port"  = "destination_port"
+    "ethertype" = "ethertype"
+    "proto"     = "ip_protocol"
+    "src-ip"    = "source_ip"
+    "src-ipv4"  = "source_ipv4"
+    "src-ipv6"  = "source_ipv6"
+    "src-mac"   = "source_mac"
+    "src-port"  = "source_port"
+  }
+  netflow_records = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.netflow_records, []) : {
+        name             = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_records.name_suffix}"
+        template_name    = template.name
+        description      = try(policy.description, null)
+        match_parameters = try([for param in policy.match_parameters : local.netflow_record_match_map[param]], null)
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_netflow_record" "tenant_policies_netflow_record" {
+  for_each         = { for policy in local.netflow_records : policy.name => policy }
+  template_id      = mso_template.tenant_template[each.value.template_name].id
+  name             = each.value.name
+  description      = each.value.description
+  match_parameters = each.value.match_parameters
+}
+
+locals {
+  netflow_exporters = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.netflow_exporters, []) : {
+        name          = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.name_suffix}"
+        template_name = template.name
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_netflow_exporter" "tenant_policies_netflow_exporter" {
+  for_each    = { for policy in local.netflow_exporters : policy.name => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  name        = each.value.name
+}
+
+locals {
+  netflow_monitors = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.netflow_monitors, []) : {
+        name                  = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_monitors.name_suffix}"
+        template_name         = template.name
+        description           = try(policy.description, null)
+        netflow_record_name   = try("${policy.netflow_record}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_records.name_suffix}", null)
+        netflow_exporter_keys = [for exporter in try(policy.netflow_exporters, []) : "${exporter}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.name_suffix}"]
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_netflow_monitor" "tenant_policies_netflow_monitor" {
+  for_each               = { for policy in local.netflow_monitors : policy.name => policy }
+  template_id            = mso_template.tenant_template[each.value.template_name].id
+  name                   = each.value.name
+  description            = each.value.description
+  netflow_record_uuid    = each.value.netflow_record_name != null ? mso_tenant_policies_netflow_record.tenant_policies_netflow_record[each.value.netflow_record_name].uuid : null
+  netflow_exporter_uuids = [for exporter_name in each.value.netflow_exporter_keys : mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter[exporter_name].uuid]
+
+  depends_on = [
+    mso_tenant_policies_netflow_record.tenant_policies_netflow_record,
+    mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter,
+  ]
+}
+
+locals {
+  igmp_interface_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.igmp_interface_policies, []) : {
+        name                         = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.name_suffix}"
+        template_name                = template.name
+        description                  = try(policy.description, null)
+        version3_asm                 = try(policy.version3_asm, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.version3_asm)
+        fast_leave                   = try(policy.fast_leave, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.fast_leave)
+        report_link_local_groups     = try(policy.report_link_local_groups, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.report_link_local_groups)
+        igmp_version                 = try(policy.igmp_version, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.igmp_version)
+        group_timeout                = try(policy.group_timeout, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.group_timeout)
+        query_interval               = try(policy.query_interval, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.query_interval)
+        query_response_interval      = try(policy.query_response_interval, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.query_response_interval)
+        last_member_count            = try(policy.last_member_count, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.last_member_count)
+        last_member_response_time    = try(policy.last_member_response_time, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.last_member_response_time)
+        startup_query_count          = try(policy.startup_query_count, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.startup_query_count)
+        startup_query_interval       = try(policy.startup_query_interval, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.startup_query_interval)
+        querier_timeout              = try(policy.querier_timeout, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.querier_timeout)
+        robustness_variable          = try(policy.robustness_variable, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.robustness_variable)
+        maximum_multicast_entries    = try(policy.maximum_multicast_entries, null)
+        reserved_multicast_entries   = try(policy.reserved_multicast_entries, local.defaults.ndo.tenant_templates.tenant_policies.igmp_interface_policies.reserved_multicast_entries)
+        state_limit_route_map_name   = try("${policy.state_limit_route_map}${local.defaults.ndo.tenant_templates.tenant_policies.multicast_route_maps.name_suffix}", null)
+        report_policy_route_map_name = try("${policy.report_policy_route_map}${local.defaults.ndo.tenant_templates.tenant_policies.multicast_route_maps.name_suffix}", null)
+        static_report_route_map_name = try("${policy.static_report_route_map}${local.defaults.ndo.tenant_templates.tenant_policies.multicast_route_maps.name_suffix}", null)
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_igmp_interface_policy" "tenant_policies_igmp_interface_policy" {
+  for_each                     = { for policy in local.igmp_interface_policies : policy.name => policy }
+  template_id                  = mso_template.tenant_template[each.value.template_name].id
+  name                         = each.value.name
+  description                  = each.value.description
+  version3_asm                 = each.value.version3_asm
+  fast_leave                   = each.value.fast_leave
+  report_link_local_groups     = each.value.report_link_local_groups
+  igmp_version                 = each.value.igmp_version
+  group_timeout                = each.value.group_timeout
+  query_interval               = each.value.query_interval
+  query_response_interval      = each.value.query_response_interval
+  last_member_count            = each.value.last_member_count
+  last_member_response_time    = each.value.last_member_response_time
+  startup_query_count          = each.value.startup_query_count
+  startup_query_interval       = each.value.startup_query_interval
+  querier_timeout              = each.value.querier_timeout
+  robustness_variable          = each.value.robustness_variable
+  maximum_multicast_entries    = each.value.maximum_multicast_entries
+  reserved_multicast_entries   = each.value.reserved_multicast_entries
+  state_limit_route_map_uuid   = each.value.state_limit_route_map_name != null ? mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast[each.value.state_limit_route_map_name].uuid : null
+  report_policy_route_map_uuid = each.value.report_policy_route_map_name != null ? mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast[each.value.report_policy_route_map_name].uuid : null
+  static_report_route_map_uuid = each.value.static_report_route_map_name != null ? mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast[each.value.static_report_route_map_name].uuid : null
+
+  depends_on = [mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast]
+}
+
+locals {
+  endpoint_mac_tag_policies = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.endpoint_mac_tag_policies, []) : {
+        key             = "${template.name}/${policy.mac}"
+        template_name   = template.name
+        mac             = policy.mac
+        scope_type      = policy.scope_type
+        scope_key       = policy.scope_type == "bd" ? "${policy.schema}/${policy.template}/${policy.bridge_domain}" : "${policy.schema}/${policy.template}/${policy.vrf}"
+        tag_annotations = try(policy.tag_annotations, [])
+        policy_tags     = try(policy.policy_tags, [])
+      }
+    ]
+  ])
+}
+
+resource "mso_tenant_policies_endpoint_mac_tag_policy" "tenant_policies_endpoint_mac_tag_policy" {
+  for_each    = { for policy in local.endpoint_mac_tag_policies : policy.key => policy }
+  template_id = mso_template.tenant_template[each.value.template_name].id
+  mac         = each.value.mac
+  bd_uuid     = each.value.scope_type == "bd" ? mso_schema_template_bd.schema_template_bd[each.value.scope_key].uuid : null
+  vrf_uuid    = each.value.scope_type == "vrf" ? mso_schema_template_vrf.schema_template_vrf[each.value.scope_key].uuid : null
+
+  dynamic "tag_annotations" {
+    for_each = each.value.tag_annotations
+    content {
+      key   = tag_annotations.value.key
+      value = tag_annotations.value.value
+    }
+  }
+
+  dynamic "policy_tags" {
+    for_each = each.value.policy_tags
+    content {
+      key   = policy_tags.value.key
+      value = policy_tags.value.value
+    }
+  }
+}
