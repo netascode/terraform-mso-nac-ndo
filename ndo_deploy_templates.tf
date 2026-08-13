@@ -206,7 +206,7 @@ locals {
 }
 
 resource "mso_schema_template_deploy_ndo" "service_device_template" {
-  for_each            = { for template in local.deploy_service_device_templates : template.key => template if var.deploy_service_device_templates }
+  for_each            = { for template in local.deploy_service_device_templates : template.key => template if var.deploy_templates }
   template_id         = mso_template.service_device_template[each.value.template_name].id
   template_type       = "service_device"
   template_name       = each.value.template_name
