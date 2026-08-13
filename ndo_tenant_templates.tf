@@ -556,8 +556,7 @@ locals {
         template_name = template.name
         name          = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
         device_type   = try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)
-        # Firewall and load balancer are always layer3, matching the Ansible flavor (service_device.j2:20)
-        device_mode = contains(["firewall", "load_balancer"], try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)) ? "layer3" : try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
+        device_mode   = contains(["firewall", "load_balancer"], try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)) ? "layer3" : try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
         interfaces = [for iface in try(cluster.interfaces, []) : {
           name                  = iface.name
           bd_uuid_key           = iface.interface_type == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
