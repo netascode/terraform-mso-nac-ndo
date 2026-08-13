@@ -562,7 +562,7 @@ locals {
           bd_uuid_key           = iface.interface_type == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
           external_epg_uuid_key = iface.interface_type == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_endpoint_group, "")}" : null
           redirect              = try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)
-          ipsla_key             = try(iface.ip_sla, null) != null ? "${try(iface.ip_sla.template, template.name)}/${try(iface.ip_sla.name, "")}" : null
+          ipsla_key             = try(iface.ip_sla, null) != null ? "${iface.ip_sla.template}/${iface.ip_sla.name}${local.defaults.ndo.tenant_templates.tenant_policies.ip_sla_policies.name_suffix}" : null
           preferred_group       = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.preferred_group)
           rewrite_source_mac    = try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect) ? try(iface.rewrite_source_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.rewrite_source_mac) : null
           anycast               = try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect) ? try(iface.anycast, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.anycast) : null
