@@ -555,7 +555,7 @@ locals {
         key           = "service_device/${template.name}/${cluster.name}"
         template_name = template.name
         name          = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
-        device_type   = try(cluster.device_type, "firewall")
+        device_type   = try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)
         device_mode   = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
         interfaces = [for iface in try(cluster.interfaces, []) : {
           name                      = iface.name
@@ -568,7 +568,7 @@ locals {
           preferred_group           = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.preferred_group)
           rewrite_source_mac        = try(iface.rewrite_source_mac, null)
           anycast                   = try(iface.anycast, null)
-          config_static_mac         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.config_static_mac) : null
+          static_mac         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) : null
           is_backup_redirect_ip     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.backup_redirect_ip, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.backup_redirect_ip) : null
           load_balance_hashing      = try(iface.load_balance_hashing, null)
           pod_aware_redirection     = try(iface.pod_aware_redirection, null)
@@ -639,7 +639,7 @@ resource "mso_service_device_cluster" "service_device_cluster" {
       preferred_group              = interface_properties.value.preferred_group
       rewrite_source_mac           = interface_properties.value.rewrite_source_mac
       anycast                      = interface_properties.value.anycast
-      config_static_mac            = interface_properties.value.config_static_mac
+      config_static_mac            = interface_properties.value.static_mac
       is_backup_redirect_ip        = interface_properties.value.is_backup_redirect_ip
       load_balance_hashing         = interface_properties.value.load_balance_hashing
       pod_aware_redirection        = interface_properties.value.pod_aware_redirection
@@ -762,7 +762,7 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
           vm_name   = vm_information.value.vmm_name
           vnic_name = vm_information.value.vnic
           port_type = vm_information.value.type
-          pod_id    = vm_information.value.node != null ? m_information.value.pod : null
+          pod_id    = vm_information.value.node != null ? vm_information.value.pod : null
           path      = vm_information.value.node != null ? (vm_information.value.type == "port" ? "eth${vm_information.value.module}/${vm_information.value.port}" : "${vm_information.value.channel}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.sites.static_ports.leaf_interface_policy_group_suffix}") : null
           node_id   = vm_information.value.node != null ? vm_information.value.type == "vpc" ? [vm_information.value.node, vm_information.value.node_2] : [vm_information.value.node] : null
         }

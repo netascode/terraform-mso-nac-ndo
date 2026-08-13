@@ -189,9 +189,9 @@ defaults:
     tenant_templates:
       service_devices:
         cluster:
-          name_suffix: "TEST"
+          name_suffix: ""
           device_mode: layer3
-          connectivity_mode: twoArm
+          device_type: firewall
           sites:
             domain_type: physical
             high_availability_mode: activeStandby
@@ -199,7 +199,6 @@ defaults:
             promiscuous_mode: false
             vmm_type: VMware
           interfaces:
-            name_suffix: ""
             interface_type: bd
             redirect: false
             advanced_settings: false
@@ -209,7 +208,7 @@ defaults:
             anycast: false
             rewrite_source_mac: false
             advanced_tracking_options: false
-            config_static_mac: false
+            static_mac: false
             tag_based_sorting: false
             resilient_hash: false
             backup_redirect_ip: false
