@@ -530,22 +530,21 @@ resource "mso_rest" "consumer_redirect_policy" {
 
 }
 
-data "mso_rest" "service_device_template_content" {
-  for_each = { for template in local.service_device_policies : template.name => template }
-  path     = "api/v1/templates/${mso_template.service_device_template[each.key].id}"
+data "mso_service_device_cluster" "service_device_cluster" {
+  for_each    = { for cluster in local.service_device_clusters : "${cluster.template_name}/${cluster.name}" => cluster }
+  template_id = mso_template.service_device_template[each.value.template_name].id
+  name        = each.value.name
 
-  depends_on = [mso_service_device_cluster_site.service_device_cluster_site]
+  depends_on = [
+    mso_service_device_cluster.service_device_cluster,
+    mso_service_device_cluster_site.service_device_cluster_site,
+  ]
 }
 
 locals {
-  service_device_cluster_uuids = merge(flatten([
-    for key, template_data in data.mso_rest.service_device_template_content : [
-      { for device in try(jsondecode(template_data.content).deviceTemplate.template.devices, []) :
-        "${key}/${device.name}" => device.uuid
-      }
-    ]
-  ])...)
-
+  service_device_cluster_uuids = {
+    for key, cluster in data.mso_service_device_cluster.service_device_cluster : key => cluster.uuid
+  }
 
   contracts_service_chaining = flatten([
     for schema in local.schemas : [
