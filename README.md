@@ -107,6 +107,7 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_deploy_service_device_templates"></a> [deploy\_service\_device\_templates](#input\_deploy\_service\_device\_templates) | Flag to indicate if service device templates should be deployed. Only takes effect when `deploy_templates` is true. | `bool` | `false` | no |
 | <a name="input_deploy_templates"></a> [deploy\_templates](#input\_deploy\_templates) | Flag to indicate if templates should be deployed. | `bool` | `false` | no |
 | <a name="input_manage_fabric_templates"></a> [manage\_fabric\_templates](#input\_manage\_fabric\_templates) | Flag to indicate if fabric templates should be managed. | `bool` | `false` | no |
 | <a name="input_manage_schemas"></a> [manage\_schemas](#input\_manage\_schemas) | Flag to indicate if schemas should be managed. | `bool` | `false` | no |
