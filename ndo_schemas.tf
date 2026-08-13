@@ -577,7 +577,7 @@ locals {
 }
 
 resource "mso_schema_template_contract_service_chaining" "schema_template_contract_service_chaining" {
-  for_each      = { for sc in local.contracts_service_chaining : sc.key => sc if local.ndo_version >= 4.2 }
+  for_each      = { for sc in local.contracts_service_chaining : sc.key => sc if local.ndo_version >= 4.2 && var.deploy_service_device_templates }
   schema_id     = each.value.schema_id
   template_name = each.value.template_name
   contract_name = each.value.contract_name

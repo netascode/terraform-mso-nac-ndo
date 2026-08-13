@@ -76,6 +76,12 @@ variable "deploy_templates" {
   default     = false
 }
 
+variable "deploy_service_device_templates" {
+  description = "Flag to indicate if service device templates should be deployed. Only takes effect when `deploy_templates` is true."
+  type        = bool
+  default     = false
+}
+
 variable "manage_fabric_templates" {
   description = "Flag to indicate if fabric templates should be managed."
   type        = bool
