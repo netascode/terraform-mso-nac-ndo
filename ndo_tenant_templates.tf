@@ -556,27 +556,26 @@ locals {
         template_name = template.name
         name          = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
         device_type   = try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)
-        device_mode   = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
+        # Firewall and load balancer are always layer3, matching the Ansible flavor (service_device.j2:20)
+        device_mode = contains(["firewall", "load_balancer"], try(cluster.device_type, local.defaults.ndo.tenant_templates.service_devices.cluster.device_type)) ? "layer3" : try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
         interfaces = [for iface in try(cluster.interfaces, []) : {
-          name                      = iface.name
-          interface_type            = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.interface_type)
-          bd_uuid_key               = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.interface_type) == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
-          external_epg_uuid_key     = try(iface.interface_type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.interface_type) == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_endpoint_group, "")}" : null
-          redirect                  = try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)
-          ipsla_key                 = try(iface.ip_sla, null) != null ? "${try(iface.ip_sla.template, template.name)}/${try(iface.ip_sla.name, "")}" : null
-          advanced_tracking_options = try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)
-          preferred_group           = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.preferred_group)
-          rewrite_source_mac        = try(iface.rewrite_source_mac, null)
-          anycast                   = try(iface.anycast, null)
-          static_mac                = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) : null
-          is_backup_redirect_ip     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.backup_redirect_ip, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.backup_redirect_ip) : null
-          load_balance_hashing      = try(iface.load_balance_hashing, null)
-          pod_aware_redirection     = try(iface.pod_aware_redirection, null)
-          resilient_hashing         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.resilient_hash) : null
-          tag_based_sorting         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.tag_based_sorting, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.tag_based_sorting) : null
-          min_threshold             = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.min_threshold, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.min_threshold) : null
-          max_threshold             = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.max_threshold, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.max_threshold) : null
-          threshold_down_action     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.down_action, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.down_action) : null
+          name                  = iface.name
+          bd_uuid_key           = iface.interface_type == "bd" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.bridge_domain, "")}" : null
+          external_epg_uuid_key = iface.interface_type == "l3out" ? "${try(iface.schema, "")}/${try(iface.template, "")}/${try(iface.external_endpoint_group, "")}" : null
+          redirect              = try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)
+          ipsla_key             = try(iface.ip_sla, null) != null ? "${try(iface.ip_sla.template, template.name)}/${try(iface.ip_sla.name, "")}" : null
+          preferred_group       = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.preferred_group)
+          rewrite_source_mac    = (try(iface.advanced_settings, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_settings) && try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? try(iface.rewrite_source_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.rewrite_source_mac) : null
+          anycast               = (try(iface.advanced_settings, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_settings) && try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? try(iface.anycast, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.anycast) : null
+          static_mac            = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) : null
+          is_backup_redirect_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.backup_redirect_ip, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.backup_redirect_ip) : null
+          load_balance_hashing  = (try(iface.advanced_settings, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_settings) && try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? try(iface.load_balance_hashing, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.load_balance_hashing) : null
+          pod_aware_redirection = (try(iface.advanced_settings, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_settings) && try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.pod_aware_redirection) : null
+          resilient_hashing     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.resilient_hash) : null
+          tag_based_sorting     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.tag_based_sorting, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.tag_based_sorting) : null
+          min_threshold         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.min_threshold, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.min_threshold) : null
+          max_threshold         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.max_threshold, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.max_threshold) : null
+          threshold_down_action = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(iface.threshold.down_action, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.threshold.down_action) : null
         }]
       }
     ]
@@ -685,16 +684,17 @@ locals {
                 domain_name = try(iface_site.domain_name, null)
 
                 pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? [for pbr in try(iface_site.pbr_destinations, []) : {
-                  ip                     = try(pbr.ip, null)
-                  mac                    = try(pbr.mac, null)
-                  tag                    = try(pbr.tag, null)
+                  # ip/mac/tag follow the Ansible layer3 vs non-layer3 branches (service_device.j2:137-156)
+                  ip                     = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(pbr.ip, null) : null
+                  mac                    = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? (try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) ? try(pbr.mac, null) : null) : (((try(iface.advanced_settings, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_settings) && try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options) && try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac)) || try(iface.ip_sla, null) == null) ? try(pbr.mac, null) : null)
+                  tag                    = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? (try(iface.tag_based_sorting, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.tag_based_sorting) ? try(pbr.tag, null) : null) : try(pbr.tag, null)
                   pod                    = try(iface.pod_aware_redirection, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.pod_aware_redirection) ? try(pbr.pod, 1) : null
-                  weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.pbr.weight) : null
+                  weight                 = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(pbr.weight, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.sites.pbr_destinations.weight) : null
                   additional_tracking_ip = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(pbr.additional_tracking_ip, null) : null
                   is_backup              = try(iface.resilient_hash, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.resilient_hash) && try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode) == "layer3" ? try(pbr.backup, false) : null
                 }] : []
                 fabric_interfaces = try(site.domain_type, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.domain_type) == "physical" ? [for fi in try(iface_site.fabric_interfaces, []) : {
-                  type    = try(fi.type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.fabric_interfaces.type)
+                  type    = try(fi.type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.sites.fabric_interfaces.type)
                   pod     = try(fi.pod, 1)
                   node    = try(fi.node, null)
                   node_2  = try(fi.node_2, null)
@@ -705,7 +705,7 @@ locals {
                   vlan    = try(fi.vlan, null)
                 }] : []
                 vmm_interfaces = try(site.domain_type, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.domain_type) == "vmm" ? [for fi in try(iface_site.fabric_interfaces, []) : {
-                  type     = try(fi.type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.fabric_interfaces.type)
+                  type     = try(fi.type, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.sites.fabric_interfaces.type)
                   pod      = try(fi.pod, 1)
                   node     = try(fi.node, null)
                   node_2   = try(fi.node_2, null)

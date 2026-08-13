@@ -191,7 +191,6 @@ defaults:
             promiscuous_mode: false
             vmm_type: VMware
           interfaces:
-            interface_type: bd
             redirect: false
             advanced_settings: false
             preferred_group: false
@@ -208,10 +207,11 @@ defaults:
               min_threshold: 0
               max_threshold: 100
               down_action: permit
-            pbr:
-              weight: 1
-            fabric_interfaces:
-              type: port
+            sites:
+              pbr_destinations:
+                weight: 1
+              fabric_interfaces:
+                type: port
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""
