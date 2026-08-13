@@ -135,8 +135,8 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 
 | Name | Version |
 |------|---------|
-| <a name="provider_local"></a> [local](#provider\_local) | >= 2.3.0 |
-| <a name="provider_mso"></a> [mso](#provider\_mso) | >= 2.0.0 |
+| <a name="provider_local"></a> [local](#provider\_local) | 2.9.0 |
+| <a name="provider_mso"></a> [mso](#provider\_mso) | 2.0.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Resources
@@ -226,13 +226,13 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [mso_rest.ndo_version](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.schemas](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
-| [mso_rest.service_device_template_content](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.system_config](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_rest.templates](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/rest) | data source |
 | [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_anp_epg) | data source |
 | [mso_schema_template_bd.service_device_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_bd) | data source |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
 | [mso_schema_template_external_epg.service_device_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
+| [mso_service_device_cluster.service_device_cluster](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/service_device_cluster) | data source |
 | [mso_site.fabric_templates_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.template_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |

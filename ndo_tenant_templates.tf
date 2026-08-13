@@ -568,7 +568,7 @@ locals {
           preferred_group           = try(iface.preferred_group, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.preferred_group)
           rewrite_source_mac        = try(iface.rewrite_source_mac, null)
           anycast                   = try(iface.anycast, null)
-          static_mac         = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) : null
+          static_mac                = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.static_mac, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.static_mac) : null
           is_backup_redirect_ip     = (try(iface.ip_sla, null) != null || try(iface.advanced_tracking_options, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.advanced_tracking_options)) ? try(iface.backup_redirect_ip, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.backup_redirect_ip) : null
           load_balance_hashing      = try(iface.load_balance_hashing, null)
           pod_aware_redirection     = try(iface.pod_aware_redirection, null)
