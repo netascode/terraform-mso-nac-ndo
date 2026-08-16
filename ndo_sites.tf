@@ -1,5 +1,5 @@
 resource "mso_site" "site" {
-  for_each     = { for site in try(local.ndo.sites, {}) : site.name => site if var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" && local.ndo_platform_version != "4.3" }
+  for_each     = { for site in try(local.ndo.sites, {}) : site.name => site if var.manage_sites && !contains(["4.1", "4.2", "4.3"], local.ndo_platform_version) }
   name         = each.value.name
   apic_site_id = each.value.id
   lifecycle {
