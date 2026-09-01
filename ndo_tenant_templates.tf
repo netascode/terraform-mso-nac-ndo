@@ -602,7 +602,6 @@ resource "mso_tenant_policies_netflow_monitor" "tenant_policies_netflow_monitor"
   ]
 }
 
-
 locals {
   igmp_interface_policies = flatten([
     for template in local.tenant_templates : [
@@ -965,4 +964,5 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
     mso_service_device_cluster.service_device_cluster,
     mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
   ]
+}
 }
