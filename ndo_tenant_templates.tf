@@ -965,4 +965,3 @@ resource "mso_service_device_cluster_site" "service_device_cluster_site" {
     mso_fabric_policies_physical_domain.fabric_policies_physical_domain,
   ]
 }
-}
