@@ -224,8 +224,6 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_tenant_policies_ipsla_track_list.tenant_policies_ipsla_track_list](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_ipsla_track_list) | resource |
 | [mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_l3out_interface_routing_policy) | resource |
 | [mso_tenant_policies_mld_snooping_policy.tenant_policies_mld_snooping_policy](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_mld_snooping_policy) | resource |
-| [mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_exporter) | resource |
-| [mso_tenant_policies_netflow_monitor.tenant_policies_netflow_monitor](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_monitor) | resource |
 | [mso_tenant_policies_netflow_record.tenant_policies_netflow_record](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_netflow_record) | resource |
 | [mso_tenant_policies_route_map_policy_multicast.tenant_policies_route_map_policy_multicast](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/resources/tenant_policies_route_map_policy_multicast) | resource |
 | [terraform_data.validation](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |

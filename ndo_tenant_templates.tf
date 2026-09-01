@@ -557,6 +557,10 @@ resource "mso_tenant_policies_netflow_record" "tenant_policies_netflow_record" {
   match_parameters = each.value.match_parameters
 }
 
+/* NetFlow Exporters and Monitors are disabled: NDO 4.2 support for NetFlow
+Exporters is incomplete (missing site-specific settings), and Monitors depend
+on Exporters. NetFlow Records are unaffected and remain enabled above.
+
 locals {
   netflow_exporters = flatten([
     for template in local.tenant_templates : [
@@ -601,6 +605,7 @@ resource "mso_tenant_policies_netflow_monitor" "tenant_policies_netflow_monitor"
     mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter,
   ]
 }
+*/
 
 locals {
   igmp_interface_policies = flatten([
