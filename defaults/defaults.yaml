@@ -212,6 +212,7 @@ defaults:
                 weight: 1
               fabric_interfaces:
                 type: port
+
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""
