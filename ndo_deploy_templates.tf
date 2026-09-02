@@ -117,6 +117,9 @@ resource "mso_schema_template_deploy_ndo" "tenant_template" {
     mso_tenant_policies_custom_qos_policy.tenant_policies_custom_qos_policy,
     mso_tenant_policies_l3out_interface_routing_policy.tenant_policies_l3out_interface_routing_policy,
     mso_tenant_policies_mld_snooping_policy.tenant_policies_mld_snooping_policy,
+    mso_tenant_policies_netflow_record.tenant_policies_netflow_record,
+    mso_tenant_policies_igmp_interface_policy.tenant_policies_igmp_interface_policy,
+    mso_tenant_policies_endpoint_mac_tag_policy.tenant_policies_endpoint_mac_tag_policy,
   ]
 }
 
