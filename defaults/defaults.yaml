@@ -166,6 +166,12 @@ defaults:
           filters:
             log: false
             policy_compression: false
+          service_chaining:
+            node_filter: allow-all
+            nodes:
+              device_type: firewall
+              consumer_redirect: false
+              provider_redirect: false
         service_graphs:
           name_suffix: ""
           device_name_suffix: ""
@@ -173,6 +179,40 @@ defaults:
           redirect_policy_name_suffix: ""
           node_type: "firewall"
     tenant_templates:
+      service_devices:
+        cluster:
+          name_suffix: ""
+          device_mode: layer3
+          device_type: firewall
+          sites:
+            domain_type: physical
+            high_availability_mode: activeStandby
+            trunking_port: false
+            promiscuous_mode: false
+            vmm_type: VMware
+          interfaces:
+            redirect: false
+            advanced_settings: false
+            preferred_group: false
+            load_balance_hashing: sourceDestinationAndProtocol
+            pod_aware_redirection: false
+            anycast: false
+            rewrite_source_mac: false
+            advanced_tracking_options: false
+            static_mac: false
+            tag_based_sorting: false
+            resilient_hash: false
+            backup_redirect_ip: false
+            threshold:
+              min_threshold: 0
+              max_threshold: 100
+              down_action: permit
+            sites:
+              pbr_destinations:
+                weight: 1
+              fabric_interfaces:
+                type: port
+
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""
@@ -259,6 +299,30 @@ defaults:
           last_member_query_interval: 1
           start_query_interval: 31
           start_query_count: 2
+        netflow_records:
+          name_suffix: ""
+        netflow_exporters:
+          name_suffix: ""
+        netflow_monitors:
+          name_suffix: ""
+        igmp_interface_policies:
+          name_suffix: ""
+          version3_asm: false
+          fast_leave: false
+          report_link_local_groups: false
+          igmp_version: v2
+          group_timeout: 260
+          query_interval: 125
+          query_response_interval: 10
+          last_member_count: 2
+          last_member_response_time: 1
+          startup_query_count: 2
+          startup_query_interval: 31
+          querier_timeout: 255
+          robustness_variable: 2
+          reserved_multicast_entries: 0
+        endpoint_mac_tag_policies:
+          name_suffix: ""
     fabric_templates:
       fabric_policies:
         mcp_global_policy:
