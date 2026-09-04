@@ -192,7 +192,6 @@ defaults:
             vmm_type: VMware
           interfaces:
             redirect: false
-            advanced_settings: false
             preferred_group: false
             load_balance_hashing: sourceDestinationAndProtocol
             pod_aware_redirection: false
@@ -212,7 +211,6 @@ defaults:
                 weight: 1
               fabric_interfaces:
                 type: port
-
       tenant_policies:
         dhcp_relay_policies:
           name_suffix: ""
