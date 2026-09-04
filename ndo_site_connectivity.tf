@@ -10,8 +10,8 @@ locals {
       maxAsLimit             = try(local.ndo.fabric_connectivity.bgp.max_as, local.defaults.ndo.fabric_connectivity.bgp.max_as)
     }
     sites = var.manage_site_connectivity ? [for site in try(local.ndo.sites, []) : {
-      id                         = var.manage_sites && !contains(["4.1", "4.2", "4.3"], local.ndo_platform_version) ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
-      apicSiteId                 = site.id
+      id                         = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.site[site.name].id
+      apicSiteId                 = !local.nd_managed ? site.id : tonumber(data.mso_site.site[site.name].apic_site_id)
       platform                   = "on-premise"
       fabricId                   = try(site.fabric_id, local.defaults.ndo.sites.fabric_id)
       msiteEnabled               = try(site.multisite, local.defaults.ndo.sites.multisite)
@@ -33,8 +33,8 @@ locals {
         transmitDelay      = try(pol.retransmit_delay, local.defaults.ndo.sites.ospf_policies.retransmit_delay)
       }]
       pods = [for pod in try(site.pods, []) : {
-        podId                          = try(pod.id, local.defaults.sites.pods.id)
-        name                           = "pod-${try(pod.id, local.defaults.sites.pods.id)}"
+        podId                          = try(pod.id, local.defaults.ndo.sites.pods.id)
+        name                           = "pod-${try(pod.id, local.defaults.ndo.sites.pods.id)}"
         msiteDataPlaneUnicastTep       = try(pod.unicast_tep, "")
         msiteDataPlaneRoutableTEPPools = flatten([for pool in try(pod.external_tep_pools, []) : [pool.ip]])
         faults                         = []
@@ -61,7 +61,7 @@ locals {
 }
 
 data "mso_site" "site" {
-  for_each = toset([for site in try(local.ndo.sites, []) : site.name if(!var.manage_sites || contains(["4.1", "4.2", "4.3"], local.ndo_platform_version)) && var.manage_site_connectivity])
+  for_each = toset([for site in try(local.ndo.sites, []) : site.name if(!var.manage_sites || local.nd_managed) && var.manage_site_connectivity])
   name     = each.value
 }
 
