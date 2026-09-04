@@ -192,7 +192,6 @@ defaults:
             vmm_type: VMware
           interfaces:
             redirect: false
-            advanced_settings: false
             preferred_group: false
             load_balance_hashing: sourceDestinationAndProtocol
             pod_aware_redirection: false
