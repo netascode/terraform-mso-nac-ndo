@@ -99,6 +99,7 @@ locals {
     } if length(try(template.sites, [])) > 0
   ])
 }
+
 resource "mso_schema_template_deploy_ndo" "tenant_template" {
   for_each            = { for template in local.deploy_tenant_templates : template.key => template if var.deploy_templates && template.deploy_order == 1 }
   template_id         = var.manage_tenant_templates ? mso_template.tenant_template[each.value.template_name].id : local.template_ids[each.value.template_name].id
@@ -200,8 +201,9 @@ resource "mso_schema_template_deploy_ndo" "fabric_template3" {
 }
 
 locals {
+  unmanaged_service_devices = [for template in try(local.ndo.tenant_templates.service_devices, []) : template if !var.manage_tenant_templates && var.deploy_templates && !var.manage_schemas && !var.manage_fabric_templates]
   deploy_service_device_templates = flatten([
-    for template in local.service_device_templates : {
+    for template in try(concat(local.service_device_templates, local.unmanaged_service_devices), {}) : {
       key           = template.name
       template_name = template.name
     } if var.deploy_templates && length(try(template.sites, [])) > 0
@@ -210,7 +212,7 @@ locals {
 
 resource "mso_schema_template_deploy_ndo" "service_device_template" {
   for_each            = { for template in local.deploy_service_device_templates : template.key => template if var.deploy_templates }
-  template_id         = mso_template.service_device_template[each.value.template_name].id
+  template_id         = var.manage_tenant_templates ? mso_template.service_device_template[each.value.template_name].id : local.service_device_template_ids[each.value.template_name].id
   template_type       = "service_device"
   template_name       = each.value.template_name
   undeploy_on_destroy = true
