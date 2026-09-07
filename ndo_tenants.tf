@@ -13,12 +13,12 @@ locals {
 }
 
 data "mso_user" "tenant_user" {
-  for_each = local.ndo_platform_version != "4.2" ? toset(local.tenant_users) : []
+  for_each = !contains(["4.2", "4.3"], local.ndo_platform_version) ? toset(local.tenant_users) : []
   username = each.value
 }
 
 data "mso_site" "tenant_site" {
-  for_each = !var.manage_sites || local.ndo_platform_version == "4.1" || local.ndo_platform_version == "4.2" ? toset(local.tenant_sites) : []
+  for_each = !var.manage_sites || local.nd_managed ? toset(local.tenant_sites) : []
   name     = each.value
 }
 
@@ -30,7 +30,7 @@ resource "mso_tenant" "tenant" {
   orchestrator_only = try(each.value.orchestrator_only, local.defaults.ndo.tenants.orchestrator_only)
 
   dynamic "user_associations" {
-    for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user if local.ndo_platform_version != "4.2" }
+    for_each = { for user in distinct(concat(try(each.value.users, []), local.default_users)) : user.name => user if !contains(["4.2", "4.3"], local.ndo_platform_version) }
     content {
       user_id = data.mso_user.tenant_user[user_associations.value.name].id
     }
@@ -39,7 +39,7 @@ resource "mso_tenant" "tenant" {
   dynamic "site_associations" {
     for_each = { for site in try(each.value.sites, []) : site.name => site }
     content {
-      site_id               = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_associations.value.name].id : data.mso_site.tenant_site[site_associations.value.name].id
+      site_id               = var.manage_sites && !local.nd_managed ? mso_site.site[site_associations.value.name].id : data.mso_site.tenant_site[site_associations.value.name].id
       vendor                = try(site_associations.value.azure_subscription_id, null) != null ? "azure" : null
       azure_subscription_id = try(site_associations.value.azure_subscription_id, null) != null ? site_associations.value.azure_subscription_id : null
       azure_access_type     = try(site_associations.value.azure_subscription_id, null) != null ? "managed" : null

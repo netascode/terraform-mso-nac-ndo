@@ -41,7 +41,7 @@ locals {
 }
 
 data "mso_site" "tenant_templates_site" {
-  for_each = toset([for site in distinct(concat([for s in local.tenant_templates_sites : s.site_name], [for s in local.service_device_sites : s.site_name])) : site if(!var.manage_sites || local.ndo_platform_version == "4.1" || local.ndo_platform_version == "4.2") && var.manage_tenant_templates])
+  for_each = toset([for site in distinct(concat([for s in local.tenant_templates_sites : s.site_name], [for s in local.service_device_sites : s.site_name])) : site if(!var.manage_sites || local.nd_managed) && var.manage_tenant_templates])
   name     = each.value
 }
 
@@ -50,7 +50,7 @@ locals {
     for template in local.tenant_templates : [{
       name   = template.name
       tenant = contains(local.managed_tenants, template.tenant) ? mso_tenant.tenant[template.tenant].id : data.mso_tenant.tenant_templates_tenant[template.tenant].id
-    sites = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id] }]
+    sites = [for site in try(template.sites, []) : var.manage_sites && !local.nd_managed ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id] }]
   ])
 }
 
@@ -725,7 +725,7 @@ locals {
     for template in local.service_device_templates : [{
       name   = template.name
       tenant = contains(local.managed_tenants, template.tenant) ? mso_tenant.tenant[template.tenant].id : data.mso_tenant.tenant_templates_tenant[template.tenant].id
-      sites  = [for site in try(template.sites, []) : var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id]
+      sites  = [for site in try(template.sites, []) : var.manage_sites && !local.nd_managed ? mso_site.site[site].id : data.mso_site.tenant_templates_site[site].id]
     }]
   ])
 }
@@ -863,7 +863,7 @@ locals {
             template_name          = template.name
             cluster_name           = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
             site_name              = site_name
-            site_id                = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
+            site_id                = var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
             device_mode            = try(cluster.device_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.device_mode)
             domain_type            = try(site.domain_type, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.domain_type)
             domain_name            = try(site.domain_name, null)

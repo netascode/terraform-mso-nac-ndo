@@ -56,7 +56,7 @@ locals {
 }
 
 data "mso_site" "template_site" {
-  for_each = toset(distinct([for site in local.template_sites : site.site_name if(!var.manage_sites || local.ndo_platform_version == "4.1" || local.ndo_platform_version == "4.2") && var.manage_schemas]))
+  for_each = toset(distinct([for site in local.template_sites : site.site_name if(!var.manage_sites || local.nd_managed) && var.manage_schemas]))
   name     = each.value
 }
 
@@ -64,7 +64,7 @@ resource "mso_schema_site" "schema_site" {
   for_each            = { for site in local.template_sites : site.key => site if try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) == false }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
-  site_id             = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  site_id             = var.manage_sites && !local.nd_managed ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
   undeploy_on_destroy = true
 
   depends_on = [mso_schema.schema]
@@ -76,7 +76,7 @@ resource "mso_schema_site" "schema_site1" {
   for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 1 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
-  site_id             = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  site_id             = var.manage_sites && !local.nd_managed ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
   undeploy_on_destroy = true
 
   depends_on = [mso_schema.schema]
@@ -86,7 +86,7 @@ resource "mso_schema_site" "schema_site2" {
   for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 2 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
-  site_id             = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  site_id             = var.manage_sites && !local.nd_managed ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
   undeploy_on_destroy = true
 
   depends_on = [
@@ -99,7 +99,7 @@ resource "mso_schema_site" "schema_site3" {
   for_each            = { for site in local.template_sites : site.key => site if site.deploy_order == 3 && try(local.ndo.undeploy_order, local.defaults.ndo.undeploy_order) }
   schema_id           = each.value.schema_id
   template_name       = each.value.template_name
-  site_id             = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
+  site_id             = var.manage_sites && !local.nd_managed ? mso_site.site[each.value.site_name].id : data.mso_site.template_site[each.value.site_name].id
   undeploy_on_destroy = true
 
   depends_on = [
@@ -252,7 +252,7 @@ locals {
             schema_id = mso_schema.schema[schema.name].id
             patch = [{
               op   = "add"
-              path = "/sites/${var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site].id : data.mso_site.template_site[site].id}-${template.name}/contracts/-"
+              path = "/sites/${var.manage_sites && !local.nd_managed ? mso_site.site[site].id : data.mso_site.template_site[site].id}-${template.name}/contracts/-"
               value = {
                 contractRef = {
                   contractName = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
@@ -351,7 +351,7 @@ locals {
           for site_name in try(template.sites, []) : {
             key                         = "${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"
             schema_id                   = mso_schema.schema[schema.name].id
-            site_id                     = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
+            site_id                     = var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
             template_name               = template.name
             contract_name               = "${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}"
             service_graph_name          = "${contract.service_graph.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
@@ -431,7 +431,7 @@ locals {
                 for node in try(contract.service_graph.nodes, []) : [
                   for site in try(node.provider.sites, []) : {
                     op   = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].provider_connector_redirect_policy, "") != "" ? "remove" : "add"
-                    path = "/sites/${var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/providerConnector/redirectPolicy"
+                    path = "/sites/${var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/providerConnector/redirectPolicy"
                     value = try(site.redirect_policy, null) != null ? {
                       dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
                     } : {}
@@ -486,7 +486,7 @@ locals {
                 for node in try(contract.service_graph.nodes, []) : [
                   for site in try(node.consumer.sites, []) : {
                     op   = try(site.redirect_policy, null) != null ? "add" : try(mso_schema_site_contract_service_graph.schema_site_contract_service_graph["${schema.name}/${template.name}/${contract.name}/${contract.service_graph.name}/${site_name}"].node_relationship[0].consumer_connector_redirect_policy, "") != "" ? "remove" : "add"
-                    path = "/sites/${var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/consumerConnector/redirectPolicy"
+                    path = "/sites/${var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id}-${template.name}/contracts/${contract.name}${local.defaults.ndo.schemas.templates.contracts.name_suffix}/serviceGraphRelationship/serviceNodesRelationship/0/consumerConnector/redirectPolicy"
                     value = try(site.redirect_policy, null) != null ? {
                       dn = "uni/tn-${try(site.tenant, template.tenant)}/svcCont/svcRedirectPol-${site.redirect_policy}${local.defaults.ndo.schemas.templates.service_graphs.redirect_policy_name_suffix}"
                     } : {}
@@ -650,7 +650,7 @@ locals {
           for site in try(vrf.sites, []) : {
             key           = "${schema.name}/${template.name}/${vrf.name}/${site.name}"
             schema_id     = mso_schema.schema[schema.name].id
-            site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+            site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
             template_name = template.name
             vrf_name      = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
           }
@@ -734,7 +734,7 @@ locals {
             for region in try(site.regions, []) : {
               key                = "${schema.name}/${template.name}/${vrf.name}/${site.name}/${region.name}"
               schema_id          = mso_schema.schema[schema.name].id
-              site_id            = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+              site_id            = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               template_name      = template.name
               vrf_name           = "${vrf.name}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}"
               region_name        = region.name
@@ -868,7 +868,7 @@ locals {
             schema_id     = mso_schema.schema[schema.name].id
             template_name = template.name
             bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-            site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+            site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
             host_route    = try(site.advertise_host_routes, local.defaults.ndo.schemas.templates.bridge_domains.sites.advertise_host_routes)
             mac           = try(site.mac, local.defaults.ndo.schemas.templates.bridge_domains.sites.mac, "00:22:BD:F8:19:FF")
           }
@@ -945,7 +945,7 @@ locals {
               schema_id          = mso_schema.schema[schema.name].id
               template_name      = template.name
               bd_name            = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-              site_id            = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+              site_id            = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               ip                 = subnet.ip
               scope              = try(subnet.scope, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.scope)
               shared             = try(subnet.shared, local.defaults.ndo.schemas.templates.bridge_domains.sites.subnets.shared)
@@ -987,7 +987,7 @@ locals {
               schema_id     = mso_schema.schema[schema.name].id
               template_name = template.name
               bd_name       = "${bd.name}${local.defaults.ndo.schemas.templates.bridge_domains.name_suffix}"
-              site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+              site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               l3out_name    = "${l3out}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}"
             }
           ]
@@ -1041,7 +1041,7 @@ locals {
             key           = "${schema.name}/${template.name}/${ap.name}/${site}"
             schema_id     = mso_schema.schema[schema.name].id
             template_name = template.name
-            site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site].id : data.mso_site.template_site[site].id
+            site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site].id : data.mso_site.template_site[site].id
             anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
           }
         ]
@@ -1142,7 +1142,7 @@ locals {
               key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}"
               schema_id     = mso_schema.schema[schema.name].id
               template_name = template.name
-              site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+              site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
               epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
             }
@@ -1276,7 +1276,7 @@ locals {
               for subnet in try(site.subnets, []) : {
                 key                = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${subnet.ip}"
                 schema_id          = mso_schema.schema[schema.name].id
-                site_id            = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id            = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 template_name      = template.name
                 anp_name           = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name           = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1324,7 +1324,7 @@ locals {
             for site in try(epg.sites, []) : {
               key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}"
               schema_id     = mso_schema.schema[schema.name].id
-              site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+              site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
               template_name = template.name
               anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
               epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1388,7 +1388,7 @@ locals {
               for sl in try(site.static_leafs, []) : {
                 key             = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${try(sl.pod, "1")}/${try(sl.node, "")}/${try(sl.vlan, "")}"
                 schema_id       = mso_schema.schema[schema.name].id
-                site_id         = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id         = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 template_name   = template.name
                 anp_name        = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name        = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1428,7 +1428,7 @@ locals {
               for pd in try(site.physical_domains, []) : {
                 key                  = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${pd.name}"
                 schema_id            = mso_schema.schema[schema.name].id
-                site_id              = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id              = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 template_name        = template.name
                 anp_name             = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name             = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1472,7 +1472,7 @@ locals {
               for vmm in try(site.vmware_vmm_domains, []) : {
                 key                      = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${vmm.name}"
                 schema_id                = mso_schema.schema[schema.name].id
-                site_id                  = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id                  = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 template_name            = template.name
                 anp_name                 = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name                 = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1550,7 +1550,7 @@ locals {
               for selector in try(site.selectors, []) : {
                 key           = "${schema.name}/${template.name}/${ap.name}/${epg.name}/${site.name}/${selector.name}"
                 schema_id     = mso_schema.schema[schema.name].id
-                site_id       = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id       = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 template_name = template.name
                 anp_name      = "${ap.name}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}"
                 epg_name      = "${epg.name}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}"
@@ -1685,7 +1685,7 @@ locals {
           for site in try(epg.sites, []) : {
             key                 = try(site.l3out.name, null) != null ? "${schema.name}/${template.name}/${epg.name}/${site.name}/${site.l3out.name}" : "${schema.name}/${template.name}/${epg.name}/${site.name}"
             schema_id           = mso_schema.schema[schema.name].id
-            site_id             = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+            site_id             = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
             template_name       = template.name
             external_epg_name   = epg.name
             l3out_name          = try(site.l3out.name, null)
@@ -1866,7 +1866,7 @@ locals {
                 key               = "${schema.name}/${template.name}/${epg.name}/${site.name}/${selector.name}/${ip}"
                 schema_id         = mso_schema.schema[schema.name].id
                 template_name     = template.name
-                site_id           = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
+                site_id           = var.manage_sites && !local.nd_managed ? mso_site.site[site.name].id : data.mso_site.template_site[site.name].id
                 external_epg_name = "${epg.name}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
                 name              = selector.name
                 ip                = ip
@@ -1943,7 +1943,7 @@ locals {
             key                = "${schema.name}/${template.name}/${sg.name}/${site_name}"
             schema_id          = mso_schema.schema[schema.name].id
             template_name      = template.name
-            site_id            = var.manage_sites && local.ndo_platform_version != "4.1" && local.ndo_platform_version != "4.2" ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
+            site_id            = var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.template_site[site_name].id
             service_graph_name = "${sg.name}${local.defaults.ndo.schemas.templates.service_graphs.name_suffix}"
             service_node = flatten([
               for node in try(sg.nodes, []) : [
