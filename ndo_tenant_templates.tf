@@ -5,8 +5,9 @@ locals {
   service_device_tenants = [
     for template in local.service_device_templates : template.tenant
   ]
-  template_ids                = { for template in try(jsondecode(data.mso_rest.templates.content), []) : template.templateName => { "id" : template.templateId } if template.templateType == "tenantPolicy" }
-  service_device_template_ids = { for template in try(jsondecode(data.mso_rest.templates.content), []) : template.templateName => { "id" : template.templateId } if template.templateType == "serviceDevice" }
+  template_ids                     = { for template in try(jsondecode(data.mso_rest.templates.content), []) : template.templateName => { "id" : template.templateId } if template.templateType == "tenantPolicy" }
+  service_device_template_ids      = { for template in try(jsondecode(data.mso_rest.templates.content), []) : template.templateName => { "id" : template.templateId } if template.templateType == "serviceDevice" }
+  managed_service_device_templates = [for template in local.service_device_templates : template.name]
 }
 
 data "mso_rest" "templates" {
@@ -90,14 +91,16 @@ locals {
     for template in local.tenant_templates : [
       for policy in try(template.dhcp_relay_policies, []) : [
         for provider in try(policy.providers, []) : {
-          key                     = "${provider.schema}/${provider.template}/${provider.external_endpoint_group}"
-          schema                  = provider.schema
-          template                = provider.template
-          external_endpoint_group = try("${provider.external_endpoint_group}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}", null)
+          key      = "${provider.schema}/${provider.template}/${provider.external_endpoint_group}"
+          schema   = provider.schema
+          template = provider.template
+          name     = try("${provider.external_endpoint_group}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}", null)
         } if provider.type == "external_epg"
       ]
     ]
   ])
+
+  external_epg_lookups = distinct(concat(local.dhcp_provider_external_epgs, local.service_device_external_epg_lookups))
 }
 
 data "mso_schema_template_anp_epg" "schema_template_anp_epg" {
@@ -109,10 +112,10 @@ data "mso_schema_template_anp_epg" "schema_template_anp_epg" {
 }
 
 data "mso_schema_template_external_epg" "schema_template_external_epg" {
-  for_each          = { for provider in distinct(local.dhcp_provider_external_epgs) : provider.key => provider if(!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, provider.schema))) }
+  for_each          = { for epg in local.external_epg_lookups : epg.key => epg if(!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, epg.schema))) }
   schema_id         = local.schema_ids[each.value.schema].id
   template_name     = each.value.template
-  external_epg_name = each.value.external_endpoint_group
+  external_epg_name = each.value.name
 }
 
 locals {
@@ -750,7 +753,7 @@ locals {
   service_device_clusters = flatten([
     for template in local.service_device_templates : [
       for cluster in try(template.cluster, []) : {
-        key           = "service_device/${template.name}/${cluster.name}"
+        key           = "${template.name}/${cluster.name}"
         template_name = template.name
         name          = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
         description   = try(cluster.description, null)
@@ -796,7 +799,7 @@ locals {
         key      = iface.external_epg_uuid_key
         schema   = split("/", iface.external_epg_uuid_key)[0]
         template = split("/", iface.external_epg_uuid_key)[1]
-        name     = split("/", iface.external_epg_uuid_key)[2]
+        name     = "${split("/", iface.external_epg_uuid_key)[2]}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}"
       } if iface.external_epg_uuid_key != null
     ]
   ]))
@@ -808,13 +811,6 @@ data "mso_schema_template_bd" "service_device_bd" {
   schema_id     = local.schema_ids[each.value.schema].id
   template_name = each.value.template
   name          = each.value.name
-}
-
-data "mso_schema_template_external_epg" "service_device_external_epg" {
-  for_each          = { for epg in local.service_device_external_epg_lookups : epg.key => epg if(!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, epg.schema))) }
-  schema_id         = local.schema_ids[each.value.schema].id
-  template_name     = each.value.template
-  external_epg_name = each.value.name
 }
 
 resource "mso_service_device_cluster" "service_device_cluster" {
@@ -830,7 +826,7 @@ resource "mso_service_device_cluster" "service_device_cluster" {
       name                         = interface_properties.value.name
       redirect                     = interface_properties.value.redirect
       bd_uuid                      = interface_properties.value.bd_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.bd_uuid_key)[0])) ? data.mso_schema_template_bd.service_device_bd[interface_properties.value.bd_uuid_key].uuid : mso_schema_template_bd.schema_template_bd[interface_properties.value.bd_uuid_key].uuid) : null
-      external_epg_uuid            = interface_properties.value.external_epg_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.service_device_external_epg[interface_properties.value.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg[interface_properties.value.external_epg_uuid_key].uuid) : null
+      external_epg_uuid            = interface_properties.value.external_epg_uuid_key != null ? (!var.manage_schemas || (var.manage_schemas && !contains(local.managed_schemas, split("/", interface_properties.value.external_epg_uuid_key)[0])) ? data.mso_schema_template_external_epg.schema_template_external_epg[interface_properties.value.external_epg_uuid_key].uuid : mso_schema_template_external_epg.schema_template_external_epg[interface_properties.value.external_epg_uuid_key].uuid) : null
       ipsla_monitoring_policy_uuid = interface_properties.value.ipsla_key != null ? mso_tenant_policies_ipsla_monitoring_policy.tenant_policies_ipsla_monitoring_policy[split("/", interface_properties.value.ipsla_key)[1]].uuid : null
       preferred_group              = interface_properties.value.preferred_group
       rewrite_source_mac           = interface_properties.value.rewrite_source_mac
@@ -859,7 +855,7 @@ locals {
       for cluster in try(template.cluster, []) : [
         for site_name in try(template.sites, []) : [
           for site in [try([for s in try(cluster.sites, []) : s if s.name == site_name][0], {})] : {
-            key                    = "service_device/${template.name}/${cluster.name}/${site_name}"
+            key                    = "${template.name}/${cluster.name}/${site_name}"
             template_name          = template.name
             cluster_name           = "${cluster.name}${local.defaults.ndo.tenant_templates.service_devices.cluster.name_suffix}"
             site_name              = site_name

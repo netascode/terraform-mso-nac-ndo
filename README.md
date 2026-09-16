@@ -234,7 +234,6 @@ $ export TF_CLI_ARGS_apply="-parallelism=1"
 | [mso_schema_template_anp_epg.schema_template_anp_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_anp_epg) | data source |
 | [mso_schema_template_bd.service_device_bd](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_bd) | data source |
 | [mso_schema_template_external_epg.schema_template_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
-| [mso_schema_template_external_epg.service_device_external_epg](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/schema_template_external_epg) | data source |
 | [mso_service_device_cluster.service_device_cluster](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/service_device_cluster) | data source |
 | [mso_site.fabric_templates_site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
 | [mso_site.site](https://registry.terraform.io/providers/CiscoDevNet/mso/latest/docs/data-sources/site) | data source |
