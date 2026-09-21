@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 2.1.0
+
+### New Features
+
+- Add support for ND 4.2. Tenant management is only supported for greenfield deployments. Brownfield tenants with remote users associations will fail.
+- Add support for ND 4.3, including tenant management for brownfield deployments.
+- Add support for Fabric Templates: Interface settings
+- Add support for Fabric Templates: L3 domain
+- Add support for Fabric Templates: Physical Domain
+- Add support for Fabric Templates: SyncE interface policy
+- Add support for Fabric Templates: VLAN pool
+- Add support for Fabric Templates: MCP Global policy
+- Add support for Tenant Tempaltes: Service device (PBR / L4-L7 service device clusters) 
+- Add support for Service Chaining configuration under Schema Templates
+- Add support for Tenant Templates: IGMP interface policy
+- Add support for Tenant Templates: Netflow record policy
+- Add support for Tenant Templates: Endpoint MAC tag policy
+- Add support for Tenant Templates: MLD snooping policy
+- Add support for Tenant Templates: L3out interface routing policy
+- Add support for Tenant Templates: IP SLA track list
+- Add support for Tenant Templates: Custom QoS policy
+- Add support for Tenant Templates: DHCP option policy
+- Add support for Tenant Templates: BGP peer prefix policy
+- Add support for configuring enhanced LAG policy under EPG VMM domain association
+
+### Bug Fixes
+
+- Fix missing name suffix on tenant policy resources (DHCP relay, IP SLA, IP SLA track list, multicast route map, BGP peer prefix, DHCP option and custom QoS policies) and on EPG/external EPG references used in service graph connectors
+
 ## 2.0.0
 
 - BREAKING CHANGE: Remove support for old DHCP relay and DHCP option policies 
