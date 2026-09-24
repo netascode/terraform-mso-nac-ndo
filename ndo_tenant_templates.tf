@@ -871,7 +871,7 @@ locals {
             interfaces = [for iface in try(cluster.interfaces, []) : [
               for iface_site in [try([for s in try(iface.sites, []) : s if s.name == site_name][0], {})] : {
                 name        = iface.name
-                vlan        = (iface.interface_type == "bd" && try(site.high_availability_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.high_availability_mode) != "activeActive") ? try(iface.vlan, null) : null
+                vlan        = (iface.interface_type == "bd" && try(site.high_availability_mode, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.high_availability_mode) != "activeActive") ? try(iface_site.vlan, iface.vlan, null) : null
                 elag        = try(site.domain_type, local.defaults.ndo.tenant_templates.service_devices.cluster.sites.domain_type) == "vmm" ? try(iface_site.elag, null) : null
                 domain_name = try(iface_site.domain_name, null)
                 pbr_destinations = (try(iface.ip_sla, null) != null || try(iface.redirect, local.defaults.ndo.tenant_templates.service_devices.cluster.interfaces.redirect)) ? [for pbr in try(iface_site.pbr_destinations, []) : {
