@@ -191,6 +191,80 @@ resource "mso_fabric_policies_mcp_global_policy" "fabric_policies_mcp_global_pol
   transmission_frequency_msec       = each.value.transmission_frequency_msec
 }
 
+locals {
+  fabric_ptp_policies = flatten([
+    for template in local.fabric_templates : [{
+      key                      = template.name
+      template_name            = template.name
+      name                     = template.ptp_policy.name
+      description              = try(template.ptp_policy.description, null)
+      admin_state              = try(template.ptp_policy.admin_state, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.admin_state) ? "enabled" : "disabled"
+      global_priority1         = try(template.ptp_policy.global_priority_1, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.global_priority_1)
+      global_priority2         = try(template.ptp_policy.global_priority_2, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.global_priority_2)
+      global_domain            = try(template.ptp_policy.global_domain, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.global_domain)
+      fabric_profile_template  = try(template.ptp_policy.fabric_profile_template, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.fabric_profile_template)
+      fabric_announce_interval = try(template.ptp_policy.fabric_announce_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.fabric_announce_interval)
+      fabric_sync_interval     = try(template.ptp_policy.fabric_sync_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.fabric_sync_interval)
+      fabric_delay_interval    = try(template.ptp_policy.fabric_delay_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.fabric_delay_interval)
+      fabric_announce_timeout  = try(template.ptp_policy.fabric_announce_timeout, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.fabric_announce_timeout)
+    }] if try(template.ptp_policy, null) != null
+  ])
+}
+
+resource "mso_fabric_policies_ptp_policy" "fabric_policies_ptp_policy" {
+  for_each                 = { for policy in local.fabric_ptp_policies : policy.key => policy }
+  template_id              = mso_template.fabric_template[each.value.template_name].id
+  name                     = each.value.name
+  description              = each.value.description
+  admin_state              = each.value.admin_state
+  global_priority1         = each.value.global_priority1
+  global_priority2         = each.value.global_priority2
+  global_domain            = each.value.global_domain
+  fabric_profile_template  = each.value.fabric_profile_template
+  fabric_announce_interval = each.value.fabric_announce_interval
+  fabric_sync_interval     = each.value.fabric_sync_interval
+  fabric_delay_interval    = each.value.fabric_delay_interval
+  fabric_announce_timeout  = each.value.fabric_announce_timeout
+}
+
+locals {
+  fabric_ptp_profiles = flatten([
+    for template in local.fabric_templates : [
+      for profile in try(template.ptp_policy.ptp_profiles, []) : {
+        key                     = "${template.name}/${profile.name}"
+        template_name           = template.name
+        name                    = profile.name
+        profile_template        = try(profile.template, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.template)
+        announce_interval       = try(profile.announce_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.announce_interval)
+        sync_interval           = try(profile.sync_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.sync_interval)
+        delay_interval          = try(profile.delay_interval, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.delay_interval)
+        announce_timeout        = try(profile.announce_timeout, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.announce_timeout)
+        override_node_profile   = try(profile.override_node_profile, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.override_node_profile)
+        local_priority          = try(profile.priority, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.priority)
+        destination_mac_type    = try(profile.forwardable, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.forwardable) ? "forwardable" : "non_forwardable"
+        mismatched_mac_handling = lookup({ drop = "drop", received = "reply_with_received_mac", configured = "reply_with_config_mac" }, try(profile.mismatch_handling, local.defaults.ndo.fabric_templates.fabric_policies.ptp_policy.ptp_profiles.mismatch_handling), "drop")
+      }
+    ] if try(template.ptp_policy, null) != null
+  ])
+}
+
+resource "mso_fabric_policies_ptp_policy_profile" "fabric_policies_ptp_policy_profile" {
+  for_each              = { for profile in local.fabric_ptp_profiles : profile.key => profile }
+  template_id           = mso_template.fabric_template[each.value.template_name].id
+  ptp_policy_uuid       = mso_fabric_policies_ptp_policy.fabric_policies_ptp_policy[each.value.template_name].uuid
+  name                  = each.value.name
+  profile_template      = each.value.profile_template
+  announce_interval     = each.value.announce_interval
+  sync_interval         = each.value.sync_interval
+  delay_interval        = each.value.delay_interval
+  announce_timeout      = each.value.announce_timeout
+  override_node_profile = each.value.profile_template == "telecom" ? null : each.value.override_node_profile
+  # Telecom-only attributes
+  local_priority          = each.value.profile_template == "telecom" ? each.value.local_priority : null
+  destination_mac_type    = each.value.profile_template == "telecom" ? each.value.destination_mac_type : null
+  mismatched_mac_handling = each.value.profile_template == "telecom" ? each.value.mismatched_mac_handling : null
+}
+
 # locals {
 #   fabric_macsec_policies = flatten([
 #     for template in local.fabric_templates : [
