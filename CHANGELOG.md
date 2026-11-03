@@ -12,6 +12,7 @@
 - Add support for Fabric Templates: SyncE interface policy
 - Add support for Fabric Templates: VLAN pool
 - Add support for Fabric Templates: MCP Global policy
+- Add support for Fabric Templates: PTP policy
 - Add support for Tenant Tempaltes: Service device (PBR / L4-L7 service device clusters) 
 - Add support for Service Chaining configuration under Schema Templates
 - Add support for Tenant Templates: IGMP interface policy

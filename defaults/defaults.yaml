@@ -332,6 +332,16 @@ defaults:
           transmission_frequency_msec: 0
           initial_delay: 180
           port_disable_protection: true
+        ptp_policy:
+          admin_state: true
+          global_priority_1: 255
+          global_priority_2: 255
+          global_domain: 0
+          fabric_profile_template: "AES67-2015"
+          fabric_announce_interval: 1
+          fabric_sync_interval: -3
+          fabric_delay_interval: -2
+          fabric_announce_timeout: 3
 #        macsec_policies:
 #          admin_state: true
 #          type: fabric
