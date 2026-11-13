@@ -49,10 +49,17 @@ locals {
             portId        = "${try(interface.module, local.defaults.ndo.sites.pods.spines.interfaces.module)}/${interface.port}"
             ipAddress     = interface.ip
             mtu           = tostring(try(interface.mtu, local.defaults.ndo.sites.pods.spines.interfaces.mtu))
-            routingPolicy = "${interface.ospf.policy}${local.defaults.ndo.sites.ospf_policies.name_suffix}"
+            routingPolicy = try("${interface.ospf.policy}${local.defaults.ndo.sites.ospf_policies.name_suffix}", null)
             ospfAuthType  = try(interface.ospf.authentication_type, local.defaults.ndo.sites.pods.spines.interfaces.ospf.authentication_type)
             ospfAuthKey   = try(interface.ospf.authentication_key, "")
             ospfAuthKeyId = try(interface.ospf.authentication_key_id, local.defaults.ndo.sites.pods.spines.interfaces.ospf.authentication_key_id)
+            bgpPeer = try(interface.bgp, null) != null ? {
+              peerAddr          = interface.bgp.ip
+              peerAsn           = interface.bgp.remote_as
+              password          = try(interface.bgp.password, "")
+              bfdEnabled        = try(interface.bgp.bfd, local.defaults.ndo.sites.pods.spines.interfaces.bgp.bfd)
+              adminStateEnabled = try(interface.bgp.admin_state, local.defaults.ndo.sites.pods.spines.interfaces.bgp.admin_state)
+            } : null
           }]
         }]
       }]
