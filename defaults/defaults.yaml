@@ -46,6 +46,9 @@ defaults:
             ospf:
               authentication_type: none
               authentication_key_id: 1
+            bgp:
+              bfd: false
+              admin_state: true
     fabric_connectivity:
       bgp:
         peering_type: full-mesh
