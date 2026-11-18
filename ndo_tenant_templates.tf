@@ -574,10 +574,6 @@ resource "mso_tenant_policies_netflow_record" "tenant_policies_netflow_record" {
   match_parameters = each.value.match_parameters
 }
 
-/* NetFlow Exporters and Monitors are disabled: NDO 4.2 support for NetFlow
-Exporters is incomplete (missing site-specific settings), and Monitors depend
-on Exporters. NetFlow Records are unaffected and remain enabled above.
-
 locals {
   netflow_exporters = flatten([
     for template in local.tenant_templates : [
@@ -587,6 +583,43 @@ locals {
       }
     ]
   ])
+  netflow_exporter_source_type_map = {
+    "custom-src-ip"  = "customSrcIP"
+    "inband-mgmt-ip" = "inbandMgmtIP"
+    "oob-mgmt-ip"    = "oobMgmtIP"
+    "ptep"           = "ptep"
+  }
+  netflow_exporter_dscp_map = {
+    "EF" = "expedited_forwarding"
+    "VA" = "voice_admit"
+  }
+  netflow_exporter_sites = flatten([
+    for template in local.tenant_templates : [
+      for policy in try(template.netflow_exporters, []) : [
+        for site_name in try(template.sites, []) : [
+          for site in [for s in try(policy.sites, []) : s if s.name == site_name] : {
+            key                     = "${template.name}/${policy.name}/${site_name}"
+            template_name           = template.name
+            exporter_name           = "${policy.name}${local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.name_suffix}"
+            site_id                 = var.manage_sites && !local.nd_managed ? mso_site.site[site_name].id : data.mso_site.tenant_templates_site[site_name].id
+            description             = try(site.description, null)
+            destination_ip          = site.destination_ip
+            destination_port        = tostring(site.destination_port)
+            source_type             = local.netflow_exporter_source_type_map[try(site.source_type, local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.sites.source_type)]
+            source_ip               = try(site.source_type, local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.sites.source_type) == "custom-src-ip" ? try(site.source_ip, local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.sites.source_ip) : null
+            dscp                    = lookup(local.netflow_exporter_dscp_map, try(site.dscp, local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.sites.dscp), lower(try(site.dscp, local.defaults.ndo.tenant_templates.tenant_policies.netflow_exporters.sites.dscp)))
+            epg_type                = try(site.epg_type, null)
+            tenant                  = try(site.tenant, template.tenant)
+            application_profile     = try("${site.application_profile}${local.defaults.ndo.schemas.templates.application_profiles.name_suffix}", null)
+            endpoint_group          = try("${site.endpoint_group}${local.defaults.ndo.schemas.templates.application_profiles.endpoint_groups.name_suffix}", null)
+            vrf                     = try("${site.vrf}${local.defaults.ndo.schemas.templates.vrfs.name_suffix}", null)
+            l3out                   = try("${site.l3out}${local.defaults.ndo.schemas.templates.l3outs.name_suffix}", null)
+            external_endpoint_group = try("${site.external_endpoint_group}${local.defaults.ndo.schemas.templates.external_endpoint_groups.name_suffix}", null)
+          }
+        ]
+      ]
+    ]
+  ])
 }
 
 resource "mso_tenant_policies_netflow_exporter" "tenant_policies_netflow_exporter" {
@@ -594,6 +627,41 @@ resource "mso_tenant_policies_netflow_exporter" "tenant_policies_netflow_exporte
   template_id = mso_template.tenant_template[each.value.template_name].id
   name        = each.value.name
 }
+
+resource "mso_tenant_policies_netflow_exporter_site" "tenant_policies_netflow_exporter_site" {
+  for_each               = { for site in local.netflow_exporter_sites : site.key => site }
+  template_id            = mso_template.tenant_template[each.value.template_name].id
+  site_id                = each.value.site_id
+  netflow_exporter_uuid  = mso_tenant_policies_netflow_exporter.tenant_policies_netflow_exporter[each.value.exporter_name].uuid
+  description            = each.value.description
+  destination_ip         = each.value.destination_ip
+  destination_port       = each.value.destination_port
+  source_ip_address_type = each.value.source_type
+  source_ip              = each.value.source_ip
+  dscp                   = each.value.dscp
+
+  dynamic "application_epg" {
+    for_each = each.value.epg_type == "epg" ? [1] : []
+    content {
+      tenant_name = each.value.tenant
+      anp_name    = each.value.application_profile
+      epg_name    = each.value.endpoint_group
+      vrf_name    = each.value.vrf
+    }
+  }
+
+  dynamic "external_epg" {
+    for_each = each.value.epg_type == "external_epg" ? [1] : []
+    content {
+      tenant_name       = each.value.tenant
+      l3out_name        = each.value.l3out
+      external_epg_name = each.value.external_endpoint_group
+      vrf_name          = each.value.vrf
+    }
+  }
+}
+
+/* NetFlow Monitors are disabled until #1164.
 
 locals {
   netflow_monitors = flatten([
