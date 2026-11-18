@@ -303,8 +303,12 @@ defaults:
           start_query_count: 2
         netflow_records:
           name_suffix: ""
-#        netflow_exporters:
-#          name_suffix: ""
+        netflow_exporters:
+          name_suffix: ""
+          sites:
+            source_type: custom-src-ip
+            source_ip: 0.0.0.0/0
+            dscp: CS2
 #        netflow_monitors:
 #          name_suffix: ""
         igmp_interface_policies:
