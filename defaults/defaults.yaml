@@ -335,6 +335,26 @@ defaults:
           transmission_frequency_msec: 0
           initial_delay: 180
           port_disable_protection: true
+        ptp_policy:
+          admin_state: false
+          global_priority_1: 255
+          global_priority_2: 255
+          global_domain: 0
+          fabric_profile_template: "aes67"
+          fabric_announce_interval: 1
+          fabric_sync_interval: -3
+          fabric_delay_interval: -2
+          fabric_announce_timeout: 3
+          ptp_profiles:
+            template: "aes67"
+            announce_interval: 1
+            sync_interval: -3
+            delay_interval: -2
+            announce_timeout: 3
+            override_node_profile: false
+            priority: 128
+            forwardable: true
+            mismatch_handling: configured
 #        macsec_policies:
 #          admin_state: true
 #          type: fabric
