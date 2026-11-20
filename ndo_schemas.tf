@@ -836,11 +836,12 @@ locals {
           unknown_multicast_flooding      = local.unknown_multicast_map[try(bd.unknown_ipv4_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv4_multicast)]
           ipv6_unknown_multicast_flooding = local.unknown_multicast_map[try(bd.unknown_ipv6_multicast, local.defaults.ndo.schemas.templates.bridge_domains.unknown_ipv6_multicast)]
           ep_move_detection_mode          = local.ndo_version >= 4.2 ? try(bd.ep_move_detection_mode, local.defaults.ndo.schemas.templates.bridge_domains.ep_move_detection_mode) : null
+
           dhcp_policies = [
             for pol in try(bd.dhcp_policies, []) : {
               key                     = "${bd.name}/${pol.dhcp_relay_policy}"
-              name                    = pol.dhcp_relay_policy
-              dhcp_option_policy_name = try(pol.dhcp_option_policy, null)
+              name                    = "${pol.dhcp_relay_policy}${local.defaults.ndo.tenant_templates.tenant_policies.dhcp_relay_policies.name_suffix}"
+              dhcp_option_policy_name = try("${pol.dhcp_option_policy}${local.defaults.ndo.tenant_templates.tenant_policies.dhcp_option_policies.name_suffix}", null)
             }
           ]
         }
