@@ -879,7 +879,7 @@ resource "mso_schema_template_bd" "schema_template_bd" {
       dhcp_option_policy_name = dhcp_policies.value.dhcp_option_policy_name
     }
   }
-  depends_on                      = [
+  depends_on = [
     mso_schema_template_vrf.schema_template_vrf
   ]
 }
